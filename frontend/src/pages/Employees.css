@@ -1,0 +1,57 @@
+.page-bg{
+    background:#f4f7fe;
+    min-height:100vh;
+}
+
+.employee-header{
+    background:linear-gradient(135deg,#2563eb,#7c3aed);
+    border-radius:20px;
+    color:white;
+    padding:30px;
+}
+
+.stats-card{
+    border:none;
+    border-radius:15px;
+    transition:0.3s;
+}
+
+.stats-card:hover{
+    transform:translateY(-5px);
+}
+
+.employee-table{
+    border-radius:20px;
+    overflow:hidden;
+}
+
+.avatar{
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    object-fit:cover;
+    border:3px solid #2563eb;
+}
+
+.status-active{
+    background:#16a34a;
+    color:white;
+    padding:8px 15px;
+    border-radius:20px;
+}
+
+.status-inactive{
+    background:#dc2626;
+    color:white;
+    padding:8px 15px;
+    border-radius:20px;
+}
+
+.search-box{
+    border-radius:12px;
+    height:55px;
+}
+
+.table-hover tbody tr:hover{
+    background:#eef4ff;
+}

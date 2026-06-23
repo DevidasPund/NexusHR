@@ -1,0 +1,29 @@
+.card {
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+body {
+  background: #f5f7fb;
+}
+.nav-link{
+  border-radius:12px;
+  margin:4px 10px;
+  transition:0.3s;
+}
+
+.nav-link:hover{
+  background:#2563eb;
+  transform:translateX(5px);
+}
+
+.active-menu{
+  background:linear-gradient(
+      135deg,
+      #2563eb,
+      #7c3aed
+  );
+}
