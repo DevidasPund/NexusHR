@@ -33,30 +33,20 @@ public class AuthService {
 
     public User login(
             String username,
-            String password) {
+            String password){
 
         User user =
                 repository
                 .findByUsername(username)
                 .orElse(null);
 
-        if (user == null) {
-
-            throw new RuntimeException(
-                    "User Not Found");
+        if(user == null){
+            throw new RuntimeException("User not found");
         }
 
-        if (!password.equals(
-                user.getPassword())) {
-
-            throw new RuntimeException(
-                    "Invalid Password");
+        if(!password.equals(user.getPassword())){
+            throw new RuntimeException("Invalid Password");
         }
-
-        auditLogService.saveLog(
-                username,
-                "LOGIN",
-                "User Logged In");
 
         return user;
     }
