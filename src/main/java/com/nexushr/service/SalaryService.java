@@ -21,8 +21,8 @@ public class SalaryService {
     @Autowired
     private AuditLogService auditLogService;
 
-    @Autowired
-    private EmailService emailService;
+//    @Autowired
+//    private EmailService emailService;
 
     // Get Employee Salary
 

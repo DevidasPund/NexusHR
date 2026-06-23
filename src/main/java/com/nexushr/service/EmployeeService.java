@@ -20,9 +20,9 @@ public class EmployeeService {
 
     @Autowired
     private AuditLogService auditLogService;
-
-    @Autowired
-    private EmailService emailService;
+//
+//    @Autowired
+//    private EmailService emailService;
 
     // SAVE EMPLOYEE
 

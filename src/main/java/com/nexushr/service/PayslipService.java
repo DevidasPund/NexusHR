@@ -20,8 +20,8 @@ public class PayslipService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @Autowired
-    private EmailService emailService;
+//    @Autowired
+//    private EmailService emailService;
 
     public Payslip generatePayslip(
             Payslip payslip) {

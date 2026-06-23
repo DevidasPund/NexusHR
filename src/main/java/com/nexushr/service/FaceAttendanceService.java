@@ -12,8 +12,8 @@ public class FaceAttendanceService {
     @Autowired
     private AttendanceService attendanceService;
 
-    @Autowired
-    private EmployeeService employeeService;
+//    @Autowired
+//    private EmployeeService employeeService;
 
     public boolean markAttendance(
             FaceRequest request){

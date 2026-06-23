@@ -21,8 +21,8 @@ public class TaskService {
     @Autowired
     private AuditLogService auditLogService;
 
-    @Autowired
-    private EmailService emailService;
+//    @Autowired
+//    private EmailService emailService;
 
     // GET ALL TASKS
 
