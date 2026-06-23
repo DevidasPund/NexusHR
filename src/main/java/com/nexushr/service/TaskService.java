@@ -21,13 +21,9 @@ public class TaskService {
     @Autowired
     private AuditLogService auditLogService;
 
-//    @Autowired
-//    private EmailService emailService;
-
     // GET ALL TASKS
 
     public List<Task> getAllTasks() {
-
         return taskRepository.findAll();
     }
 
@@ -41,36 +37,23 @@ public class TaskService {
             task.setStatus("PENDING");
         }
 
-        Task savedTask =
-                taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
 
-        // Notification
+        Notification notification = new Notification();
 
-        Notification notification =
-                new Notification();
-
-        notification.setTitle(
-                "New Task Assigned");
+        notification.setTitle("New Task Assigned");
 
         notification.setMessage(
                 task.getTaskName()
                 + " assigned to "
                 + task.getEmployeeName());
 
-        notification.setSender(
-                "MANAGER");
+        notification.setSender("MANAGER");
 
         notification.setReceiver(
                 task.getEmployeeName());
 
-        notificationService.save(
-                notification);
-
-        // Email
-
-      
-
-        // Audit Log
+        notificationService.save(notification);
 
         auditLogService.saveLog(
                 "MANAGER",
@@ -88,9 +71,8 @@ public class TaskService {
     public List<Task> getEmployeeTasks(
             String employeeName) {
 
-        return taskRepository
-                .findByEmployeeName(
-                        employeeName);
+        return taskRepository.findByEmployeeName(
+                employeeName);
     }
 
     // UPDATE TASK
@@ -99,8 +81,7 @@ public class TaskService {
             Long id,
             Task updatedTask) {
 
-        Task task =
-                taskRepository.findById(id)
+        Task task = taskRepository.findById(id)
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Task Not Found"));
@@ -129,8 +110,6 @@ public class TaskService {
         Task savedTask =
                 taskRepository.save(task);
 
-        // Notification
-
         Notification notification =
                 new Notification();
 
@@ -150,22 +129,6 @@ public class TaskService {
 
         notificationService.save(
                 notification);
-
-        // Email
-
-        if(task.getEmployeeEmail() != null &&
-           !task.getEmployeeEmail().isEmpty()) {
-
-            emailService.sendEmail(
-                    task.getEmployeeEmail(),
-                    "Task Updated",
-                    "Task : "
-                    + task.getTaskName()
-                    + "\nCurrent Status : "
-                    + task.getStatus());
-        }
-
-        // Audit Log
 
         auditLogService.saveLog(
                 "MANAGER",

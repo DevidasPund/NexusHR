@@ -21,21 +21,14 @@ public class EmployeeService {
     @Autowired
     private AuditLogService auditLogService;
 
-
     // SAVE EMPLOYEE
-
     public Employee save(Employee employee) {
 
-        Employee savedEmployee =
-                repository.save(employee);
+        Employee savedEmployee = repository.save(employee);
 
-        // Notification
+        Notification notification = new Notification();
 
-        Notification notification =
-                new Notification();
-
-        notification.setTitle(
-                "New Employee Added");
+        notification.setTitle("New Employee Added");
 
         notification.setMessage(
                 savedEmployee.getFirstName()
@@ -44,16 +37,10 @@ public class EmployeeService {
                 + " joined "
                 + savedEmployee.getDepartment());
 
-        notification.setSender(
-                "SYSTEM");
+        notification.setSender("SYSTEM");
+        notification.setReceiver("ALL");
 
-        notification.setReceiver(
-                "ALL");
-
-        notificationService.save(
-                notification);
-
-        // Audit Log
+        notificationService.save(notification);
 
         auditLogService.saveLog(
                 "ADMIN",
@@ -62,90 +49,53 @@ public class EmployeeService {
                 + " "
                 + savedEmployee.getLastName());
 
-        // Email
-
+        return savedEmployee;
     }
+
     // GET ALL EMPLOYEES
-
     public List<Employee> getAllEmployees() {
-
         return repository.findAll();
     }
 
     // GET EMPLOYEE BY ID
-
     public Employee getById(Long id) {
 
         return repository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException(
-                                "Employee Not Found"));
+                        new RuntimeException("Employee Not Found"));
     }
 
     // GET EMPLOYEE BY USERNAME
+    public Employee getByUsername(String username) {
 
-    public Employee getByUsername(
-            String username){
-
-        return repository
-                .findByUsername(username)
-                .orElseThrow(
-                    () -> new RuntimeException(
-                        "Employee Not Found"
-                    ));
+        return repository.findByUsername(username)
+                .orElseThrow(() ->
+                        new RuntimeException("Employee Not Found"));
     }
+
     // UPDATE EMPLOYEE
+    public Employee updateEmployee(Long id,
+                                   Employee employee) {
 
-    public Employee updateEmployee(
-            Long id,
-            Employee employee) {
+        Employee existing = repository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Employee Not Found"));
 
-        Employee existing =
-                repository.findById(id)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Employee Not Found"));
+        Double oldSalary = existing.getSalary();
 
-        Double oldSalary =
-                existing.getSalary();
+        existing.setFirstName(employee.getFirstName());
+        existing.setLastName(employee.getLastName());
+        existing.setUsername(employee.getUsername());
+        existing.setEmail(employee.getEmail());
+        existing.setPhone(employee.getPhone());
+        existing.setDepartment(employee.getDepartment());
+        existing.setDesignation(employee.getDesignation());
+        existing.setSalary(employee.getSalary());
+        existing.setRole(employee.getRole());
+        existing.setStatus(employee.getStatus());
+        existing.setProfileImage(employee.getProfileImage());
 
-        existing.setFirstName(
-                employee.getFirstName());
-
-        existing.setLastName(
-                employee.getLastName());
-
-        existing.setUsername(
-                employee.getUsername());
-
-        existing.setEmail(
-                employee.getEmail());
-
-        existing.setPhone(
-                employee.getPhone());
-
-        existing.setDepartment(
-                employee.getDepartment());
-
-        existing.setDesignation(
-                employee.getDesignation());
-
-        existing.setSalary(
-                employee.getSalary());
-
-        existing.setRole(
-                employee.getRole());
-
-        existing.setStatus(
-                employee.getStatus());
-
-        existing.setProfileImage(
-                employee.getProfileImage());
-
-        Employee updated =
-                repository.save(existing);
-
-        // Audit Log
+        Employee updated = repository.save(existing);
 
         auditLogService.saveLog(
                 "ADMIN",
@@ -154,11 +104,8 @@ public class EmployeeService {
                 + " "
                 + existing.getLastName());
 
-        // Salary Update Audit
-
-        if(oldSalary != null &&
-           !oldSalary.equals(
-                   employee.getSalary())) {
+        if (oldSalary != null &&
+                !oldSalary.equals(employee.getSalary())) {
 
             auditLogService.saveLog(
                     "ADMIN",
@@ -174,14 +121,11 @@ public class EmployeeService {
     }
 
     // DELETE EMPLOYEE
-
     public void delete(Long id) {
 
-        Employee employee =
-                repository.findById(id)
+        Employee employee = repository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException(
-                                "Employee Not Found"));
+                        new RuntimeException("Employee Not Found"));
 
         auditLogService.saveLog(
                 "ADMIN",
@@ -194,67 +138,49 @@ public class EmployeeService {
     }
 
     // TOTAL EMPLOYEES
-
     public long count() {
-
         return repository.count();
     }
 
     // ACTIVE EMPLOYEES
-
     public Long getActiveEmployees() {
-
-        return repository.countByStatus(
-                "ACTIVE");
+        return repository.countByStatus("ACTIVE");
     }
 
     // TOTAL SALARY
-
     public Double getTotalSalary() {
-
         return repository.getTotalSalary();
     }
+
     public List<Employee> getEmployeesByDepartment(
             String department) {
-
-        return repository.findByDepartment(
-                department);
+        return repository.findByDepartment(department);
     }
 
     public List<Employee> getEmployeesByRole(
             String role) {
-
-        return repository.findByRole(
-                role);
+        return repository.findByRole(role);
     }
 
     public List<Employee> getEmployeesByAttritionRisk(
             String risk) {
-
-        return repository.findByAttritionRisk(
-                risk);
+        return repository.findByAttritionRisk(risk);
     }
-    public List<Employee> getByDepartment(
-            String department){
 
-        return repository.findByDepartment(
-                department);
+    public List<Employee> getByDepartment(
+            String department) {
+        return repository.findByDepartment(department);
     }
 
     public List<Employee> getByRole(
-            String role){
-
-        return repository.findByRole(
-                role);
+            String role) {
+        return repository.findByRole(role);
     }
 
     public List<Employee> searchEmployee(
-            String name){
+            String name) {
 
         return repository
-                .findByFirstNameContainingIgnoreCase(
-                        name);
+                .findByFirstNameContainingIgnoreCase(name);
     }
-
-   
 }
