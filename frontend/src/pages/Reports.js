@@ -53,14 +53,14 @@ function Reports() {
   const exportPdf = () => {
 
     window.open(
-      "http://localhost:8080/reports/pdf"
+      "https://nexushr-production-612e.up.railway.app/reports/pdf"
     );
   };
 
   const exportExcel = () => {
 
     window.open(
-      "http://localhost:8080/reports/excel"
+      "https://nexushr-production-612e.up.railway.app/reports/excel"
     );
   };
 

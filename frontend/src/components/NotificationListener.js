@@ -11,7 +11,7 @@ function NotificationListener() {
 
       webSocketFactory: () =>
         new SockJS(
-          "http://localhost:8080/ws"
+          "https://nexushr-production-612e.up.railway.app"
         ),
 
       reconnectDelay: 5000,

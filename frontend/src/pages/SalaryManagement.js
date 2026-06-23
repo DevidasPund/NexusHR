@@ -98,7 +98,7 @@ function SalaryManagement() {
  (id)=>{
 
   window.open(
-   `http://localhost:8080/salary/payslip/${id}`
+   `https://nexushr-production-612e.up.railway.app/salary/payslip/${id}`
   );
  };
 

@@ -64,7 +64,7 @@ function AdminProfile() {
        src={
         user.profileImage
         ?
-        `http://localhost:8080/uploads/${user.profileImage}`
+        `https://nexushr-production-612e.up.railway.app/uploads/${user.profileImage}`
         :
         "https://via.placeholder.com/150"
        }

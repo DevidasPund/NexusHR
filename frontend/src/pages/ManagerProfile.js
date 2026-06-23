@@ -170,7 +170,7 @@ return (
             src={
               manager.profileImage
               ?
-              `http://localhost:8080/uploads/${manager.profileImage}`
+              `https://nexushr-production-612e.up.railway.app/uploads/${manager.profileImage}`
               :
               "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
             }

@@ -290,7 +290,7 @@ function Employees() {
                             <img
                               src={
                                 employee.profileImage
-                                  ? `http://localhost:8080/uploads/${employee.profileImage}`
+                                  ? `https://nexushr-production-612e.up.railway.app/uploads/${employee.profileImage}`
                                   : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                               }
                               alt="profile"

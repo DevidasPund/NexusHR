@@ -304,7 +304,7 @@ function AdminDashboard() {
   <img
     src={
       emp.profileImage
-        ? `http://localhost:8080/uploads/${emp.profileImage}`
+        ? `https://nexushr-production-612e.up.railway.app/uploads/${emp.profileImage}`
         : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
     }
     alt=""
