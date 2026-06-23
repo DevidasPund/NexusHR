@@ -1,7 +1,6 @@
 package com.nexushr.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.nexushr.entity.User;
@@ -14,21 +13,13 @@ public class AuthService {
     private UserRepository repository;
 
     @Autowired
-    private PasswordEncoder encoder;
-
-    @Autowired
     private AuditLogService auditLogService;
 
     // REGISTER
 
-    public User register(User user){
+    public User register(User user) {
 
-        user.setPassword(
-                encoder.encode(
-                        user.getPassword()));
-
-        User saved =
-                repository.save(user);
+        User saved = repository.save(user);
 
         auditLogService.saveLog(
                 user.getUsername(),
@@ -42,20 +33,20 @@ public class AuthService {
 
     public User login(
             String username,
-            String password){
+            String password) {
 
-        User user =
-                repository
+        User user = repository
                 .findByUsername(username)
                 .orElse(null);
 
-        if(user == null){
-            throw new RuntimeException("User not found");
+        if (user == null) {
+
+            throw new RuntimeException(
+                    "User not found");
         }
 
-        if(!encoder.matches(
-                password,
-                user.getPassword())){
+        if (!password.equals(
+                user.getPassword())) {
 
             throw new RuntimeException(
                     "Invalid Password");
@@ -73,21 +64,18 @@ public class AuthService {
 
     public String resetPassword(
             String email,
-            String password){
+            String password) {
 
-        User user =
-                repository
+        User user = repository
                 .findByEmail(email)
                 .orElse(null);
 
-        if(user == null){
+        if (user == null) {
 
             return "Email Not Found";
         }
 
-        user.setPassword(
-                encoder.encode(
-                        password));
+        user.setPassword(password);
 
         repository.save(user);
 
