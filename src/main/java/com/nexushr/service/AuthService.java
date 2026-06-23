@@ -35,14 +35,15 @@ public class AuthService {
             String username,
             String password) {
 
-        User user = repository
+        User user =
+                repository
                 .findByUsername(username)
                 .orElse(null);
 
         if (user == null) {
 
             throw new RuntimeException(
-                    "User not found");
+                    "User Not Found");
         }
 
         if (!password.equals(
@@ -66,7 +67,8 @@ public class AuthService {
             String email,
             String password) {
 
-        User user = repository
+        User user =
+                repository
                 .findByEmail(email)
                 .orElse(null);
 
