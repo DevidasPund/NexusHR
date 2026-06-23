@@ -32,10 +32,16 @@ public class AuthController {
     public Map<String, Object> login(
             @RequestBody User loginUser){
 
-    	User user =
-    	        service.login(
-    	                loginUser.getUsername(),
-    	                loginUser.getPassword());
+        System.out.println("Login Request: " +
+                loginUser.getUsername());
+
+        User user =
+                service.login(
+                        loginUser.getUsername(),
+                        loginUser.getPassword());
+
+        System.out.println("User Found: " +
+                user.getUsername());
 
         Employee employee =
                 employeeRepository
@@ -46,40 +52,11 @@ public class AuthController {
         Map<String, Object> response =
                 new HashMap<>();
 
-        response.put(
-                "id",
-                user.getId());
-
-        response.put(
-                "username",
-                user.getUsername());
-
-        response.put(
-                "email",
-                user.getEmail());
-
-        response.put(
-                "role",
-                user.getRole());
-
-        response.put(
-                "employeeName",
-                user.getEmployeeName());
-
-        if(employee != null){
-
-            response.put(
-                    "employeeId",
-                    employee.getId());
-
-            response.put(
-                    "firstName",
-                    employee.getFirstName());
-
-            response.put(
-                    "lastName",
-                    employee.getLastName());
-        }
+        response.put("id", user.getId());
+        response.put("username", user.getUsername());
+        response.put("email", user.getEmail());
+        response.put("role", user.getRole());
+        response.put("employeeName", user.getEmployeeName());
 
         return response;
     }
