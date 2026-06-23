@@ -6,9 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.nexushr.entity.Employee;
 import com.nexushr.entity.Payslip;
-import com.nexushr.repository.EmployeeRepository;
 import com.nexushr.repository.PayslipRepository;
 
 @Service
@@ -16,12 +14,6 @@ public class PayslipService {
 
     @Autowired
     private PayslipRepository repository;
-
-    @Autowired
-    private EmployeeRepository employeeRepository;
-
-//    @Autowired
-//    private EmailService emailService;
 
     public Payslip generatePayslip(
             Payslip payslip) {
@@ -41,8 +33,7 @@ public class PayslipService {
                 repository.save(
                         payslip);
 
-        // Send Email
-
+        return savedPayslip;
     }
 
     public List<Payslip> getAllPayslips() {
