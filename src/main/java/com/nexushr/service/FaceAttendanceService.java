@@ -12,11 +12,10 @@ public class FaceAttendanceService {
     @Autowired
     private AttendanceService attendanceService;
 
-//    @Autowired
-//    private EmployeeService employeeService;
+    @Autowired
+    private EmployeeService employeeService;
 
-    public boolean markAttendance(
-            FaceRequest request){
+    public boolean markAttendance(FaceRequest request){
 
         try{
 
@@ -33,17 +32,14 @@ public class FaceAttendanceService {
                     + result);
 
             if(!"Matched".equals(result)){
-
                 return false;
             }
 
             var employee =
-                    employeeService
-                    .getByUsername(
+                    employeeService.getByUsername(
                             request.getUsername());
 
             if(employee == null){
-
                 return false;
             }
 
@@ -55,7 +51,6 @@ public class FaceAttendanceService {
         }catch(Exception e){
 
             e.printStackTrace();
-
             return false;
         }
     }

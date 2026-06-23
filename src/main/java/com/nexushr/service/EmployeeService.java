@@ -20,9 +20,7 @@ public class EmployeeService {
 
     @Autowired
     private AuditLogService auditLogService;
-//
-//    @Autowired
-//    private EmailService emailService;
+
 
     // SAVE EMPLOYEE
 
@@ -66,20 +64,7 @@ public class EmployeeService {
 
         // Email
 
-        if(savedEmployee.getEmail() != null &&
-           !savedEmployee.getEmail().isEmpty()) {
-
-            emailService.sendEmail(
-                    savedEmployee.getEmail(),
-                    "Welcome To NexusHR",
-                    "Hello "
-                    + savedEmployee.getFirstName()
-                    + ",\n\nWelcome to NexusHR.\nYour employee account has been created successfully.");
-        }
-
-        return savedEmployee;
     }
-
     // GET ALL EMPLOYEES
 
     public List<Employee> getAllEmployees() {

@@ -43,22 +43,6 @@ public class PayslipService {
 
         // Send Email
 
-        Employee employee =
-                employeeRepository
-                .findById(
-                        payslip.getEmployeeId())
-                .orElse(null);
-
-        if (employee != null
-                && employee.getEmail() != null) {
-
-            emailService.sendPayslipEmail(
-                    employee.getEmail(),
-                    employee.getFirstName(),
-                    savedPayslip.getNetSalary());
-        }
-
-        return savedPayslip;
     }
 
     public List<Payslip> getAllPayslips() {

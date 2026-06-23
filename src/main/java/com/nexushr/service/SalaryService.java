@@ -100,17 +100,6 @@ public class SalaryService {
 
         // Email
 
-        if(employee.getEmail() != null &&
-           !employee.getEmail().isEmpty()) {
-
-            emailService.sendEmail(
-                    employee.getEmail(),
-                    "Salary Updated",
-                    "Hello "
-                    + employee.getFirstName()
-                    + ",\n\nYour salary has been updated.\nNew Salary : ₹"
-                    + salary);
-        }
 
         return updated;
     }

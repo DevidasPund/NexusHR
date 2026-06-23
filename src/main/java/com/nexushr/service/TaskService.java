@@ -68,22 +68,7 @@ public class TaskService {
 
         // Email
 
-        if(task.getEmployeeEmail() != null &&
-           !task.getEmployeeEmail().isEmpty()) {
-
-            emailService.sendEmail(
-                    task.getEmployeeEmail(),
-                    "New Task Assigned",
-                    "Hello,\n\nTask : "
-                    + task.getTaskName()
-                    + "\nProject : "
-                    + task.getProjectName()
-                    + "\nPriority : "
-                    + task.getPriority()
-                    + "\nDue Date : "
-                    + task.getDueDate()
-                    + "\n\nPlease complete the task on time.");
-        }
+      
 
         // Audit Log
 
