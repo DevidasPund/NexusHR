@@ -2,28 +2,34 @@ package com.nexushr.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 public class CorsConfig {
 
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
+    public CorsFilter corsFilter() {
 
-        return new WebMvcConfigurer() {
+        CorsConfiguration config =
+                new CorsConfiguration();
 
-            @Override
-            public void addCorsMappings(
-                    CorsRegistry registry) {
+        config.setAllowCredentials(true);
 
-                registry.addMapping("/**")
-                        .allowedOrigins(
-                                "http://localhost:3000")
-                        .allowedMethods("*")
-                        .allowedHeaders("*");
-            }
-        };
+        config.addAllowedOrigin(
+                "https://nexushr-hrms.netlify.app");
+
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration(
+                "/**",
+                config);
+
+        return new CorsFilter(source);
     }
 }
