@@ -66,7 +66,7 @@ function AdminProfile() {
       <div
         className="flex-grow-1"
         style={{
-          marginLeft: "280px",
+         
           background: "#f4f7fc",
           minHeight: "100vh"
         }}

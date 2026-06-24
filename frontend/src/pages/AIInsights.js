@@ -102,7 +102,7 @@ function AIInsights() {
       <div
         className="flex-grow-1"
         style={{
-          marginLeft: "280px",
+         
           background: "#f4f7fe",
           minHeight: "100vh"
         }}
