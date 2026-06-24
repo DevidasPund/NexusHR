@@ -2,27 +2,27 @@ package com.nexushr.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/upload")
-@CrossOrigin("*")
+@CrossOrigin(origins = {
+        "https://nexushr-hrms.netlify.app",
+        "http://localhost:3000"
+})
 public class FileUploadController {
 
     @PostMapping
-    public Map<String, Object> uploadFile(
-            @RequestParam("file")
-            MultipartFile file)
+    public String uploadFile(
+            @RequestParam("file") MultipartFile file)
             throws IOException {
 
         String uploadDir =
                 System.getProperty("user.dir")
-                        + File.separator
-                        + "uploads";
+                + File.separator
+                + "uploads";
 
         File directory = new File(uploadDir);
 
@@ -32,8 +32,8 @@ public class FileUploadController {
 
         String fileName =
                 System.currentTimeMillis()
-                        + "_"
-                        + file.getOriginalFilename();
+                + "_"
+                + file.getOriginalFilename();
 
         File destination =
                 new File(uploadDir
@@ -42,15 +42,6 @@ public class FileUploadController {
 
         file.transferTo(destination);
 
-        Map<String, Object> response =
-                new HashMap<>();
-
-        response.put("success", true);
-        response.put("fileName", fileName);
-        response.put(
-                "filePath",
-                "/uploads/" + fileName);
-
-        return response;
+        return fileName;
     }
 }
