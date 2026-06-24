@@ -65,10 +65,10 @@ function Login() {
             }
           );
 
-        localStorage.setItem(
-          "employeeId",
-          response.data.id
-        );
+       localStorage.setItem(
+  "employeeId",
+  response.data.employeeId
+);
 
         localStorage.setItem(
           "username",
