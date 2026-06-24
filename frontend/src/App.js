@@ -10,7 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import NotificationListener from "./components/NotificationListener";
 import ProtectedRoute from "./components/ProtectedRoute";
-
+import EmployeeProfile from "./pages/EmployeeProfile";
 /* Authentication */
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -439,6 +439,10 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/employee-profile"
+  element={<EmployeeProfile />}
+/>
 
         <Route
           path="/manager-profile"
