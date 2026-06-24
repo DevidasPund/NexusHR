@@ -8,46 +8,60 @@ function Sidebar() {
 
   const location = useLocation();
 
-  const isActive = (path) =>
-    location.pathname === path
-      ? "active-menu"
-      : "";
+  const activeStyle = {
+    background: "linear-gradient(90deg,#2563eb,#7c3aed)",
+    borderRadius: "12px",
+    color: "#fff",
+    fontWeight: "600"
+  };
+
+  const menuStyle = {
+    color: "#d1d5db",
+    textDecoration: "none",
+    padding: "12px 18px",
+    display: "block",
+    borderRadius: "12px",
+    marginBottom: "6px"
+  };
 
   return (
-
     <div
-      className="sidebar text-white shadow"
       style={{
-        width: "300px",
-        minWidth: "300px",
+        width: "280px",
         minHeight: "100vh",
-        background:
-          "linear-gradient(180deg,#0f172a,#1e293b)"
+        background: "#0f172a",
+        display: "flex",
+        flexDirection: "column",
+        position: "sticky",
+        top: 0
       }}
     >
 
       {/* Logo */}
 
-      <div className="text-center py-4">
-
+      <div
+        className="text-center p-4"
+        style={{
+          borderBottom: "1px solid #1e293b"
+        }}
+      >
         <h1
-          className="fw-bold"
           style={{
-            fontSize: "3rem"
+            color: "#fff",
+            fontWeight: "800"
           }}
         >
           NexusHR
         </h1>
 
-        <small className="text-info">
+        <small style={{ color: "#38bdf8" }}>
           Enterprise HRMS
         </small>
-
       </div>
 
       {/* Profile */}
 
-      <div className="text-center mb-4">
+      <div className="text-center py-4">
 
         <img
           src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
@@ -56,285 +70,171 @@ function Sidebar() {
           height="90"
           style={{
             borderRadius: "50%",
-            border: "3px solid #3b82f6"
+            border: "4px solid #3b82f6"
           }}
         />
 
-        <h5 className="mt-3">
+        <h5 className="mt-3 text-white">
           {username}
         </h5>
 
-        <span className="badge bg-primary">
+        <span className="badge bg-primary px-3 py-2">
           {role}
         </span>
 
       </div>
 
-      <hr style={{borderColor:"#374151"}} />
-
-      {/* Dashboard */}
-
-      <Link
-        className={`nav-link text-white px-4 py-3 ${isActive(
-          role === "ADMIN"
-            ? "/admin/dashboard"
-            : role === "MANAGER"
-            ? "/manager/dashboard"
-            : "/employee/dashboard"
-        )}`}
-        to={
-          role === "ADMIN"
-            ? "/admin/dashboard"
-            : role === "MANAGER"
-            ? "/manager/dashboard"
-            : "/employee/dashboard"
-        }
-      >
-        📊 Dashboard
-      </Link>
-
-      {/* ADMIN */}
-
-      {role === "ADMIN" && (
-
-        <>
-
-          <div className="px-4 mt-4 text-info">
-            WORKFORCE
-          </div>
-
-          <Link className="nav-link text-white px-4 py-2" to="/employees">
-            👨‍💼 Employees
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/add-employee">
-            ➕ Add Employee
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/departments">
-            🏢 Departments
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/teams">
-            👥 Teams
-          </Link>
-
-          <div className="px-4 mt-4 text-warning">
-            OPERATIONS
-          </div>
-
-          <Link className="nav-link text-white px-4 py-2" to="/admin-attendance">
-            ⏰ Attendance
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/leave-management">
-            🌴 Leave Approval
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/salary-management">
-            💰 Payroll
-          </Link>
-
-          <div className="px-4 mt-4 text-success">
-            PROJECTS
-          </div>
-
-          <Link className="nav-link text-white px-4 py-2" to="/projects">
-            📁 Projects
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/tasks">
-            ✅ Tasks
-          </Link>
-
-          <div className="px-4 mt-4 text-danger">
-            AI & REPORTS
-          </div>
-
-          <Link className="nav-link text-white px-4 py-2" to="/audit-logs">
-            📋 Audit Logs
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/reports">
-            📊 Reports
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/notification-management">
-            🔔 Notifications
-          </Link>
-
-        </>
-
-      )}
-
-      {/* MANAGER */}
-
-      {role === "MANAGER" && (
-
-        <>
-
-          <div className="px-4 mt-4 text-info">
-            TEAM MANAGEMENT
-          </div>
-
-          <Link className="nav-link text-white px-4 py-2" to="/teams">
-            👥 Team Members
-          </Link>
-
-          
-
-          <Link className="nav-link text-white px-4 py-2" to="/leave-management">
-            🌴 Leave Approval
-          </Link>
-
-          <div className="px-4 mt-4 text-success">
-            PROJECTS
-          </div>
-
-          <Link className="nav-link text-white px-4 py-2" to="/projects">
-            📁 Projects
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/tasks">
-            ✅ Tasks
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/milestones">
-            📌 Milestones
-          </Link>
-
-          <div className="px-4 mt-4 text-warning">
-            PERFORMANCE
-          </div>
-
-          <Link className="nav-link text-white px-4 py-2" to="/performance">
-            ⭐ Performance
-          </Link>
-
-          
-          <div className="px-4 mt-4 text-danger">
-            AI INSIGHTS
-          </div>
-
-          <Link className="nav-link text-white px-4 py-2" to="/ai-insights">
-            🤖 AI Insights
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/attrition-risk">
-            ⚠ Attrition Risk
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/skill-gap-analysis">
-            🧠 Skill Gap Analysis
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/reports">
-            📊 Reports
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/notification-management">
-            🔔 Notifications
-          </Link>
-
-        </>
-
-      )}
-
-      {/* EMPLOYEE */}
-
-      {role === "EMPLOYEE" && (
-
-        <>
-
-          <Link className="nav-link text-white px-4 py-2" to="/employee-attendance">
-            ⏰ My Attendance
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/face-attendance">
-            📷 Face Attendance
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/my-tasks">
-            ✅ My Tasks
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/leave">
-            🌴 My Leaves
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/salary">
-            💰 My Salary
-          </Link>
-
-          <Link className="nav-link text-white px-4 py-2" to="/employee-Notification">
-            🔔 Notifications
-          </Link>
-
-        </>
-
-      )}
-
-      <hr style={{borderColor:"#374151"}} />
-
-      {/* Common */}
-
-      <Link className="nav-link text-white px-4 py-2" to="/profile">
-        👤 Profile
-      </Link>
-
-      <Link className="nav-link text-white px-4 py-2" to="/settings">
-        ⚙ Settings
-      </Link>
-
-      <Link className="nav-link text-white px-4 py-2" to="/change-password">
-        🔒 Change Password
-      </Link>
-
-      {/* AI Widget */}
-
       <div
-        className="m-3 p-3 rounded"
         style={{
-          background:
-            "linear-gradient(135deg,#2563eb,#7c3aed)"
+          overflowY: "auto",
+          flex: 1,
+          padding: "10px"
         }}
       >
 
-        <h6>
-          🤖 AI Workforce Insights
-        </h6>
+        {/* Dashboard */}
 
-        <small>
-          Attrition Monitoring
-        </small>
+        <Link
+          to={
+            role === "ADMIN"
+              ? "/admin/dashboard"
+              : role === "MANAGER"
+              ? "/manager/dashboard"
+              : "/employee/dashboard"
+          }
+          style={{
+            ...menuStyle,
+            ...(location.pathname.includes("dashboard")
+              ? activeStyle
+              : {})
+          }}
+        >
+          📊 Dashboard
+        </Link>
 
-        <br />
+        {/* ADMIN MENU */}
 
-        <small>
-          Skill Gap Analysis
-        </small>
+        {role === "ADMIN" && (
+          <>
+            <div className="text-info mt-3 mb-2 fw-bold">
+              WORKFORCE
+            </div>
 
+            <Link to="/employees" style={menuStyle}>
+              👨‍💼 Employees
+            </Link>
+
+            <Link to="/add-employee" style={menuStyle}>
+              ➕ Add Employee
+            </Link>
+
+            <Link to="/departments" style={menuStyle}>
+              🏢 Departments
+            </Link>
+
+            <Link to="/teams" style={menuStyle}>
+              👥 Teams
+            </Link>
+
+            <div className="text-warning mt-4 mb-2 fw-bold">
+              OPERATIONS
+            </div>
+
+            <Link to="/admin-attendance" style={menuStyle}>
+              ⏰ Attendance
+            </Link>
+
+            <Link to="/leave-management" style={menuStyle}>
+              🌴 Leave Approval
+            </Link>
+
+            <Link to="/salary-management" style={menuStyle}>
+              💰 Payroll
+            </Link>
+
+            <div className="text-success mt-4 mb-2 fw-bold">
+              PROJECTS
+            </div>
+
+            <Link to="/projects" style={menuStyle}>
+              📁 Projects
+            </Link>
+
+            <Link to="/tasks" style={menuStyle}>
+              ✅ Tasks
+            </Link>
+
+            <div className="text-danger mt-4 mb-2 fw-bold">
+              REPORTS
+            </div>
+
+            <Link to="/reports" style={menuStyle}>
+              📊 Reports
+            </Link>
+
+            <Link to="/notification-management" style={menuStyle}>
+              🔔 Notifications
+            </Link>
+          </>
+        )}
       </div>
 
-      {/* Footer */}
+      {/* Bottom Section */}
 
       <div
-        className="text-center p-3"
         style={{
-          background:
-            "rgba(255,255,255,0.05)"
+          borderTop: "1px solid #1e293b",
+          padding: "15px"
         }}
       >
 
-        <small className="text-info">
-          NexusHR Enterprise Suite
-        </small>
+        <Link
+          to="/profile"
+          style={menuStyle}
+        >
+          👤 Profile
+        </Link>
 
-        <br />
+        <Link
+          to="/settings"
+          style={menuStyle}
+        >
+          ⚙️ Settings
+        </Link>
 
-        <small className="text-light">
-          Version 2.0
-        </small>
+        <Link
+          to="/change-password"
+          style={menuStyle}
+        >
+          🔒 Change Password
+        </Link>
+
+        <button
+          className="btn btn-danger w-100 mt-3"
+          onClick={() => {
+            localStorage.clear();
+            window.location.href = "/";
+          }}
+        >
+          Logout
+        </button>
+
+        <div
+          className="mt-3 p-3 text-center"
+          style={{
+            borderRadius: "12px",
+            background:
+              "linear-gradient(135deg,#2563eb,#7c3aed)"
+          }}
+        >
+          <h6 className="text-white">
+            🤖 AI Workforce Insights
+          </h6>
+
+          <small className="text-light">
+            Attrition & Skill Gap Analysis
+          </small>
+        </div>
 
       </div>
 
