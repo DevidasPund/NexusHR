@@ -13,7 +13,8 @@ public interface AttendanceRepository
         extends JpaRepository<Attendance, Long> {
 
     // Employee Attendance
-    List<Attendance> findByEmployeeId(Long employeeId);
+    List<Attendance> findByEmployeeId(
+            Long employeeId);
 
     // Today's Attendance
     List<Attendance> findByAttendanceDate(
@@ -27,11 +28,11 @@ public interface AttendanceRepository
     Attendance findTopByEmployeeIdOrderByIdDesc(
             Long employeeId);
 
-    // Status Counts
+    // Status Count
     long countByAttendanceStatus(
             String attendanceStatus);
 
-    // Today's Present Employees
+    // Today's Present Count
     long countByAttendanceDateAndAttendanceStatus(
             LocalDate attendanceDate,
             String attendanceStatus);
@@ -40,17 +41,7 @@ public interface AttendanceRepository
     List<Attendance> findByDepartment(
             String department);
 
-    // Employee Present Count
-    long countByEmployeeIdAndAttendanceStatus(
-            Long employeeId,
-            String attendanceStatus);
-
-    // Employee Absent Count
-    long countByEmployeeIdAndAttendanceStatus(
-            Long employeeId,
-            String attendanceStatus);
-
-    // Employee Leave Count
+    // Employee Status Count
     long countByEmployeeIdAndAttendanceStatus(
             Long employeeId,
             String attendanceStatus);
