@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
@@ -6,6 +7,7 @@ import Navbar from "../components/Navbar";
 function Reports() {
 
   const [dashboard, setDashboard] = useState({});
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,7 +16,7 @@ function Reports() {
 
     const interval = setInterval(() => {
       loadReports();
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(interval);
 
@@ -24,9 +26,23 @@ function Reports() {
 
     try {
 
-      const response = await API.get("/dashboard");
+      const dashboardRes =
+        await API.get("/dashboard");
 
-      setDashboard(response.data);
+      setDashboard(dashboardRes.data);
+
+      try {
+
+        const deptRes =
+          await API.get("/departments");
+
+        setDepartments(deptRes.data);
+
+      } catch (e) {
+
+        setDepartments([]);
+
+      }
 
     } catch (error) {
 
@@ -58,6 +74,14 @@ function Reports() {
 
   };
 
+  const averageSalary =
+    dashboard.totalEmployees > 0
+      ? Math.round(
+          (dashboard.totalSalary || 0) /
+          dashboard.totalEmployees
+        )
+      : 0;
+
   return (
 
     <div className="d-flex">
@@ -76,8 +100,6 @@ function Reports() {
 
         <div className="container-fluid p-4">
 
-          {/* Header */}
-
           <div
             className="card border-0 shadow-lg mb-4"
             style={{
@@ -86,17 +108,19 @@ function Reports() {
               borderRadius: "20px"
             }}
           >
+
             <div className="card-body text-white">
 
               <h2>
                 📊 HR Reports & Analytics
               </h2>
 
-              <p className="mb-0">
+              <p>
                 Real-Time Workforce Intelligence Dashboard
               </p>
 
             </div>
+
           </div>
 
           {loading ? (
@@ -105,7 +129,6 @@ function Reports() {
 
               <div
                 className="spinner-border text-primary"
-                role="status"
               />
 
               <h5 className="mt-3">
@@ -117,52 +140,110 @@ function Reports() {
           ) : (
 
             <>
+
               {/* KPI Cards */}
 
               <div className="row g-4 mb-4">
 
                 <div className="col-md-3">
-                  <div className="card bg-primary text-white border-0 shadow">
+
+                  <div
+                    className="card text-white border-0 shadow"
+                    style={{
+                      background:
+                        "linear-gradient(135deg,#2563eb,#3b82f6)"
+                    }}
+                  >
+
                     <div className="card-body text-center">
+
                       <h6>Total Employees</h6>
-                      <h2>{dashboard.totalEmployees || 0}</h2>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="col-md-3">
-                  <div className="card bg-success text-white border-0 shadow">
-                    <div className="card-body text-center">
-                      <h6>Active Employees</h6>
-                      <h2>{dashboard.activeEmployees || 0}</h2>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="col-md-3">
-                  <div className="card bg-warning border-0 shadow">
-                    <div className="card-body text-center">
-                      <h6>Departments</h6>
-                      <h2>{dashboard.totalDepartments || 0}</h2>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="col-md-3">
-                  <div className="card bg-danger text-white border-0 shadow">
-                    <div className="card-body text-center">
-                      <h6>Total Salary</h6>
                       <h2>
-                        ₹
-                        {dashboard.totalSalary?.toLocaleString() || 0}
+                        {dashboard.totalEmployees || 0}
                       </h2>
+
                     </div>
+
                   </div>
+
+                </div>
+
+                <div className="col-md-3">
+
+                  <div
+                    className="card text-white border-0 shadow"
+                    style={{
+                      background:
+                        "linear-gradient(135deg,#16a34a,#22c55e)"
+                    }}
+                  >
+
+                    <div className="card-body text-center">
+
+                      <h6>Active Employees</h6>
+
+                      <h2>
+                        {dashboard.activeEmployees || 0}
+                      </h2>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <div className="col-md-3">
+
+                  <div
+                    className="card border-0 shadow"
+                    style={{
+                      background:
+                        "linear-gradient(135deg,#f59e0b,#fbbf24)"
+                    }}
+                  >
+
+                    <div className="card-body text-center">
+
+                      <h6>Departments</h6>
+
+                      <h2>
+                        {dashboard.totalDepartments || 0}
+                      </h2>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <div className="col-md-3">
+
+                  <div
+                    className="card text-white border-0 shadow"
+                    style={{
+                      background:
+                        "linear-gradient(135deg,#9333ea,#7c3aed)"
+                    }}
+                  >
+
+                    <div className="card-body text-center">
+
+                      <h6>Average Salary</h6>
+
+                      <h2>
+                        ₹{averageSalary}
+                      </h2>
+
+                    </div>
+
+                  </div>
+
                 </div>
 
               </div>
 
-              {/* Attendance */}
+              {/* Attendance + Leave */}
 
               <div className="row g-4 mb-4">
 
@@ -172,11 +253,11 @@ function Reports() {
 
                     <div className="card-body">
 
-                      <h4 className="mb-4">
+                      <h4>
                         📅 Attendance Analytics
                       </h4>
 
-                      <div className="mb-3">
+                      <div className="mt-3">
 
                         <div className="d-flex justify-content-between">
 
@@ -195,35 +276,10 @@ function Reports() {
                           <div
                             className="progress-bar bg-success"
                             style={{
-                              width: `${dashboard.attendancePercentage || 0}%`
+                              width:
+                                `${dashboard.attendancePercentage || 0}%`
                             }}
-                          >
-                            {dashboard.attendancePercentage || 0}%
-                          </div>
-
-                        </div>
-
-                      </div>
-
-                      <div className="row text-center mt-4">
-
-                        <div className="col-6">
-
-                          <h5 className="text-success">
-                            {dashboard.presentToday || 0}
-                          </h5>
-
-                          <small>Present Today</small>
-
-                        </div>
-
-                        <div className="col-6">
-
-                          <h5 className="text-danger">
-                            {dashboard.absentToday || 0}
-                          </h5>
-
-                          <small>Absent Today</small>
+                          />
 
                         </div>
 
@@ -241,11 +297,11 @@ function Reports() {
 
                     <div className="card-body">
 
-                      <h4 className="mb-4">
+                      <h4>
                         🌴 Leave Analytics
                       </h4>
 
-                      <div className="row text-center">
+                      <div className="row text-center mt-4">
 
                         <div className="col-6">
 
@@ -253,7 +309,7 @@ function Reports() {
                             {dashboard.pendingLeaves || 0}
                           </h2>
 
-                          <p>Pending Leaves</p>
+                          <p>Pending</p>
 
                         </div>
 
@@ -263,7 +319,7 @@ function Reports() {
                             {dashboard.approvedLeaves || 0}
                           </h2>
 
-                          <p>Approved Leaves</p>
+                          <p>Approved</p>
 
                         </div>
 
@@ -277,7 +333,56 @@ function Reports() {
 
               </div>
 
-              {/* AI Analytics */}
+              {/* Department Summary */}
+
+              <div className="card shadow border-0 mb-4">
+
+                <div className="card-body">
+
+                  <h4>
+                    🏢 Department Summary
+                  </h4>
+
+                  <table className="table table-hover mt-3">
+
+                    <thead className="table-dark">
+
+                      <tr>
+
+                        <th>Department</th>
+                        <th>Employees</th>
+
+                      </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                      {departments.map((dept) => (
+
+                        <tr key={dept.id}>
+
+                          <td>
+                            {dept.departmentName}
+                          </td>
+
+                          <td>
+                            {dept.employeeCount || 0}
+                          </td>
+
+                        </tr>
+
+                      ))}
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+              </div>
+
+              {/* AI Insights */}
 
               <div className="card shadow border-0 mb-4">
 
@@ -286,76 +391,6 @@ function Reports() {
                   <h4>
                     🤖 AI Workforce Insights
                   </h4>
-
-                  <hr />
-
-                  <div className="row">
-
-                    <div className="col-md-3">
-
-                      <div className="alert alert-danger">
-
-                        <strong>
-                          High Risk Employees
-                        </strong>
-
-                        <h3>
-                          {dashboard.highRiskEmployees || 0}
-                        </h3>
-
-                      </div>
-
-                    </div>
-
-                    <div className="col-md-3">
-
-                      <div className="alert alert-warning">
-
-                        <strong>
-                          Medium Risk
-                        </strong>
-
-                        <h3>
-                          {dashboard.mediumRiskEmployees || 0}
-                        </h3>
-
-                      </div>
-
-                    </div>
-
-                    <div className="col-md-3">
-
-                      <div className="alert alert-success">
-
-                        <strong>
-                          Low Risk
-                        </strong>
-
-                        <h3>
-                          {dashboard.lowRiskEmployees || 0}
-                        </h3>
-
-                      </div>
-
-                    </div>
-
-                    <div className="col-md-3">
-
-                      <div className="alert alert-info">
-
-                        <strong>
-                          Avg Performance
-                        </strong>
-
-                        <h3>
-                          {dashboard.averagePerformance || 0}%
-                        </h3>
-
-                      </div>
-
-                    </div>
-
-                  </div>
 
                 </div>
 
@@ -371,7 +406,7 @@ function Reports() {
                     ⭐ Performance Summary
                   </h4>
 
-                  <div className="row text-center mt-4">
+                  <div className="row text-center mt-3">
 
                     <div className="col-md-4">
 
@@ -409,26 +444,6 @@ function Reports() {
 
               </div>
 
-              {/* Skill Gap */}
-
-              <div className="card shadow border-0 mb-4">
-
-                <div className="card-body">
-
-                  <h4>
-                    🎯 Top Skill Gaps
-                  </h4>
-
-                  <hr />
-
-                  <h5 className="text-danger">
-                    {dashboard.topSkillGaps || "No Data Available"}
-                  </h5>
-
-                </div>
-
-              </div>
-
               {/* Export */}
 
               <div className="card shadow border-0">
@@ -442,24 +457,24 @@ function Reports() {
                   <div className="d-flex gap-3 mt-3">
 
                     <button
-                      className="btn btn-danger btn-lg"
+                      className="btn btn-danger"
                       onClick={exportPdf}
                     >
-                      PDF Report
+                      📄 Export PDF
                     </button>
 
                     <button
-                      className="btn btn-success btn-lg"
+                      className="btn btn-success"
                       onClick={exportExcel}
                     >
-                      Excel Report
+                      📊 Export Excel
                     </button>
 
                     <button
-                      className="btn btn-primary btn-lg"
+                      className="btn btn-dark"
                       onClick={() => window.print()}
                     >
-                      Print Report
+                      🖨 Print
                     </button>
 
                   </div>
@@ -469,6 +484,7 @@ function Reports() {
               </div>
 
             </>
+
           )}
 
         </div>
@@ -478,6 +494,8 @@ function Reports() {
     </div>
 
   );
+
 }
 
 export default Reports;
+
