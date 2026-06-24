@@ -431,14 +431,14 @@ function App() {
 
         {/* Profile */}
 
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
+       <Route
+  path="/employee-profile"
+  element={
+    <ProtectedRoute>
+      <EmployeeProfile />
+    </ProtectedRoute>
+  }
+/>
         <Route
   path="/employee-profile"
   element={<EmployeeProfile />}
