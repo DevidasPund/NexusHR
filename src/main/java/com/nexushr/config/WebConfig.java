@@ -6,8 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
 
 @Configuration
-public class WebConfig
-        implements WebMvcConfigurer {
+public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(
@@ -15,13 +14,25 @@ public class WebConfig
 
         String uploadPath =
                 System.getProperty("user.dir")
-                        + File.separator
-                        + "uploads"
-                        + File.separator;
+                + File.separator
+                + "uploads"
+                + File.separator;
 
-        registry.addResourceHandler(
-                        "/uploads/**")
-                .addResourceLocations(
-                        "file:" + uploadPath);
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + uploadPath);
+    }
+
+    @Override
+    public void addCorsMappings(
+            CorsRegistry registry) {
+
+        registry.addMapping("/**")
+                .allowedOrigins(
+                    "https://nexushr-hrms.netlify.app",
+                    "http://localhost:3000"
+                )
+                .allowedMethods("*")
+                .allowedHeaders("*")
+                .allowCredentials(false);
     }
 }
