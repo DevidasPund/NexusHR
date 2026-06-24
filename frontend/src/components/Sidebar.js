@@ -331,12 +331,7 @@ function Sidebar() {
               🔔 Notifications
             </Link>
 
-            <Link
-              to="/employee-profile"
-              style={getMenuStyle("/employee-profile")}
-            >
-              👤 My Profile
-            </Link>
+           
           </>
         )}
       </div>
