@@ -38,15 +38,13 @@ function EmployeeProfile() {
 
       try {
 
-        const username =
-          localStorage.getItem(
-            "username"
-          );
+       const employeeId =
+  localStorage.getItem("employeeId");
 
-        const response =
-          await API.get(
-            `/employees/username/${username}`
-          );
+const response =
+  await API.get(
+    `/employees/${employeeId}`
+  );
 
         setEmployee(
           response.data
