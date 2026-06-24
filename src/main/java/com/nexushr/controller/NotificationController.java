@@ -36,6 +36,12 @@ public class NotificationController {
         return service.getByReceiver(
                 receiver);
     }
+    @PostMapping("/reply")
+    public Notification reply(
+            @RequestBody Notification notification){
+
+        return service.save(notification);
+    }
 
     @DeleteMapping("/{id}")
     public void delete(

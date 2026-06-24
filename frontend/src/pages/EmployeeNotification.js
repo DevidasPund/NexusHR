@@ -47,11 +47,10 @@ function EmployeeNotification() {
 
       try {
 
-        const response =
-          await API.get(
-            `/notifications/employee/${username}`
-          );
-
+       const response =
+  await API.get(
+    `/notifications/receiver/${username}`
+  );
         setNotifications(
           response.data
         );
