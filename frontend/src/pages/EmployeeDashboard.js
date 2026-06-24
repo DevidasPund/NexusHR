@@ -142,11 +142,10 @@ function EmployeeDashboard() {
 
       <div
         className="flex-grow-1"
-        style={{
-         
-          background: "#f4f7fe",
-          minHeight: "100vh"
-        }}
+       style={{
+  background: "#f4f7fe",
+  minHeight: "100vh"
+}}
       >
 
         <Navbar />
