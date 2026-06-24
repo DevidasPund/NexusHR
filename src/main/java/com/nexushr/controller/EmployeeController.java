@@ -22,6 +22,8 @@ public class EmployeeController {
     public Employee save(
             @RequestBody Employee employee) {
 
+        System.out.println(employee);
+
         return employeeService.save(employee);
     }
 
