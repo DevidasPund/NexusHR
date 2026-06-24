@@ -26,15 +26,7 @@ public class EmployeeController {
 
         return employeeService.save(employee);
     }
-    @PostMapping
-    public Object save(
-            @RequestBody java.util.Map<String,Object> data) {
-
-        System.out.println("DATA = " + data);
-
-        return data;
-    }
-
+   
 
     @GetMapping
     public List<Employee> getAll() {
