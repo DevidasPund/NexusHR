@@ -1,57 +1,48 @@
-import React, {
-  useEffect,
-  useState
-} from "react";
 
+import React, { useEffect, useState } from "react";
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function Attendance() {
 
-  const [attendance, setAttendance] =
-    useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  const [employeeId, setEmployeeId] =
-    useState(null);
-
-  const [search, setSearch] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(true);
+  const employeeId =
+    localStorage.getItem("employeeId");
 
   useEffect(() => {
+
     loadAttendance();
+
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+
   }, []);
 
   const loadAttendance = async () => {
 
     try {
 
-      const username =
-        localStorage.getItem(
-          "username"
-        );
+      if (!employeeId) {
 
-      const employeeResponse =
-        await API.get(
-          `/employees/username/${username}`
-        );
+        console.log("Employee ID Missing");
+        return;
 
-      const employee =
-        employeeResponse.data;
-
-      setEmployeeId(employee.id);
+      }
 
       const response =
         await API.get(
-          `/attendance/employee/${employee.id}`
+          `/attendance/employee/${employeeId}`
         );
 
-      setAttendance(
-        response.data
-      );
+      setAttendance(response.data || []);
 
     } catch (error) {
 
@@ -73,9 +64,7 @@ function Attendance() {
         `/attendance/checkin/${employeeId}`
       );
 
-      alert(
-        "✅ Check In Successful"
-      );
+      alert("✅ Check In Successful");
 
       loadAttendance();
 
@@ -84,6 +73,7 @@ function Attendance() {
       console.error(error);
 
       alert(
+        error.response?.data ||
         "Already Checked In"
       );
 
@@ -99,9 +89,7 @@ function Attendance() {
         `/attendance/checkout/${employeeId}`
       );
 
-      alert(
-        "✅ Check Out Successful"
-      );
+      alert("✅ Check Out Successful");
 
       loadAttendance();
 
@@ -110,12 +98,54 @@ function Attendance() {
       console.error(error);
 
       alert(
+        error.response?.data ||
         "Check In First"
       );
 
     }
 
   };
+
+  const presentCount =
+    attendance.filter(
+      a =>
+        a.attendanceStatus ===
+        "PRESENT"
+    ).length;
+
+  const absentCount =
+    attendance.filter(
+      a =>
+        a.attendanceStatus ===
+        "ABSENT"
+    ).length;
+
+  const leaveCount =
+    attendance.filter(
+      a =>
+        a.attendanceStatus ===
+        "LEAVE"
+    ).length;
+
+  const attendancePercentage =
+    attendance.length > 0
+      ? (
+          presentCount /
+          attendance.length
+        ) * 100
+      : 0;
+
+  const today =
+    new Date()
+      .toISOString()
+      .split("T")[0];
+
+  const todayAttendance =
+    attendance.find(
+      a =>
+        a.attendanceDate ===
+        today
+    );
 
   const filteredAttendance =
     attendance.filter(item =>
@@ -126,28 +156,11 @@ function Attendance() {
         )
     );
 
-  const presentCount =
-    attendance.filter(
-      a => a.status === "PRESENT"
-    ).length;
-
-  const attendancePercentage =
-    attendance.length > 0
-      ?
-      (
-        presentCount /
-        attendance.length
-      ) * 100
-      :
-      0;
-
   if (loading) {
 
     return (
       <div className="text-center mt-5">
-        <h3>
-          Loading...
-        </h3>
+        <h3>Loading...</h3>
       </div>
     );
 
@@ -162,7 +175,6 @@ function Attendance() {
       <div
         className="flex-grow-1"
         style={{
-          marginLeft: "280px",
           background: "#f4f7fe",
           minHeight: "100vh"
         }}
@@ -172,7 +184,7 @@ function Attendance() {
 
         <div className="container-fluid p-4">
 
-          {/* Header */}
+          {/* Hero */}
 
           <div
             className="card border-0 shadow-lg mb-4"
@@ -186,12 +198,20 @@ function Attendance() {
             <div className="card-body text-white">
 
               <h2>
-                📅 Attendance Management
+                📅 Attendance Dashboard
               </h2>
 
-              <p className="mb-0">
-                Track Daily Attendance
+              <p>
+                Real-Time Workforce Attendance
               </p>
+
+              <h5>
+                {currentTime.toLocaleDateString()}
+              </h5>
+
+              <h4>
+                {currentTime.toLocaleTimeString()}
+              </h4>
 
             </div>
 
@@ -201,91 +221,126 @@ function Attendance() {
 
           <div className="row g-4 mb-4">
 
-            <div className="col-md-4">
-
+            <div className="col-md-3">
               <div className="card shadow border-0">
-
                 <div className="card-body text-center">
-
-                  <h6>
-                    Total Records
-                  </h6>
-
+                  <h6>Total Records</h6>
                   <h2 className="text-primary">
                     {attendance.length}
                   </h2>
-
                 </div>
-
               </div>
-
             </div>
 
-            <div className="col-md-4">
-
+            <div className="col-md-3">
               <div className="card shadow border-0">
-
                 <div className="card-body text-center">
-
-                  <h6>
-                    Present Days
-                  </h6>
-
+                  <h6>Present Days</h6>
                   <h2 className="text-success">
                     {presentCount}
                   </h2>
-
                 </div>
-
               </div>
-
             </div>
 
-            <div className="col-md-4">
-
+            <div className="col-md-3">
               <div className="card shadow border-0">
-
                 <div className="card-body text-center">
+                  <h6>Absent Days</h6>
+                  <h2 className="text-danger">
+                    {absentCount}
+                  </h2>
+                </div>
+              </div>
+            </div>
 
-                  <h6>
-                    Attendance %
-                  </h6>
-
+            <div className="col-md-3">
+              <div className="card shadow border-0">
+                <div className="card-body text-center">
+                  <h6>Attendance %</h6>
                   <h2 className="text-warning">
                     {attendancePercentage.toFixed(1)}%
                   </h2>
-
                 </div>
-
               </div>
-
             </div>
 
           </div>
 
-          {/* Check In / Out */}
+          {/* Today Status */}
 
           <div className="card shadow border-0 mb-4">
 
-            <div className="card-body text-center">
+            <div className="card-body">
 
-              <h4 className="mb-4">
+              <h4>
                 Today's Attendance
               </h4>
 
-              <button
-                className="btn btn-success btn-lg me-3"
-                onClick={checkIn}
-              >
-                ✅ Check In
-              </button>
+              <div className="row">
 
-              <button
-                className="btn btn-danger btn-lg"
-                onClick={checkOut}
-              >
-                🚪 Check Out
-              </button>
+                <div className="col-md-6">
+
+                  <h6>
+                    Status :
+                    <span
+                      className={
+                        todayAttendance?.attendanceStatus === "PRESENT"
+                          ? "badge bg-success ms-2"
+                          : todayAttendance?.attendanceStatus === "LEAVE"
+                          ? "badge bg-warning ms-2"
+                          : "badge bg-danger ms-2"
+                      }
+                    >
+                      {
+                        todayAttendance?.attendanceStatus ||
+                        "ABSENT"
+                      }
+                    </span>
+                  </h6>
+
+                  <p>
+                    Check In :
+                    {" "}
+                    {
+                      todayAttendance?.checkInTime ||
+                      "--"
+                    }
+                  </p>
+
+                  <p>
+                    Check Out :
+                    {" "}
+                    {
+                      todayAttendance?.checkOutTime ||
+                      "--"
+                    }
+                  </p>
+
+                </div>
+
+                <div className="col-md-6 text-end">
+
+                  <button
+                    className="btn btn-success me-2"
+                    onClick={checkIn}
+                    disabled={
+                      todayAttendance?.checkInTime
+                    }
+                  >
+                    ✅ Check In
+                  </button>
+
+                  <button
+                    className="btn btn-danger"
+                    onClick={checkOut}
+                  >
+                    🚪 Check Out
+                  </button>
+
+                </div>
+
+              </div>
 
             </div>
 
@@ -300,7 +355,7 @@ function Attendance() {
               <input
                 type="text"
                 className="form-control"
-                placeholder="Search by Date"
+                placeholder="Search Attendance Date"
                 value={search}
                 onChange={(e) =>
                   setSearch(
@@ -313,7 +368,7 @@ function Attendance() {
 
           </div>
 
-          {/* Attendance Table */}
+          {/* History */}
 
           <div className="card shadow border-0">
 
@@ -332,9 +387,12 @@ function Attendance() {
                     <tr>
 
                       <th>ID</th>
+                      <th>Employee</th>
+                      <th>Department</th>
                       <th>Date</th>
                       <th>Check In</th>
                       <th>Check Out</th>
+                      <th>Hours</th>
                       <th>Status</th>
 
                     </tr>
@@ -343,17 +401,20 @@ function Attendance() {
 
                   <tbody>
 
-                    {
-                      filteredAttendance.length > 0
-                        ?
-
-                        filteredAttendance.map(
-                          att => (
+                    {filteredAttendance.length > 0
+                      ? filteredAttendance.map(
+                          (att) => (
 
                             <tr key={att.id}>
 
+                              <td>{att.id}</td>
+
                               <td>
-                                {att.id}
+                                {att.employeeName}
+                              </td>
+
+                              <td>
+                                {att.department}
                               </td>
 
                               <td>
@@ -369,20 +430,25 @@ function Attendance() {
                               </td>
 
                               <td>
+                                {
+                                  att.workingHours
+                                    ? att.workingHours.toFixed(2)
+                                    : "0.00"
+                                } hrs
+                              </td>
+
+                              <td>
 
                                 <span
                                   className={
-                                    att.status ===
-                                    "PRESENT"
-                                      ?
-                                      "badge bg-success"
-                                      :
-                                      "badge bg-danger"
+                                    att.attendanceStatus === "PRESENT"
+                                      ? "badge bg-success"
+                                      : att.attendanceStatus === "LEAVE"
+                                      ? "badge bg-warning"
+                                      : "badge bg-danger"
                                   }
                                 >
-
-                                  {att.status}
-
+                                  {att.attendanceStatus}
                                 </span>
 
                               </td>
@@ -391,13 +457,12 @@ function Attendance() {
 
                           )
                         )
-
-                        :
+                      : (
 
                         <tr>
 
                           <td
-                            colSpan="5"
+                            colSpan="8"
                             className="text-center"
                           >
                             No Attendance Found
@@ -405,7 +470,7 @@ function Attendance() {
 
                         </tr>
 
-                    }
+                      )}
 
                   </tbody>
 
@@ -428,3 +493,4 @@ function Attendance() {
 }
 
 export default Attendance;
+
