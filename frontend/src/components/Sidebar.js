@@ -218,7 +218,84 @@ function Sidebar() {
         >
           Logout
         </button>
+{role === "MANAGER" && (
+  <>
+    <div className="text-info mt-3 mb-2 fw-bold">
+      TEAM MANAGEMENT
+    </div>
 
+    <Link to="/teams" style={menuStyle}>
+      👥 Team Members
+    </Link>
+
+    <Link to="/tasks" style={menuStyle}>
+      ✅ Team Tasks
+    </Link>
+
+    <Link to="/leave-management" style={menuStyle}>
+      🌴 Leave Approval
+    </Link>
+
+    <div className="text-success mt-4 mb-2 fw-bold">
+      PROJECTS
+    </div>
+
+    <Link to="/projects" style={menuStyle}>
+      📁 Projects
+    </Link>
+
+    <Link to="/milestones" style={menuStyle}>
+      📌 Milestones
+    </Link>
+
+    <div className="text-warning mt-4 mb-2 fw-bold">
+      PERFORMANCE
+    </div>
+
+    <Link to="/performance" style={menuStyle}>
+      ⭐ Performance
+    </Link>
+
+    <Link to="/reports" style={menuStyle}>
+      📊 Reports
+    </Link>
+
+    <Link to="/notification-management" style={menuStyle}>
+      🔔 Notifications
+    </Link>
+  </>
+)}
+{role === "EMPLOYEE" && (
+  <>
+    <div className="text-info mt-3 mb-2 fw-bold">
+      MY WORKSPACE
+    </div>
+
+    <Link to="/employee-attendance" style={menuStyle}>
+      ⏰ My Attendance
+    </Link>
+
+    <Link to="/my-tasks" style={menuStyle}>
+      ✅ My Tasks
+    </Link>
+
+    <Link to="/leave" style={menuStyle}>
+      🌴 My Leave
+    </Link>
+
+    <Link to="/salary" style={menuStyle}>
+      💰 Salary
+    </Link>
+
+    <Link to="/employee-notification" style={menuStyle}>
+      🔔 Notifications
+    </Link>
+
+    <Link to="/employee-profile" style={menuStyle}>
+      👤 My Profile
+    </Link>
+  </>
+)}
         <div
           className="mt-3 p-3 text-center"
           style={{

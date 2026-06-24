@@ -409,48 +409,44 @@ function Employees() {
                                   employee.salary
                                 }
                               </td>
+<td>
 
-                              <td>
+  <span
+    className={
+      employee.status === "ACTIVE"
+        ? "badge bg-success"
+        : "badge bg-danger"
+    }
+  >
+    {employee.status}
+  </span>
 
-                                <span
-                                  className={
-                                    employee.status === "ACTIVE"
-                                    ?
-                                    "badge bg-success"
-                                    :
-                                    "badge bg-danger"
-                                  }
-                                >
+</td>
 
-                                  {
-                                    employee.status
-                                  }
+<td>
 
-                                </span>
+  <i
+    className="bi bi-pencil-square text-primary me-3"
+    style={{
+      cursor: "pointer",
+      fontSize: "18px"
+    }}
+    title="Edit"
+  />
 
-                              </td>
+  <i
+    className="bi bi-trash-fill text-danger"
+    style={{
+      cursor: "pointer",
+      fontSize: "18px"
+    }}
+    title="Delete"
+    onClick={() =>
+      deleteEmployee(employee.id)
+    }
+  />
 
-                              <td>
-
-                                <Link
-                                  to={`/edit-employee/${employee.id}`}
-                                  className="btn btn-warning btn-sm me-2"
-                                >
-                                  Edit
-                                </Link>
-
-                                <button
-                                  className="btn btn-danger btn-sm"
-                                  onClick={() =>
-                                    deleteEmployee(
-                                      employee.id
-                                    )
-                                  }
-                                >
-                                  Delete
-                                </button>
-
-                              </td>
+</td>
 
                             </tr>
 
