@@ -1,164 +1,154 @@
-import React, {
-  useEffect,
-  useState
-} from "react";
 
+import React, { useEffect, useState } from "react";
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function EmployeeAttendance() {
 
-  const [attendance, setAttendance] =
-    useState([]);
-
-  const [employee, setEmployee] =
-    useState({});
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [currentTime, setCurrentTime] =
-    useState(new Date());
+  const [attendance, setAttendance] = useState([]);
+  const [employee, setEmployee] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
 
     loadEmployee();
 
-    const clock =
-      setInterval(() => {
+    const clock = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
 
-        setCurrentTime(
-          new Date()
-        );
-
-      }, 1000);
-
-    const refresh =
-      setInterval(() => {
-
-        loadEmployee();
-
-      }, 10000);
-
-    return () => {
-
-      clearInterval(clock);
-      clearInterval(refresh);
-
-    };
+    return () => clearInterval(clock);
 
   }, []);
 
-  const loadEmployee =
-    async () => {
+  const loadEmployee = async () => {
 
-      try {
-const employeeId =
-localStorage.getItem("employeeId");
+    try {
 
-const response =
-await API.get(
- `/attendance/employee/${employeeId}`
-);
+      const employeeId =
+        localStorage.getItem("employeeId");
 
-        setEmployee(
-          response.data
-        );
+      if (
+        !employeeId ||
+        employeeId === "undefined"
+      ) {
 
-        await loadAttendance(
-          response.data.id
-        );
-
-      } catch (error) {
-
-        console.error(error);
-
-      } finally {
-
-        setLoading(false);
+        alert("Please Login Again");
+        return;
 
       }
 
-    };
-
-  const loadAttendance =
-    async (employeeId) => {
-
-      try {
-
-        const response =
-          await API.get(
-            `/attendance/employee/${employeeId}`
-          );
-
-        setAttendance(
-          response.data
+      const employeeResponse =
+        await API.get(
+          `/employees/${employeeId}`
         );
 
-      } catch (error) {
+      setEmployee(
+        employeeResponse.data
+      );
 
-        console.error(error);
+      await loadAttendance(
+        employeeId
+      );
 
-      }
+    } catch (error) {
 
-    };
+      console.error(error);
 
-  const checkIn =
-    async () => {
+    } finally {
 
-      try {
+      setLoading(false);
 
-        await API.post(
-          `/attendance/checkin/${employee.id}`
+    }
+
+  };
+
+  const loadAttendance = async (
+    employeeId
+  ) => {
+
+    try {
+
+      const response =
+        await API.get(
+          `/attendance/employee/${employeeId}`
         );
 
-        alert(
-          "✅ Checked In Successfully"
-        );
+      setAttendance(
+        response.data || []
+      );
 
-        loadAttendance(
-          employee.id
-        );
+    } catch (error) {
 
-      } catch (error) {
+      console.error(error);
 
-        alert(
-          error.response?.data ||
-          "Already Checked In Today"
-        );
+    }
 
-      }
+  };
 
-    };
+  const checkIn = async () => {
 
-  const checkOut =
-    async () => {
+    try {
 
-      try {
+      const employeeId =
+        localStorage.getItem("employeeId");
 
-        await API.post(
-          `/attendance/checkout/${employee.id}`
-        );
+      await API.post(
+        `/attendance/checkin/${employeeId}`
+      );
 
-        alert(
-          "✅ Checked Out Successfully"
-        );
+      alert(
+        "✅ Check In Successful"
+      );
 
-        loadAttendance(
-          employee.id
-        );
+      loadAttendance(
+        employeeId
+      );
 
-      } catch (error) {
+    } catch (error) {
 
-        alert(
-          error.response?.data ||
-          "Check In First"
-        );
+      console.error(error);
 
-      }
+      alert(
+        "Already Checked In"
+      );
 
-    };
+    }
+
+  };
+
+  const checkOut = async () => {
+
+    try {
+
+      const employeeId =
+        localStorage.getItem("employeeId");
+
+      await API.post(
+        `/attendance/checkout/${employeeId}`
+      );
+
+      alert(
+        "✅ Check Out Successful"
+      );
+
+      loadAttendance(
+        employeeId
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Check In First"
+      );
+
+    }
+
+  };
 
   const today =
     new Date()
@@ -167,45 +157,39 @@ await API.get(
 
   const todayAttendance =
     attendance.find(
-      a =>
-        a.attendanceDate ===
+      item =>
+        item.attendanceDate ===
         today
     );
 
   const presentDays =
     attendance.filter(
-      a =>
-        a.status ===
+      item =>
+        item.attendanceStatus ===
         "PRESENT"
+    ).length;
+
+  const absentDays =
+    attendance.filter(
+      item =>
+        item.attendanceStatus ===
+        "ABSENT"
     ).length;
 
   const attendancePercentage =
     attendance.length > 0
-      ?
-      (
-        presentDays /
-        attendance.length
-      ) * 100
-      :
-      0;
+      ? (
+          presentDays /
+          attendance.length
+        ) * 100
+      : 0;
 
   if (loading) {
 
     return (
-
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{
-          height: "100vh"
-        }}
-      >
-
-        <h3>
-          Loading Attendance...
-        </h3>
-
+      <div className="text-center mt-5">
+        <h3>Loading...</h3>
       </div>
-
     );
 
   }
@@ -219,7 +203,6 @@ await API.get(
       <div
         className="flex-grow-1"
         style={{
-          marginLeft: "280px",
           background: "#f4f7fe",
           minHeight: "100vh"
         }}
@@ -228,8 +211,6 @@ await API.get(
         <Navbar />
 
         <div className="container-fluid p-4">
-
-          {/* Header */}
 
           <div
             className="card border-0 shadow-lg mb-4"
@@ -243,46 +224,36 @@ await API.get(
             <div className="card-body text-white">
 
               <h2>
-                🕒 Employee Attendance
+                Employee Attendance
               </h2>
 
-              <p className="mb-0">
-                Real-Time Attendance Tracking
+              <p>
+                Real Time Attendance Tracking
               </p>
 
             </div>
 
           </div>
 
-          {/* Live Clock */}
-
           <div className="card shadow border-0 mb-4">
 
             <div className="card-body text-center">
 
-              <h1 className="fw-bold text-primary">
-
+              <h1 className="text-primary">
                 {
-                  currentTime
-                    .toLocaleTimeString()
+                  currentTime.toLocaleTimeString()
                 }
-
               </h1>
 
               <h5>
-
                 {
-                  currentTime
-                    .toDateString()
+                  currentTime.toDateString()
                 }
-
               </h5>
 
             </div>
 
           </div>
-
-          {/* Summary Cards */}
 
           <div className="row g-4 mb-4">
 
@@ -297,9 +268,27 @@ await API.get(
                   </h6>
 
                   <h2 className="text-success">
-
                     {presentDays}
+                  </h2>
 
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-3">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Absent Days
+                  </h6>
+
+                  <h2 className="text-danger">
+                    {absentDays}
                   </h2>
 
                 </div>
@@ -319,12 +308,9 @@ await API.get(
                   </h6>
 
                   <h2 className="text-warning">
-
                     {
-                      attendancePercentage
-                        .toFixed(1)
+                      attendancePercentage.toFixed(1)
                     }%
-
                   </h2>
 
                 </div>
@@ -344,35 +330,7 @@ await API.get(
                   </h6>
 
                   <h5>
-
-                    {
-                      employee.firstName
-                    }
-
-                  </h5>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="col-md-3">
-
-              <div className="card shadow border-0">
-
-                <div className="card-body text-center">
-
-                  <h6>
-                    Department
-                  </h6>
-
-                  <h5>
-
-                    {
-                      employee.department
-                    }
-
+                    {employee.firstName}
                   </h5>
 
                 </div>
@@ -383,13 +341,11 @@ await API.get(
 
           </div>
 
-          {/* Today Status */}
-
           <div className="card shadow border-0 mb-4">
 
             <div className="card-body">
 
-              <div className="row align-items-center">
+              <div className="row">
 
                 <div className="col-md-6">
 
@@ -400,19 +356,15 @@ await API.get(
                   <span
                     className={
                       todayAttendance
-                        ?
-                        "badge bg-success fs-6"
-                        :
-                        "badge bg-danger fs-6"
+                        ? "badge bg-success"
+                        : "badge bg-danger"
                     }
                   >
 
                     {
                       todayAttendance
-                        ?
-                        "PRESENT"
-                        :
-                        "ABSENT"
+                        ? "PRESENT"
+                        : "ABSENT"
                     }
 
                   </span>
@@ -422,28 +374,20 @@ await API.get(
                 <div className="col-md-6 text-end">
 
                   <button
-                    className="btn btn-success me-3"
-                    onClick={
-                      checkIn
-                    }
+                    className="btn btn-success me-2"
+                    onClick={checkIn}
                     disabled={
                       todayAttendance
                     }
                   >
-                    ✅ Check In
+                    Check In
                   </button>
 
                   <button
                     className="btn btn-danger"
-                    onClick={
-                      checkOut
-                    }
-                    disabled={
-                      !todayAttendance ||
-                      todayAttendance.checkOutTime
-                    }
+                    onClick={checkOut}
                   >
-                    🚪 Check Out
+                    Check Out
                   </button>
 
                 </div>
@@ -454,13 +398,11 @@ await API.get(
 
           </div>
 
-          {/* Attendance History */}
-
           <div className="card shadow border-0">
 
             <div className="card-body">
 
-              <h4 className="mb-4">
+              <h4>
                 Attendance History
               </h4>
 
@@ -476,6 +418,7 @@ await API.get(
                       <th>Date</th>
                       <th>Check In</th>
                       <th>Check Out</th>
+                      <th>Hours</th>
                       <th>Status</th>
 
                     </tr>
@@ -490,28 +433,41 @@ await API.get(
                         ?
 
                         attendance.map(
-                          (a) => (
+                          item => (
 
                             <tr
-                              key={a.id}
+                              key={item.id}
                             >
 
                               <td>
-                                {a.id}
-                              </td>
-
-                              <td>
-                                {a.attendanceDate}
-                              </td>
-
-                              <td>
-                                {a.checkInTime}
+                                {item.id}
                               </td>
 
                               <td>
                                 {
-                                  a.checkOutTime ||
+                                  item.attendanceDate
+                                }
+                              </td>
+
+                              <td>
+                                {
+                                  item.checkInTime ||
                                   "-"
+                                }
+                              </td>
+
+                              <td>
+                                {
+                                  item.checkOutTime ||
+                                  "-"
+                                }
+                              </td>
+
+                              <td>
+                                {
+                                  item.workingHours
+                                    ? item.workingHours.toFixed(2)
+                                    : "0.00"
                                 }
                               </td>
 
@@ -519,16 +475,16 @@ await API.get(
 
                                 <span
                                   className={
-                                    a.status === "PRESENT"
+                                    item.attendanceStatus === "PRESENT"
                                       ? "badge bg-success"
-                                      : a.status === "LATE"
-                                      ? "badge bg-warning text-dark"
+                                      : item.attendanceStatus === "LEAVE"
+                                      ? "badge bg-warning"
                                       : "badge bg-danger"
                                   }
                                 >
-
-                                  {a.status}
-
+                                  {
+                                    item.attendanceStatus
+                                  }
                                 </span>
 
                               </td>
@@ -543,12 +499,10 @@ await API.get(
                         <tr>
 
                           <td
-                            colSpan="5"
+                            colSpan="6"
                             className="text-center"
                           >
-
                             No Attendance Found
-
                           </td>
 
                         </tr>
@@ -576,3 +530,4 @@ await API.get(
 }
 
 export default EmployeeAttendance;
+
