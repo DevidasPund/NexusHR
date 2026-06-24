@@ -62,7 +62,8 @@ function EmployeeAttendance() {
       setLoading(false);
 
     }
-
+console.log(localStorage.getItem("employeeId"));
+console.log(localStorage.getItem("username"));
   };
 
   const loadAttendance = async (
