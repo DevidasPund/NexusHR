@@ -54,16 +54,13 @@ function EmployeeAttendance() {
     async () => {
 
       try {
+const employeeId =
+localStorage.getItem("employeeId");
 
-        const username =
-          localStorage.getItem(
-            "username"
-          );
-
-        const response =
-          await API.get(
-            `/employees/username/${username}`
-          );
+const response =
+await API.get(
+ `/attendance/employee/${employeeId}`
+);
 
         setEmployee(
           response.data
