@@ -136,7 +136,7 @@ function App() {
         />
 
         <Route
-          path="/employee-dashboard"
+          path="/employee/dashboard"
           element={
             <ProtectedRoute>
               <EmployeeDashboard />
