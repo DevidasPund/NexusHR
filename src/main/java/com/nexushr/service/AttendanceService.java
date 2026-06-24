@@ -68,40 +68,50 @@ public class AttendanceService {
 
     public Attendance checkIn(Long employeeId) {
 
-        Employee employee =
-                employeeRepository.findById(employeeId)
-                        .orElseThrow(() ->
-                                new RuntimeException("Employee Not Found"));
+        try {
 
-        List<Attendance> todayAttendance =
-                attendanceRepository.findByEmployeeId(employeeId)
-                        .stream()
-                        .filter(a ->
-                                LocalDate.now().equals(
-                                        a.getAttendanceDate()))
-                        .toList();
+            System.out.println("CHECK IN EMPLOYEE ID = " + employeeId);
 
-        if (!todayAttendance.isEmpty()) {
-            throw new RuntimeException(
-                    "Already checked in today");
+            Employee employee =
+                    employeeRepository.findById(employeeId)
+                            .orElseThrow(() ->
+                                    new RuntimeException(
+                                            "Employee Not Found"));
+
+            Attendance attendance = new Attendance();
+
+            attendance.setEmployeeId(employee.getId());
+
+            attendance.setEmployeeName(
+                    employee.getFirstName() + " " +
+                    employee.getLastName());
+
+            attendance.setDepartment(
+                    employee.getDepartment());
+
+            attendance.setAttendanceDate(
+                    LocalDate.now());
+
+            attendance.setCheckInTime(
+                    LocalDateTime.now());
+
+            attendance.setAttendanceStatus(
+                    "PRESENT");
+
+            Attendance saved =
+                    attendanceRepository.save(attendance);
+
+            System.out.println("ATTENDANCE SAVED ID = " +
+                    saved.getId());
+
+            return saved;
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw e;
         }
-
-        Attendance attendance = new Attendance();
-
-        attendance.setEmployeeId(employee.getId());
-        attendance.setEmployeeName(
-                employee.getFirstName() + " " +
-                employee.getLastName());
-        attendance.setDepartment(
-                employee.getDepartment());
-        attendance.setAttendanceDate(
-                LocalDate.now());
-        attendance.setCheckInTime(
-                LocalDateTime.now());
-        attendance.setAttendanceStatus(
-                "PRESENT");
-
-        return attendanceRepository.save(attendance);
     }
     public Attendance checkOut(Long employeeId) {
 
