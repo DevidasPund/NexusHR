@@ -103,7 +103,7 @@ function Sidebar() {
               ? "/admin/dashboard"
               : role === "MANAGER"
               ? "/manager/dashboard"
-              : "/employee/dashboard"
+              : "/employee-dashboard"
           }
           style={{
             ...menuStyle,
