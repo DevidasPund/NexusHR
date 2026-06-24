@@ -19,13 +19,19 @@ a {
 }
 
 .main-content {
-  margin-left: 300px;
-  width: calc(100% - 300px);
+  flex: 1;
   padding: 25px;
   background: #f4f7fe;
   transition: all 0.3s ease;
 }
-
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
 /* Cards */
 
 .card {
