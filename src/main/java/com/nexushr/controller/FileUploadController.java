@@ -2,6 +2,8 @@ package com.nexushr.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,18 +14,17 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileUploadController {
 
     @PostMapping
-    public String uploadFile(
+    public Map<String, Object> uploadFile(
             @RequestParam("file")
             MultipartFile file)
             throws IOException {
 
         String uploadDir =
                 System.getProperty("user.dir")
-                + File.separator
-                + "uploads";
+                        + File.separator
+                        + "uploads";
 
-        File directory =
-                new File(uploadDir);
+        File directory = new File(uploadDir);
 
         if (!directory.exists()) {
             directory.mkdirs();
@@ -31,17 +32,25 @@ public class FileUploadController {
 
         String fileName =
                 System.currentTimeMillis()
-                + "_"
-                + file.getOriginalFilename();
+                        + "_"
+                        + file.getOriginalFilename();
 
         File destination =
-                new File(
-                        uploadDir
+                new File(uploadDir
                         + File.separator
                         + fileName);
 
         file.transferTo(destination);
 
-        return fileName;
+        Map<String, Object> response =
+                new HashMap<>();
+
+        response.put("success", true);
+        response.put("fileName", fileName);
+        response.put(
+                "filePath",
+                "/uploads/" + fileName);
+
+        return response;
     }
 }

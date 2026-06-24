@@ -5,12 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.nexushr.entity.Attendance;
 import com.nexushr.entity.Performance;
-import com.nexushr.entity.Task;
-import com.nexushr.repository.AttendanceRepository;
 import com.nexushr.repository.PerformanceRepository;
-import com.nexushr.repository.TaskRepository;
 
 @Service
 public class PerformanceService {
@@ -18,82 +14,20 @@ public class PerformanceService {
     @Autowired
     private PerformanceRepository repository;
 
-    @Autowired
-    private AttendanceRepository attendanceRepository;
-
-    @Autowired
-    private TaskRepository taskRepository;
-
     public Performance save(
             Performance performance) {
 
-        Long employeeId =
-                performance.getEmployeeId();
-
-        // Attendance Score
-
-        List<Attendance> attendanceList =
-                attendanceRepository
-                .findByEmployeeId(
-                        employeeId);
-
-        long presentDays =
-                attendanceList.stream()
-                .filter(a ->
-                        "PRESENT".equalsIgnoreCase(
-                                a.getStatus()))
-                .count();
-
         double attendanceScore =
-                attendanceList.size() > 0
-                ? (presentDays * 100.0)
-                  / attendanceList.size()
-                : 0;
-
-        // Task Score
-
-        List<Task> taskList =
-                taskRepository.findAll()
-                .stream()
-                .filter(t ->
-                        employeeId.equals(
-                                t.getEmployeeId()))
-                .toList();
-
-        long completedTasks =
-                taskList.stream()
-                .filter(t ->
-                        "COMPLETED".equalsIgnoreCase(
-                                t.getStatus()))
-                .count();
+                performance.getAttendanceScore();
 
         double taskScore =
-                taskList.size() > 0
-                ? (completedTasks * 100.0)
-                  / taskList.size()
-                : 0;
-
-        // Save Auto Calculated Scores
-
-        performance.setAttendanceScore(
-                attendanceScore);
-
-        performance.setTaskScore(
-                taskScore);
-
-        // Final Score
+                performance.getTaskScore();
 
         double overallScore =
-                performance.getKpiScore() * 0.4
-                + attendanceScore * 0.3
-                + taskScore * 0.3;
+                (attendanceScore + taskScore) / 2;
 
         performance.setOverallScore(
-                Math.round(
-                        overallScore * 100.0)
-                        / 100.0);
-
-        // Rating
+                overallScore);
 
         if (overallScore >= 90) {
 
@@ -131,7 +65,7 @@ public class PerformanceService {
         return repository.findById(id)
                 .orElseThrow(() ->
                         new RuntimeException(
-                                "Performance Not Found"));
+                                "Performance Record Not Found"));
     }
 
     public void delete(

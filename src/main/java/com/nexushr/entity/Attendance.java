@@ -2,14 +2,11 @@ package com.nexushr.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "attendance")
 public class Attendance {
 
     @Id
@@ -18,19 +15,22 @@ public class Attendance {
 
     private Long employeeId;
 
+    private String employeeName;
+
+    private String department;
+
     private LocalDate attendanceDate;
 
-    private LocalTime checkInTime;
+    private LocalDateTime checkInTime;
 
-    private LocalTime checkOutTime;
+    private LocalDateTime checkOutTime;
 
-    private String status;
+    private String attendanceStatus; // PRESENT, ABSENT, LEAVE
 
-    private String attendanceType;
+    private Double workingHours;
 
-    private LocalDateTime createdAt;
-
-    // Getters & Setters
+    public Attendance() {
+    }
 
     public Long getId() {
         return id;
@@ -48,6 +48,22 @@ public class Attendance {
         this.employeeId = employeeId;
     }
 
+    public String getEmployeeName() {
+        return employeeName;
+    }
+
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
     public LocalDate getAttendanceDate() {
         return attendanceDate;
     }
@@ -56,43 +72,35 @@ public class Attendance {
         this.attendanceDate = attendanceDate;
     }
 
-    public LocalTime getCheckInTime() {
+    public LocalDateTime getCheckInTime() {
         return checkInTime;
     }
 
-    public void setCheckInTime(LocalTime checkInTime) {
+    public void setCheckInTime(LocalDateTime checkInTime) {
         this.checkInTime = checkInTime;
     }
 
-    public LocalTime getCheckOutTime() {
+    public LocalDateTime getCheckOutTime() {
         return checkOutTime;
     }
 
-    public void setCheckOutTime(LocalTime checkOutTime) {
+    public void setCheckOutTime(LocalDateTime checkOutTime) {
         this.checkOutTime = checkOutTime;
     }
 
-    public String getStatus() {
-        return status;
+    public String getAttendanceStatus() {
+        return attendanceStatus;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setAttendanceStatus(String attendanceStatus) {
+        this.attendanceStatus = attendanceStatus;
     }
 
-    public String getAttendanceType() {
-        return attendanceType;
+    public Double getWorkingHours() {
+        return workingHours;
     }
 
-    public void setAttendanceType(String attendanceType) {
-        this.attendanceType = attendanceType;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setWorkingHours(Double workingHours) {
+        this.workingHours = workingHours;
     }
 }

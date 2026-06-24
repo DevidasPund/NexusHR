@@ -1,111 +1,155 @@
-import React, { useState } from "react";
+import React, {
+  useState
+} from "react";
+
+import {
+  useNavigate,
+  Link
+} from "react-router-dom";
+
 import API from "../services/ApiService";
-import { useNavigate } from "react-router-dom";
 
 function Login() {
 
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const [username, setUsername] =
+  const [username,
+    setUsername] =
     useState("");
 
-  const [password, setPassword] =
+  const [password,
+    setPassword] =
     useState("");
 
   const [showPassword,
-          setShowPassword] =
+    setShowPassword] =
     useState(false);
 
   const [loading,
-          setLoading] =
+    setLoading] =
     useState(false);
 
-  const login = async () => {
+  const [error,
+    setError] =
+    useState("");
 
-    if (!username || !password) {
+  const login =
+    async () => {
 
-      alert(
-        "Please Enter Username and Password"
-      );
-
-      return;
-    }
-
-    try {
-
-      setLoading(true);
-
- const response = await API.post(
-  "/auth/login",
-  {
-    username,
-    password
-  }
-);
-
-localStorage.setItem(
-  "employeeId",
-  response.data.id
-);
-
-localStorage.setItem(
-  "username",
-  response.data.username
-);
-
-localStorage.setItem(
-  "role",
-  response.data.role
-);
-
-localStorage.setItem(
-  "employeeName",
-  response.data.employeeName
-);
-
-console.log(
-  "Saved Employee ID:",
-  response.data.id
-);
-
-      alert("Login Successful");
+      setError("");
 
       if (
-        response.data.role === "ADMIN"
+        !username.trim() ||
+        !password.trim()
       ) {
 
-        navigate(
-          "/admin/dashboard"
+        setError(
+          "Please enter username and password"
         );
 
-      } else if (
-        response.data.role === "MANAGER"
-      ) {
+        return;
 
-        navigate(
-          "/manager/dashboard"
-        );
-
-      } else {
-
-        navigate(
-          "/employee-dashboard"
-        );
       }
 
-    } catch (error) {
+      try {
 
-      console.error(error);
+        setLoading(true);
 
-      alert(
-        "Invalid Username or Password"
-      );
+        const response =
+          await API.post(
+            "/auth/login",
+            {
+              username,
+              password
+            }
+          );
 
-    } finally {
+        localStorage.setItem(
+          "employeeId",
+          response.data.id
+        );
 
-      setLoading(false);
-    }
-  };
+        localStorage.setItem(
+          "username",
+          response.data.username
+        );
+
+        localStorage.setItem(
+          "role",
+          response.data.role
+        );
+
+        localStorage.setItem(
+          "employeeName",
+          response.data.employeeName
+        );
+
+        if (
+          response.data.token
+        ) {
+
+          localStorage.setItem(
+            "token",
+            response.data.token
+          );
+
+        }
+
+        if (
+          response.data.role ===
+          "ADMIN"
+        ) {
+
+          navigate(
+            "/admin/dashboard"
+          );
+
+        } else if (
+          response.data.role ===
+          "MANAGER"
+        ) {
+
+          navigate(
+            "/manager/dashboard"
+          );
+
+        } else {
+
+          navigate(
+            "/employee/dashboard"
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(error);
+
+        setError(
+          "Invalid Username or Password"
+        );
+
+      } finally {
+
+        setLoading(false);
+
+      }
+
+    };
+
+  const handleKeyPress =
+    (e) => {
+
+      if (
+        e.key === "Enter"
+      ) {
+
+        login();
+
+      }
+
+    };
 
   return (
 
@@ -120,7 +164,7 @@ console.log(
 
       <div className="row min-vh-100">
 
-        {/* Left Side */}
+        {/* Left Section */}
 
         <div
           className="col-lg-6 d-none d-lg-flex align-items-center justify-content-center"
@@ -129,19 +173,19 @@ console.log(
           <div className="text-white p-5">
 
             <h1
-              className="display-3 fw-bold"
+              className="display-2 fw-bold"
             >
               NexusHR
             </h1>
 
             <h4 className="mb-4">
 
-              Smart Workforce
+              Enterprise Workforce
               Management Platform
 
             </h4>
 
-            <div className="mt-4">
+            <div className="mt-5">
 
               <h5>
                 ✅ Employee Management
@@ -152,19 +196,19 @@ console.log(
               </h5>
 
               <h5>
+                ✅ Leave Management
+              </h5>
+
+              <h5>
                 ✅ Payroll Management
               </h5>
 
               <h5>
-                ✅ Performance Reviews
+                ✅ Project Tracking
               </h5>
 
               <h5>
                 ✅ AI Workforce Insights
-              </h5>
-
-              <h5>
-                ✅ Recruitment System
               </h5>
 
             </div>
@@ -173,10 +217,10 @@ console.log(
 
         </div>
 
-        {/* Login Card */}
+        {/* Login Section */}
 
         <div
-          className="col-lg-6 d-flex align-items-center justify-content-center"
+          className="col-lg-6 d-flex justify-content-center align-items-center"
         >
 
           <div
@@ -195,31 +239,44 @@ console.log(
 
               <div className="text-center mb-4">
 
-                <h2
-                  className="fw-bold text-white"
-                >
+                <h2 className="fw-bold text-white">
+
                   Welcome Back
+
                 </h2>
 
                 <p className="text-light">
 
-                  Login to NexusHR
+                  Login To NexusHR
 
                 </p>
 
               </div>
 
+              {
+
+                error &&
+
+                <div className="alert alert-danger">
+
+                  {error}
+
+                </div>
+
+              }
+
               {/* Username */}
 
               <div className="mb-3">
 
-                <label className="text-white">
+                <label className="text-white mb-2">
 
                   Username
 
                 </label>
 
                 <input
+                  autoFocus
                   type="text"
                   className="form-control"
                   placeholder="Enter Username"
@@ -229,8 +286,12 @@ console.log(
                       e.target.value
                     )
                   }
+                  onKeyDown={
+                    handleKeyPress
+                  }
                   style={{
-                    borderRadius: "15px"
+                    borderRadius: "15px",
+                    height: "50px"
                   }}
                 />
 
@@ -240,15 +301,13 @@ console.log(
 
               <div className="mb-3">
 
-                <label className="text-white">
+                <label className="text-white mb-2">
 
                   Password
 
                 </label>
 
-                <div
-                  className="input-group"
-                >
+                <div className="input-group">
 
                   <input
                     type={
@@ -264,9 +323,13 @@ console.log(
                         e.target.value
                       )
                     }
+                    onKeyDown={
+                      handleKeyPress
+                    }
                     style={{
                       borderRadius:
-                        "15px 0 0 15px"
+                        "15px 0 0 15px",
+                      height: "50px"
                     }}
                   />
 
@@ -282,7 +345,7 @@ console.log(
                     {
                       showPassword
                         ? "🙈"
-                        : "👁"
+                        : "👁️"
                     }
 
                   </button>
@@ -291,34 +354,18 @@ console.log(
 
               </div>
 
-              <div
-                className="d-flex justify-content-between mb-4"
-              >
+              {/* Forgot Password */}
 
-                <div>
+              <div className="text-end mb-4">
 
-                  <input
-                    type="checkbox"
-                  />
-
-                  <span
-                    className="text-white ms-2"
-                  >
-
-                    Remember Me
-
-                  </span>
-
-                </div>
-
-                <a
-                  href="/forgot-password"
-                  className="text-white"
+                <Link
+                  to="/forgot-password"
+                  className="text-white text-decoration-none"
                 >
 
                   Forgot Password?
 
-                </a>
+                </Link>
 
               </div>
 
@@ -330,46 +377,50 @@ console.log(
                   background:
                     "linear-gradient(135deg,#2563eb,#7c3aed)",
                   borderRadius: "15px",
-                  height: "50px",
-                  fontWeight: "bold"
+                  height: "55px",
+                  fontWeight: "600",
+                  fontSize: "18px"
                 }}
                 onClick={login}
                 disabled={loading}
               >
 
                 {
+
                   loading
-                  ?
-                  "Logging In..."
-                  :
-                  "Login"
+
+                    ?
+
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                      />
+                      Logging In...
+                    </>
+
+                    :
+
+                    "🚀 Login"
+
                 }
 
               </button>
 
-              <div
-                className="text-center mt-4"
-              >
+              <div className="text-center mt-4">
 
-                <small
-                  className="text-light"
-                >
+                <small className="text-light">
 
-                  🔒 Secure HRMS Portal
+                  🔒 Secure Enterprise HRMS
 
                 </small>
 
               </div>
 
-              <div
-                className="text-center mt-2"
-              >
+              <div className="text-center mt-2">
 
-                <small
-                  className="text-light"
-                >
+                <small className="text-light">
 
-                  © 2026 NexusHR Enterprise
+                  © 2026 NexusHR
 
                 </small>
 
@@ -384,7 +435,9 @@ console.log(
       </div>
 
     </div>
+
   );
+
 }
 
 export default Login;

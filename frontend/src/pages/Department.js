@@ -1,106 +1,204 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState
+} from "react";
+
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function Department() {
 
-  const [departments, setDepartments] = useState([]);
-  const [departmentName, setDepartmentName] = useState("");
-  const [description, setDescription] = useState("");
-  const [search, setSearch] = useState("");
+  const [departments, setDepartments] =
+    useState([]);
+
+  const [departmentName, setDepartmentName] =
+    useState("");
+
+  const [description, setDescription] =
+    useState("");
+
+  const [search, setSearch] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
 
   useEffect(() => {
+
     loadDepartments();
+
+    const interval =
+      setInterval(() => {
+
+        loadDepartments();
+
+      }, 30000);
+
+    return () =>
+      clearInterval(interval);
+
   }, []);
 
-  const loadDepartments = async () => {
+  const loadDepartments =
+    async () => {
 
-    try {
+      try {
 
-      const response =
-        await API.get("/departments");
+        const response =
+          await API.get(
+            "/departments"
+          );
 
-      setDepartments(
-        response.data
-      );
+        setDepartments(
+          response.data
+        );
 
-    } catch (error) {
+      } catch (error) {
 
-      console.error(error);
+        console.error(error);
 
-    }
-  };
+      } finally {
 
-  const saveDepartment = async () => {
+        setLoading(false);
 
-    if (!departmentName.trim()) {
+      }
 
-      alert(
-        "Department Name Required"
-      );
+    };
 
-      return;
-    }
+  const saveDepartment =
+    async () => {
 
-    try {
+      if (
+        !departmentName.trim()
+      ) {
 
-      await API.post(
-        "/departments",
-        {
-          departmentName,
-          description
-        }
-      );
+        alert(
+          "Department Name Required"
+        );
 
-      setDepartmentName("");
-      setDescription("");
+        return;
 
-      loadDepartments();
+      }
 
-      alert(
-        "Department Added Successfully"
-      );
+      try {
 
-    } catch (error) {
+        setSaving(true);
 
-      console.error(error);
-    }
-  };
+        await API.post(
+          "/departments",
+          {
+            departmentName,
+            description
+          }
+        );
 
-  const deleteDepartment = async (id) => {
+        alert(
+          "Department Added Successfully"
+        );
 
-    const confirmDelete =
-      window.confirm(
-        "Delete Department?"
-      );
+        setDepartmentName("");
+        setDescription("");
 
-    if (!confirmDelete) {
-      return;
-    }
+        loadDepartments();
 
-    try {
+      } catch (error) {
 
-      await API.delete(
-        `/departments/${id}`
-      );
+        console.error(error);
 
-      loadDepartments();
+        alert(
+          "Failed To Add Department"
+        );
 
-    } catch (error) {
+      } finally {
 
-      console.error(error);
-    }
-  };
+        setSaving(false);
+
+      }
+
+    };
+
+  const deleteDepartment =
+    async (id) => {
+
+      const confirmDelete =
+        window.confirm(
+          "Delete Department?"
+        );
+
+      if (!confirmDelete) {
+
+        return;
+
+      }
+
+      try {
+
+        await API.delete(
+          `/departments/${id}`
+        );
+
+        alert(
+          "Department Deleted Successfully"
+        );
+
+        loadDepartments();
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Delete Failed"
+        );
+
+      }
+
+    };
 
   const filteredDepartments =
-    departments.filter((dept) =>
-      dept.departmentName
-        ?.toLowerCase()
-        .includes(
-          search.toLowerCase()
-        )
+    departments.filter(
+      (dept) =>
+
+        dept.departmentName
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
+
+        ||
+
+        dept.description
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
+
     );
+
+  if (loading) {
+
+    return (
+
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{
+          height: "100vh"
+        }}
+      >
+
+        <h3>
+          Loading Departments...
+        </h3>
+
+      </div>
+
+    );
+
+  }
 
   return (
 
@@ -111,6 +209,7 @@ function Department() {
       <div
         className="flex-grow-1"
         style={{
+          marginLeft: "280px",
           background: "#f4f7fe",
           minHeight: "100vh"
         }}
@@ -119,6 +218,8 @@ function Department() {
         <Navbar />
 
         <div className="container-fluid p-4">
+
+          {/* Header */}
 
           <div
             className="card border-0 shadow-lg mb-4"
@@ -131,23 +232,48 @@ function Department() {
 
             <div className="card-body text-white">
 
-              <h2>
-                Department Management 🏢
-              </h2>
+              <div className="d-flex justify-content-between align-items-center">
 
-              <p className="mb-0">
-                Manage all company departments
-              </p>
+                <div>
+
+                  <h2>
+                    🏢 Department Management
+                  </h2>
+
+                  <p className="mb-0">
+                    Manage Company Departments
+                  </p>
+
+                </div>
+
+                <button
+                  className="btn btn-light"
+                  onClick={
+                    loadDepartments
+                  }
+                >
+                  🔄 Refresh
+                </button>
+
+              </div>
 
             </div>
 
           </div>
 
-          <div className="row mb-4">
+          {/* Statistics */}
+
+          <div className="row g-4 mb-4">
 
             <div className="col-md-4">
 
-              <div className="card bg-primary text-white shadow">
+              <div
+                className="card border-0 shadow"
+                style={{
+                  height: "140px",
+                  borderRadius: "15px"
+                }}
+              >
 
                 <div className="card-body text-center">
 
@@ -155,8 +281,66 @@ function Department() {
                     Total Departments
                   </h6>
 
-                  <h2>
+                  <h2 className="text-primary">
+
                     {departments.length}
+
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-4">
+
+              <div
+                className="card border-0 shadow"
+                style={{
+                  height: "140px",
+                  borderRadius: "15px"
+                }}
+              >
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Active Departments
+                  </h6>
+
+                  <h2 className="text-success">
+
+                    {departments.length}
+
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-4">
+
+              <div
+                className="card border-0 shadow"
+                style={{
+                  height: "140px",
+                  borderRadius: "15px"
+                }}
+              >
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    System Status
+                  </h6>
+
+                  <h2>
+
+                    🟢 Online
+
                   </h2>
 
                 </div>
@@ -167,18 +351,32 @@ function Department() {
 
           </div>
 
-          <div className="card shadow border-0 mb-4">
+          {/* Add Department */}
+
+          <div
+            className="card border-0 shadow-lg mb-4"
+            style={{
+              borderRadius: "20px"
+            }}
+          >
 
             <div className="card-body">
+
+              <h4 className="mb-4">
+                ➕ Add Department
+              </h4>
 
               <div className="row">
 
                 <div className="col-md-5">
 
                   <input
+                    type="text"
                     className="form-control"
                     placeholder="Department Name"
-                    value={departmentName}
+                    value={
+                      departmentName
+                    }
                     onChange={(e) =>
                       setDepartmentName(
                         e.target.value
@@ -191,9 +389,12 @@ function Department() {
                 <div className="col-md-5">
 
                   <input
+                    type="text"
                     className="form-control"
                     placeholder="Department Description"
-                    value={description}
+                    value={
+                      description
+                    }
                     onChange={(e) =>
                       setDescription(
                         e.target.value
@@ -210,8 +411,17 @@ function Department() {
                     onClick={
                       saveDepartment
                     }
+                    disabled={
+                      saving
+                    }
                   >
-                    Add Department
+
+                    {
+                      saving
+                        ? "Saving..."
+                        : "Add"
+                    }
+
                   </button>
 
                 </div>
@@ -222,17 +432,25 @@ function Department() {
 
           </div>
 
-          <div className="card shadow border-0">
+          {/* Department List */}
+
+          <div
+            className="card border-0 shadow-lg"
+            style={{
+              borderRadius: "20px"
+            }}
+          >
 
             <div className="card-body">
 
-              <div className="d-flex justify-content-between mb-3">
+              <div className="d-flex justify-content-between align-items-center mb-4">
 
                 <h4>
-                  Department List
+                  📋 Department List
                 </h4>
 
                 <input
+                  type="text"
                   className="form-control"
                   style={{
                     width: "300px"
@@ -248,80 +466,101 @@ function Department() {
 
               </div>
 
-              <table className="table table-hover">
+              <div className="table-responsive">
 
-                <thead className="table-dark">
+                <table className="table table-hover align-middle">
 
-                  <tr>
+                  <thead className="table-dark">
 
-                    <th>ID</th>
-                    <th>Department</th>
-                    <th>Description</th>
-                    <th>Action</th>
+                    <tr>
 
-                  </tr>
+                      <th>ID</th>
+                      <th>Department</th>
+                      <th>Description</th>
+                      <th>Action</th>
 
-                </thead>
+                    </tr>
 
-                <tbody>
+                  </thead>
 
-                  {
-                    filteredDepartments.length > 0 ?
+                  <tbody>
 
-                      filteredDepartments.map(
-                        (dept) => (
+                    {
+                      filteredDepartments.length > 0
 
-                          <tr key={dept.id}>
+                        ?
 
-                            <td>
-                              {dept.id}
-                            </td>
+                        filteredDepartments.map(
+                          (dept) => (
 
-                            <td>
-                              {dept.departmentName}
-                            </td>
+                            <tr
+                              key={
+                                dept.id
+                              }
+                            >
 
-                            <td>
-                              {dept.description}
-                            </td>
+                              <td>
+                                {dept.id}
+                              </td>
 
-                            <td>
+                              <td>
 
-                              <button
-                                className="btn btn-danger btn-sm"
-                                onClick={() =>
-                                  deleteDepartment(
-                                    dept.id
-                                  )
+                                <strong>
+                                  {
+                                    dept.departmentName
+                                  }
+                                </strong>
+
+                              </td>
+
+                              <td>
+                                {
+                                  dept.description
                                 }
-                              >
-                                Delete
-                              </button>
+                              </td>
 
-                            </td>
+                              <td>
 
-                          </tr>
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() =>
+                                    deleteDepartment(
+                                      dept.id
+                                    )
+                                  }
+                                >
+                                  Delete
+                                </button>
 
+                              </td>
+
+                            </tr>
+
+                          )
                         )
-                      )
 
-                      :
+                        :
 
-                      <tr>
+                        <tr>
 
-                        <td
-                          colSpan="4"
-                          className="text-center"
-                        >
-                          No Departments Found
-                        </td>
+                          <td
+                            colSpan="4"
+                            className="text-center"
+                          >
 
-                      </tr>
-                  }
+                            No Departments Found
 
-                </tbody>
+                          </td>
 
-              </table>
+                        </tr>
+
+                    }
+
+                  </tbody>
+
+                </table>
+
+              </div>
 
             </div>
 
@@ -334,6 +573,7 @@ function Department() {
     </div>
 
   );
+
 }
 
 export default Department;

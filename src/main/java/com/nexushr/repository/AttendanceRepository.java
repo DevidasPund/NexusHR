@@ -2,56 +2,61 @@ package com.nexushr.repository;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.nexushr.entity.Attendance;
+
 @Repository
 public interface AttendanceRepository
         extends JpaRepository<Attendance, Long> {
 
+    // Employee Attendance
     List<Attendance> findByEmployeeId(Long employeeId);
 
-    List<Attendance>
-    findByEmployeeIdOrderByAttendanceDateDesc(
+    // Today's Attendance
+    List<Attendance> findByAttendanceDate(
+            LocalDate attendanceDate);
+
+    // Monthly Attendance
+    List<Attendance> findByAttendanceDateGreaterThanEqual(
+            LocalDate date);
+
+    // Latest Attendance Record
+    Attendance findTopByEmployeeIdOrderByIdDesc(
             Long employeeId);
 
-    Optional<Attendance>
-    findByEmployeeIdAndAttendanceDate(
+    // Status Counts
+    long countByAttendanceStatus(
+            String attendanceStatus);
+
+    // Today's Present Employees
+    long countByAttendanceDateAndAttendanceStatus(
+            LocalDate attendanceDate,
+            String attendanceStatus);
+
+    // Attendance By Department
+    List<Attendance> findByDepartment(
+            String department);
+
+    // Employee Present Count
+    long countByEmployeeIdAndAttendanceStatus(
             Long employeeId,
-            LocalDate attendanceDate);
+            String attendanceStatus);
 
-    long countByAttendanceDate(
-            LocalDate attendanceDate);
+    // Employee Absent Count
+    long countByEmployeeIdAndAttendanceStatus(
+            Long employeeId,
+            String attendanceStatus);
 
-    List<Attendance>
-    findByAttendanceDate(
-            LocalDate attendanceDate);
+    // Employee Leave Count
+    long countByEmployeeIdAndAttendanceStatus(
+            Long employeeId,
+            String attendanceStatus);
 
-    long countByStatus(
-            String status);
-
-    List<Attendance>
-    findByStatus(
-            String status);
-
-    List<Attendance>
-    findByAttendanceDateBetween(
+    // Date Range Attendance
+    List<Attendance> findByAttendanceDateBetween(
             LocalDate startDate,
             LocalDate endDate);
-
-    // NEW
-
-    long countByAttendanceDateAndStatus(
-            LocalDate attendanceDate,
-            String status);
-
-    List<Attendance>
-    findByAttendanceDateOrderByAttendanceDateDesc(
-            LocalDate attendanceDate);
-
-    List<Attendance>
-    findAllByOrderByAttendanceDateDesc();
 }

@@ -1,4 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState
+} from "react";
+
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
@@ -8,16 +12,17 @@ function AttritionRisk() {
   const [employees, setEmployees] =
     useState([]);
 
+  const [search, setSearch] =
+    useState("");
+
   useEffect(() => {
 
     loadData();
 
     const interval =
       setInterval(() => {
-
         loadData();
-
-      }, 5000);
+      }, 10000);
 
     return () =>
       clearInterval(interval);
@@ -31,20 +36,70 @@ function AttritionRisk() {
       const response =
         await API.get("/employees");
 
-      setEmployees(
-        response.data.filter(
-          emp =>
-          emp.attritionRisk === "HIGH"
-        )
-      );
+      setEmployees(response.data);
 
-    } catch(error) {
+    } catch (error) {
 
       console.error(error);
 
     }
 
   };
+
+  const highRisk =
+    employees.filter(
+      emp =>
+        emp.attritionRisk === "HIGH"
+    );
+
+  const mediumRisk =
+    employees.filter(
+      emp =>
+        emp.attritionRisk === "MEDIUM"
+    );
+
+  const lowRisk =
+    employees.filter(
+      emp =>
+        emp.attritionRisk === "LOW"
+    );
+
+  const filteredEmployees =
+    highRisk.filter(emp =>
+      `${emp.firstName} ${emp.lastName}`
+        .toLowerCase()
+        .includes(
+          search.toLowerCase()
+        )
+    );
+
+  const avgAttendance =
+    highRisk.length > 0
+      ?
+      (
+        highRisk.reduce(
+          (sum, emp) =>
+            sum +
+            (emp.attendancePercentage || 0),
+          0
+        ) / highRisk.length
+      ).toFixed(1)
+      :
+      0;
+
+  const avgPerformance =
+    highRisk.length > 0
+      ?
+      (
+        highRisk.reduce(
+          (sum, emp) =>
+            sum +
+            (emp.performanceScore || 0),
+          0
+        ) / highRisk.length
+      ).toFixed(1)
+      :
+      0;
 
   return (
 
@@ -55,8 +110,9 @@ function AttritionRisk() {
       <div
         className="flex-grow-1"
         style={{
-          background:"#f4f7fe",
-          minHeight:"100vh"
+          marginLeft: "280px",
+          background: "#f4f7fe",
+          minHeight: "100vh"
         }}
       >
 
@@ -64,14 +120,14 @@ function AttritionRisk() {
 
         <div className="container-fluid p-4">
 
-          {/* Hero */}
+          {/* Header */}
 
           <div
             className="card border-0 shadow-lg mb-4"
             style={{
               background:
-              "linear-gradient(135deg,#ef4444,#dc2626)",
-              borderRadius:"20px"
+                "linear-gradient(135deg,#ef4444,#dc2626)",
+              borderRadius: "20px"
             }}
           >
 
@@ -81,31 +137,36 @@ function AttritionRisk() {
                 ⚠ Attrition Risk Analysis
               </h2>
 
-              <p>
-                Employees likely to leave
-                the organization
+              <p className="mb-0">
+                AI Prediction of Employees
+                Likely to Leave
               </p>
 
             </div>
 
           </div>
 
-          {/* Summary */}
+          {/* KPI Cards */}
 
           <div className="row g-4">
 
-            <div className="col-md-4">
+            <div className="col-md-3">
 
-              <div className="card shadow border-0">
+              <div
+                className="card bg-danger text-white shadow border-0"
+                style={{
+                  height: "140px"
+                }}
+              >
 
                 <div className="card-body text-center">
 
                   <h6>
-                    High Risk Employees
+                    High Risk
                   </h6>
 
-                  <h1 className="text-danger">
-                    {employees.length}
+                  <h1>
+                    {highRisk.length}
                   </h1>
 
                 </div>
@@ -114,34 +175,23 @@ function AttritionRisk() {
 
             </div>
 
-            <div className="col-md-4">
+            <div className="col-md-3">
 
-              <div className="card shadow border-0">
+              <div
+                className="card bg-warning shadow border-0"
+                style={{
+                  height: "140px"
+                }}
+              >
 
                 <div className="card-body text-center">
 
                   <h6>
-                    Avg Attendance
+                    Medium Risk
                   </h6>
 
-                  <h1 className="text-warning">
-
-                    {
-                      employees.length > 0
-                      ?
-                      (
-                        employees.reduce(
-                          (sum, emp) =>
-                          sum +
-                          (emp.attendancePercentage || 0),
-                          0
-                        ) /
-                        employees.length
-                      ).toFixed(1)
-                      :
-                      0
-                    }%
-
+                  <h1>
+                    {mediumRisk.length}
                   </h1>
 
                 </div>
@@ -150,9 +200,39 @@ function AttritionRisk() {
 
             </div>
 
-            <div className="col-md-4">
+            <div className="col-md-3">
 
-              <div className="card shadow border-0">
+              <div
+                className="card bg-success text-white shadow border-0"
+                style={{
+                  height: "140px"
+                }}
+              >
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Low Risk
+                  </h6>
+
+                  <h1>
+                    {lowRisk.length}
+                  </h1>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-3">
+
+              <div
+                className="card bg-primary text-white shadow border-0"
+                style={{
+                  height: "140px"
+                }}
+              >
 
                 <div className="card-body text-center">
 
@@ -160,24 +240,8 @@ function AttritionRisk() {
                     Avg Performance
                   </h6>
 
-                  <h1 className="text-primary">
-
-                    {
-                      employees.length > 0
-                      ?
-                      (
-                        employees.reduce(
-                          (sum, emp) =>
-                          sum +
-                          (emp.performanceScore || 0),
-                          0
-                        ) /
-                        employees.length
-                      ).toFixed(1)
-                      :
-                      0
-                    }%
-
+                  <h1>
+                    {avgPerformance}%
                   </h1>
 
                 </div>
@@ -188,7 +252,29 @@ function AttritionRisk() {
 
           </div>
 
-          {/* Employee Table */}
+          {/* Search */}
+
+          <div className="card shadow border-0 mt-4">
+
+            <div className="card-body">
+
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search Employee..."
+                value={search}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+              />
+
+            </div>
+
+          </div>
+
+          {/* High Risk Employees */}
 
           <div className="card shadow border-0 mt-4">
 
@@ -198,71 +284,139 @@ function AttritionRisk() {
                 High Risk Employees
               </h4>
 
-              <table className="table table-hover">
+              <div className="table-responsive">
 
-                <thead className="table-dark">
+                <table className="table table-hover">
 
-                  <tr>
+                  <thead className="table-dark">
 
-                    <th>Name</th>
-                    <th>Department</th>
-                    <th>Attendance</th>
-                    <th>Performance</th>
-                    <th>Risk Score</th>
-                    <th>Status</th>
+                    <tr>
 
-                  </tr>
+                      <th>Name</th>
+                      <th>Department</th>
+                      <th>Attendance</th>
+                      <th>Performance</th>
+                      <th>Risk Score</th>
+                      <th>Status</th>
 
-                </thead>
+                    </tr>
 
-                <tbody>
+                  </thead>
 
-                  {
-                    employees.map(emp => (
+                  <tbody>
 
-                      <tr key={emp.id}>
+                    {
+                      filteredEmployees.length > 0
+                        ?
 
-                        <td>
-                          {emp.firstName}
-                          {" "}
-                          {emp.lastName}
-                        </td>
+                        filteredEmployees.map(
+                          emp => (
 
-                        <td>
-                          {emp.department}
-                        </td>
+                            <tr key={emp.id}>
 
-                        <td>
-                          {emp.attendancePercentage || 0}%
-                        </td>
+                              <td>
+                                {emp.firstName}
+                                {" "}
+                                {emp.lastName}
+                              </td>
 
-                        <td>
-                          {emp.performanceScore || 0}%
-                        </td>
+                              <td>
+                                {emp.department}
+                              </td>
 
-                        <td>
-                          {emp.attritionScore || 0}
-                        </td>
+                              <td>
+                                {emp.attendancePercentage || 0}%
+                              </td>
 
-                        <td>
+                              <td>
+                                {emp.performanceScore || 0}%
+                              </td>
 
-                          <span
-                            className=
-                            "badge bg-danger"
+                              <td>
+                                {emp.attritionScore || 0}
+                              </td>
+
+                              <td>
+
+                                <span className="badge bg-danger">
+
+                                  HIGH RISK
+
+                                </span>
+
+                              </td>
+
+                            </tr>
+
+                          )
+                        )
+
+                        :
+
+                        <tr>
+
+                          <td
+                            colSpan="6"
+                            className="text-center"
                           >
-                            HIGH RISK
-                          </span>
+                            No High Risk Employees
+                          </td>
 
-                        </td>
+                        </tr>
 
-                      </tr>
+                    }
 
-                    ))
-                  }
+                  </tbody>
 
-                </tbody>
+                </table>
 
-              </table>
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* Analytics */}
+
+          <div className="row g-4 mt-2">
+
+            <div className="col-md-6">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h5>
+                    Average Attendance
+                  </h5>
+
+                  <h2 className="text-warning">
+                    {avgAttendance}%
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-6">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h5>
+                    Average Performance
+                  </h5>
+
+                  <h2 className="text-primary">
+                    {avgPerformance}%
+                  </h2>
+
+                </div>
+
+              </div>
 
             </div>
 
@@ -279,12 +433,11 @@ function AttritionRisk() {
               </h4>
 
               {
-                employees.map(emp => (
+                highRisk.map(emp => (
 
                   <div
                     key={emp.id}
-                    className=
-                    "alert alert-warning"
+                    className="alert alert-warning"
                   >
 
                     <strong>
@@ -296,10 +449,9 @@ function AttritionRisk() {
                     </strong>
 
                     {" "}
-                    needs manager attention.
-                    Attendance and
-                    performance are below
-                    expected levels.
+                    requires immediate manager review.
+                    Low attendance and performance
+                    indicate a high probability of attrition.
 
                   </div>
 
@@ -317,6 +469,7 @@ function AttritionRisk() {
     </div>
 
   );
+
 }
 
 export default AttritionRisk;

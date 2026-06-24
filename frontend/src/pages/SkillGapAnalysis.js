@@ -5,26 +5,23 @@ import Navbar from "../components/Navbar";
 
 function SkillGapAnalysis() {
 
-  const [employees, setEmployees] =
-    useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
 
-    loadData();
+    loadEmployees();
 
-    const interval =
-      setInterval(() => {
+    const interval = setInterval(() => {
+      loadEmployees();
+    }, 10000);
 
-        loadData();
-
-      }, 5000);
-
-    return () =>
-      clearInterval(interval);
+    return () => clearInterval(interval);
 
   }, []);
 
-  const loadData = async () => {
+  const loadEmployees = async () => {
 
     try {
 
@@ -33,9 +30,13 @@ function SkillGapAnalysis() {
 
       setEmployees(response.data);
 
-    } catch(error) {
+    } catch (error) {
 
       console.error(error);
+
+    } finally {
+
+      setLoading(false);
 
     }
 
@@ -44,9 +45,23 @@ function SkillGapAnalysis() {
   const skillGapEmployees =
     employees.filter(
       emp =>
-      emp.missingSkills &&
-      emp.missingSkills !== ""
+        emp.missingSkills &&
+        emp.missingSkills.trim() !== ""
     );
+
+  const filteredEmployees =
+    skillGapEmployees.filter(emp =>
+      `${emp.firstName} ${emp.lastName}`
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    );
+
+  const totalDepartments =
+    new Set(
+      skillGapEmployees.map(
+        emp => emp.department
+      )
+    ).size;
 
   return (
 
@@ -57,8 +72,8 @@ function SkillGapAnalysis() {
       <div
         className="flex-grow-1"
         style={{
-          background:"#f4f7fe",
-          minHeight:"100vh"
+          background: "#f4f7fe",
+          minHeight: "100vh"
         }}
       >
 
@@ -66,26 +81,26 @@ function SkillGapAnalysis() {
 
         <div className="container-fluid p-4">
 
-          {/* Hero Banner */}
+          {/* Header */}
 
           <div
             className="card border-0 shadow-lg mb-4"
             style={{
+              borderRadius: "20px",
               background:
-              "linear-gradient(135deg,#f59e0b,#f97316)",
-              borderRadius:"20px"
+                "linear-gradient(135deg,#f59e0b,#ea580c)"
             }}
           >
 
             <div className="card-body text-white">
 
-              <h2>
+              <h2 className="fw-bold">
                 🧠 Skill Gap Analysis
               </h2>
 
-              <p>
-                AI identifies missing skills
-                and recommends training
+              <p className="mb-0">
+                AI Powered Employee Skill Assessment &
+                Training Recommendations
               </p>
 
             </div>
@@ -94,16 +109,16 @@ function SkillGapAnalysis() {
 
           {/* KPI Cards */}
 
-          <div className="row g-4">
+          <div className="row g-4 mb-4">
 
-            <div className="col-md-4">
+            <div className="col-md-3">
 
-              <div className="card shadow border-0">
+              <div className="card border-0 shadow">
 
                 <div className="card-body text-center">
 
                   <h6>
-                    Employees With Gaps
+                    Employees With Skill Gaps
                   </h6>
 
                   <h1 className="text-danger">
@@ -116,9 +131,9 @@ function SkillGapAnalysis() {
 
             </div>
 
-            <div className="col-md-4">
+            <div className="col-md-3">
 
-              <div className="card shadow border-0">
+              <div className="card border-0 shadow">
 
                 <div className="card-body text-center">
 
@@ -136,9 +151,29 @@ function SkillGapAnalysis() {
 
             </div>
 
-            <div className="col-md-4">
+            <div className="col-md-3">
 
-              <div className="card shadow border-0">
+              <div className="card border-0 shadow">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Departments Affected
+                  </h6>
+
+                  <h1 className="text-primary">
+                    {totalDepartments}
+                  </h1>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-3">
+
+              <div className="card border-0 shadow">
 
                 <div className="card-body text-center">
 
@@ -158,81 +193,144 @@ function SkillGapAnalysis() {
 
           </div>
 
-          {/* Skill Gap Table */}
+          {/* Search */}
 
-          <div className="card shadow border-0 mt-4">
+          <div className="card border-0 shadow mb-4">
 
             <div className="card-body">
 
-              <h4>
+              <input
+                type="text"
+                className="form-control form-control-lg"
+                placeholder="🔍 Search Employee..."
+                value={search}
+                onChange={(e) =>
+                  setSearch(e.target.value)
+                }
+              />
+
+            </div>
+
+          </div>
+
+          {/* Skill Gap Table */}
+
+          <div className="card border-0 shadow-lg">
+
+            <div className="card-body">
+
+              <h4 className="mb-3">
                 Employee Skill Analysis
               </h4>
 
-              <table className="table table-hover">
+              {loading ? (
 
-                <thead className="table-dark">
+                <div className="text-center">
 
-                  <tr>
+                  <h5>
+                    Loading Data...
+                  </h5>
 
-                    <th>Name</th>
-                    <th>Department</th>
-                    <th>Current Skills</th>
-                    <th>Missing Skills</th>
-                    <th>Training</th>
+                </div>
 
-                  </tr>
+              ) : (
 
-                </thead>
+                <div className="table-responsive">
 
-                <tbody>
+                  <table className="table table-hover align-middle">
 
-                  {
-                    skillGapEmployees.map(emp => (
+                    <thead className="table-dark">
 
-                      <tr key={emp.id}>
+                      <tr>
 
-                        <td>
-                          {emp.firstName}
-                          {" "}
-                          {emp.lastName}
-                        </td>
-
-                        <td>
-                          {emp.department}
-                        </td>
-
-                        <td>
-                          {emp.skills}
-                        </td>
-
-                        <td>
-
-                          <span className="badge bg-danger">
-
-                            {emp.missingSkills}
-
-                          </span>
-
-                        </td>
-
-                        <td>
-
-                          <span className="badge bg-primary">
-
-                            Recommended Training
-
-                          </span>
-
-                        </td>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Current Skills</th>
+                        <th>Missing Skills</th>
+                        <th>Training Recommendation</th>
 
                       </tr>
 
-                    ))
-                  }
+                    </thead>
 
-                </tbody>
+                    <tbody>
 
-              </table>
+                      {filteredEmployees.length > 0 ? (
+
+                        filteredEmployees.map(emp => (
+
+                          <tr key={emp.id}>
+
+                            <td>
+
+                              <strong>
+                                {emp.firstName} {emp.lastName}
+                              </strong>
+
+                            </td>
+
+                            <td>
+                              {emp.department}
+                            </td>
+
+                            <td>
+
+                              <span className="badge bg-success">
+
+                                {emp.skills || "N/A"}
+
+                              </span>
+
+                            </td>
+
+                            <td>
+
+                              <span className="badge bg-danger">
+
+                                {emp.missingSkills}
+
+                              </span>
+
+                            </td>
+
+                            <td>
+
+                              <span className="badge bg-primary">
+
+                                Training Required
+
+                              </span>
+
+                            </td>
+
+                          </tr>
+
+                        ))
+
+                      ) : (
+
+                        <tr>
+
+                          <td
+                            colSpan="5"
+                            className="text-center"
+                          >
+
+                            No Skill Gaps Found
+
+                          </td>
+
+                        </tr>
+
+                      )}
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+              )}
 
             </div>
 
@@ -240,15 +338,16 @@ function SkillGapAnalysis() {
 
           {/* AI Suggestions */}
 
-          <div className="card shadow border-0 mt-4">
+          <div className="card border-0 shadow mt-4">
 
             <div className="card-body">
 
-              <h4>
-                🤖 AI Training Suggestions
+              <h4 className="mb-3">
+                🤖 AI Training Recommendations
               </h4>
 
-              {
+              {skillGapEmployees.length > 0 ? (
+
                 skillGapEmployees.map(emp => (
 
                   <div
@@ -257,23 +356,30 @@ function SkillGapAnalysis() {
                   >
 
                     <strong>
-
-                      {emp.firstName}
-                      {" "}
-                      {emp.lastName}
-
+                      {emp.firstName} {emp.lastName}
                     </strong>
 
-                    {" "}
-                    should complete training in
+                    {" "}should complete training in{" "}
 
-                    {" "}
-                    {emp.missingSkills}
+                    <strong>
+                      {emp.missingSkills}
+                    </strong>
+
+                    {" "}to improve productivity and performance.
 
                   </div>
 
                 ))
-              }
+
+              ) : (
+
+                <div className="alert alert-success">
+
+                  🎉 No skill gaps detected across employees.
+
+                </div>
+
+              )}
 
             </div>
 
@@ -286,6 +392,7 @@ function SkillGapAnalysis() {
     </div>
 
   );
+
 }
 
 export default SkillGapAnalysis;

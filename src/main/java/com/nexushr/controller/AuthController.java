@@ -16,32 +16,26 @@ import com.nexushr.service.AuthService;
 @CrossOrigin("*")
 public class AuthController {
 
-	@Autowired
-	private EmployeeRepository employeeRepository;
     @Autowired
     private AuthService service;
 
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
     @PostMapping("/register")
     public User register(
-            @RequestBody User user){
+            @RequestBody User user) {
 
         return service.register(user);
     }
 
     @PostMapping("/login")
     public Map<String, Object> login(
-            @RequestBody User loginUser){
+            @RequestBody User loginUser) {
 
-        System.out.println("Login Request: " +
-                loginUser.getUsername());
-
-        User user =
-                service.login(
-                        loginUser.getUsername(),
-                        loginUser.getPassword());
-
-        System.out.println("User Found: " +
-                user.getUsername());
+        User user = service.login(
+                loginUser.getUsername(),
+                loginUser.getPassword());
 
         Employee employee =
                 employeeRepository
@@ -58,15 +52,41 @@ public class AuthController {
         response.put("role", user.getRole());
         response.put("employeeName", user.getEmployeeName());
 
+        if (employee != null) {
+            response.put("employeeId", employee.getId());
+            response.put("department", employee.getDepartment());
+            response.put("designation", employee.getDesignation());
+        }
+
         return response;
     }
+
     @PutMapping("/reset-password")
     public String resetPassword(
             @RequestParam String email,
-            @RequestParam String password){
+            @RequestParam String password) {
 
         return service.resetPassword(
                 email,
                 password);
+    }
+
+    @PutMapping("/change-password/{employeeId}")
+    public String changePassword(
+            @PathVariable Long employeeId,
+            @RequestBody Map<String, String> request) {
+
+        return service.changePassword(
+                employeeId,
+                request.get("oldPassword"),
+                request.get("newPassword"));
+    }
+
+    @GetMapping("/user/{username}")
+    public User getUser(
+            @PathVariable String username) {
+
+        return service.getUserByUsername(
+                username);
     }
 }

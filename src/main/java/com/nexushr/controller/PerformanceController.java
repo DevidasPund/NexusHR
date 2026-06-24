@@ -28,4 +28,17 @@ public class PerformanceController {
 
         return service.getAll();
     }
+    @GetMapping("/{id}")
+    public Performance getById(
+            @PathVariable Long id) {
+
+        return service.getById(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(
+            @PathVariable Long id) {
+
+        service.delete(id);
+    }
 }

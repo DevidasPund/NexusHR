@@ -7,16 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.nexushr.entity.Notification;
 
 public interface NotificationRepository
-extends JpaRepository<Notification, Long>{
+        extends JpaRepository<Notification, Long> {
 
-    List<Notification>
-    findByReceiverOrderByCreatedAtDesc(
+    List<Notification> findByReceiver(
             String receiver);
-
-    List<Notification>
-    findAllByOrderByCreatedAtDesc();
-    List<Notification>
-    findByReceiverOrReceiverOrderByCreatedAtDesc(
-            String receiver,
-            String all);
 }

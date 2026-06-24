@@ -3,26 +3,47 @@ import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
-function PerformanceInsights() {
+function PayslipManagement() {
 
-  const [employees, setEmployees] =
-    useState([]);
+  const [payslips, setPayslips] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [search, setSearch] = useState("");
+
+  const [formData, setFormData] = useState({
+    employeeId: "",
+    month: "",
+    year: new Date().getFullYear()
+  });
 
   useEffect(() => {
 
+    loadPayslips();
     loadEmployees();
 
-    const interval =
-      setInterval(() => {
+    const interval = setInterval(() => {
+      loadPayslips();
+    }, 30000);
 
-        loadEmployees();
-
-      }, 5000);
-
-    return () =>
-      clearInterval(interval);
+    return () => clearInterval(interval);
 
   }, []);
+
+  const loadPayslips = async () => {
+
+    try {
+
+      const response =
+        await API.get("/payslips");
+
+      setPayslips(response.data);
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  };
 
   const loadEmployees = async () => {
 
@@ -31,11 +52,9 @@ function PerformanceInsights() {
       const response =
         await API.get("/employees");
 
-      setEmployees(
-        response.data
-      );
+      setEmployees(response.data);
 
-    } catch(error) {
+    } catch (error) {
 
       console.error(error);
 
@@ -43,32 +62,95 @@ function PerformanceInsights() {
 
   };
 
-  const topPerformers =
-    employees.filter(
-      emp =>
-      (emp.performanceScore || 0) >= 85
+  const handleChange = (e) => {
+
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+
+  };
+
+  const generatePayslip = async () => {
+
+    if (!formData.employeeId) {
+      alert("Select Employee");
+      return;
+    }
+
+    try {
+
+      await API.post(
+        "/payslips/generate",
+        formData
+      );
+
+      alert(
+        "Payslip Generated Successfully"
+      );
+
+      loadPayslips();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Failed To Generate Payslip"
+      );
+
+    }
+
+  };
+
+  const deletePayslip = async (id) => {
+
+    if (
+      !window.confirm(
+        "Delete Payslip?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+
+      await API.delete(
+        `/payslips/${id}`
+      );
+
+      loadPayslips();
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  };
+
+  const downloadPayslip = (id) => {
+
+    window.open(
+      `${API.defaults.baseURL}/payslips/download/${id}`,
+      "_blank"
     );
 
-  const lowPerformers =
-    employees.filter(
-      emp =>
-      (emp.performanceScore || 0) < 60
+  };
+
+  const filteredPayslips =
+    payslips.filter(pay =>
+      String(pay.employeeName || "")
+        .toLowerCase()
+        .includes(search.toLowerCase())
     );
 
-  const avgPerformance =
-    employees.length > 0
-      ?
-      (
-        employees.reduce(
-          (sum, emp) =>
-          sum +
-          (emp.performanceScore || 0),
-          0
-        ) /
-        employees.length
-      ).toFixed(1)
-      :
-      0;
+  const totalSalary =
+    payslips.reduce(
+      (sum, p) =>
+        sum + (p.netSalary || 0),
+      0
+    );
 
   return (
 
@@ -79,8 +161,8 @@ function PerformanceInsights() {
       <div
         className="flex-grow-1"
         style={{
-          background:"#f4f7fe",
-          minHeight:"100vh"
+          background: "#f4f7fe",
+          minHeight: "100vh"
         }}
       >
 
@@ -88,26 +170,23 @@ function PerformanceInsights() {
 
         <div className="container-fluid p-4">
 
-          {/* Hero */}
-
           <div
             className="card border-0 shadow-lg mb-4"
             style={{
               background:
-              "linear-gradient(135deg,#10b981,#059669)",
-              borderRadius:"20px"
+                "linear-gradient(135deg,#2563eb,#7c3aed)",
+              borderRadius: "20px"
             }}
           >
 
             <div className="card-body text-white">
 
               <h2>
-                ⭐ Performance Insights
+                📄 Payslip Management
               </h2>
 
               <p>
-                Real-Time Employee
-                Performance Analytics
+                Employee Salary Payslip System
               </p>
 
             </div>
@@ -116,7 +195,7 @@ function PerformanceInsights() {
 
           {/* KPI */}
 
-          <div className="row g-4">
+          <div className="row g-4 mb-4">
 
             <div className="col-md-4">
 
@@ -124,13 +203,11 @@ function PerformanceInsights() {
 
                 <div className="card-body text-center">
 
-                  <h6>
-                    Top Performers
-                  </h6>
+                  <h6>Total Payslips</h6>
 
-                  <h1 className="text-success">
-                    {topPerformers.length}
-                  </h1>
+                  <h2 className="text-primary">
+                    {payslips.length}
+                  </h2>
 
                 </div>
 
@@ -144,13 +221,11 @@ function PerformanceInsights() {
 
                 <div className="card-body text-center">
 
-                  <h6>
-                    Low Performers
-                  </h6>
+                  <h6>Total Employees</h6>
 
-                  <h1 className="text-danger">
-                    {lowPerformers.length}
-                  </h1>
+                  <h2 className="text-success">
+                    {employees.length}
+                  </h2>
 
                 </div>
 
@@ -164,13 +239,11 @@ function PerformanceInsights() {
 
                 <div className="card-body text-center">
 
-                  <h6>
-                    Average Score
-                  </h6>
+                  <h6>Total Payroll</h6>
 
-                  <h1 className="text-primary">
-                    {avgPerformance}%
-                  </h1>
+                  <h2 className="text-danger">
+                    ₹{totalSalary}
+                  </h2>
 
                 </div>
 
@@ -180,156 +253,201 @@ function PerformanceInsights() {
 
           </div>
 
-          {/* Leaderboard */}
+          {/* Generate Payslip */}
 
-          <div className="card shadow border-0 mt-4">
+          <div className="card shadow border-0 mb-4">
 
             <div className="card-body">
 
               <h4>
-                🏆 Top Performers
+                Generate Payslip
               </h4>
 
-              <table className="table table-hover">
+              <div className="row g-3 mt-2">
 
-                <thead className="table-dark">
+                <div className="col-md-4">
 
-                  <tr>
+                  <select
+                    className="form-select"
+                    name="employeeId"
+                    value={formData.employeeId}
+                    onChange={handleChange}
+                  >
 
-                    <th>Name</th>
-                    <th>Department</th>
-                    <th>Performance</th>
+                    <option value="">
+                      Select Employee
+                    </option>
 
-                  </tr>
+                    {
+                      employees.map(emp => (
 
-                </thead>
+                        <option
+                          key={emp.id}
+                          value={emp.id}
+                        >
+                          {emp.firstName} {emp.lastName}
+                        </option>
 
-                <tbody>
+                      ))
+                    }
 
-                  {
-                    topPerformers.map(emp => (
+                  </select>
 
-                      <tr key={emp.id}>
+                </div>
 
-                        <td>
-                          {emp.firstName}
-                          {" "}
-                          {emp.lastName}
-                        </td>
+                <div className="col-md-3">
 
-                        <td>
-                          {emp.department}
-                        </td>
+                  <input
+                    type="month"
+                    className="form-control"
+                    name="month"
+                    value={formData.month}
+                    onChange={handleChange}
+                  />
 
-                        <td>
+                </div>
 
-                          <div
-                            className="progress"
-                          >
+                <div className="col-md-3">
 
-                            <div
-                              className=
-                              "progress-bar bg-success"
-                              style={{
-                                width:
-                                `${emp.performanceScore}%`
-                              }}
+                  <input
+                    type="number"
+                    className="form-control"
+                    name="year"
+                    value={formData.year}
+                    onChange={handleChange}
+                  />
+
+                </div>
+
+                <div className="col-md-2">
+
+                  <button
+                    className="btn btn-primary w-100"
+                    onClick={generatePayslip}
+                  >
+                    Generate
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* Search */}
+
+          <div className="card shadow border-0 mb-4">
+
+            <div className="card-body">
+
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search Employee..."
+                value={search}
+                onChange={(e) =>
+                  setSearch(e.target.value)
+                }
+              />
+
+            </div>
+
+          </div>
+
+          {/* Table */}
+
+          <div className="card shadow border-0">
+
+            <div className="card-body">
+
+              <h4>
+                Payslip Records
+              </h4>
+
+              <div className="table-responsive">
+
+                <table className="table table-hover">
+
+                  <thead className="table-dark">
+
+                    <tr>
+
+                      <th>ID</th>
+                      <th>Employee</th>
+                      <th>Month</th>
+                      <th>Basic Salary</th>
+                      <th>Net Salary</th>
+                      <th>Actions</th>
+
+                    </tr>
+
+                  </thead>
+
+                  <tbody>
+
+                    {
+                      filteredPayslips.map(pay => (
+
+                        <tr key={pay.id}>
+
+                          <td>{pay.id}</td>
+
+                          <td>
+                            {pay.employeeName}
+                          </td>
+
+                          <td>
+                            {pay.month}
+                          </td>
+
+                          <td>
+                            ₹{pay.basicSalary}
+                          </td>
+
+                          <td>
+
+                            <span className="badge bg-success">
+
+                              ₹{pay.netSalary}
+
+                            </span>
+
+                          </td>
+
+                          <td>
+
+                            <button
+                              className="btn btn-primary btn-sm me-2"
+                              onClick={() =>
+                                downloadPayslip(pay.id)
+                              }
                             >
-                              {emp.performanceScore}%
-                            </div>
+                              Download
+                            </button>
 
-                          </div>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() =>
+                                deletePayslip(pay.id)
+                              }
+                            >
+                              Delete
+                            </button>
 
-                        </td>
+                          </td>
 
-                      </tr>
+                        </tr>
 
-                    ))
-                  }
+                      ))
+                    }
 
-                </tbody>
+                  </tbody>
 
-              </table>
+                </table>
 
-            </div>
-
-          </div>
-
-          {/* Low Performers */}
-
-          <div className="card shadow border-0 mt-4">
-
-            <div className="card-body">
-
-              <h4>
-                📉 Improvement Needed
-              </h4>
-
-              {
-                lowPerformers.map(emp => (
-
-                  <div
-                    key={emp.id}
-                    className=
-                    "alert alert-warning"
-                  >
-
-                    <strong>
-
-                      {emp.firstName}
-                      {" "}
-                      {emp.lastName}
-
-                    </strong>
-
-                    {" "}
-                    requires coaching and
-                    performance improvement.
-
-                  </div>
-
-                ))
-              }
-
-            </div>
-
-          </div>
-
-          {/* AI Promotion Suggestions */}
-
-          <div className="card shadow border-0 mt-4">
-
-            <div className="card-body">
-
-              <h4>
-                🚀 Promotion Candidates
-              </h4>
-
-              {
-                topPerformers.map(emp => (
-
-                  <div
-                    key={emp.id}
-                    className=
-                    "alert alert-success"
-                  >
-
-                    <strong>
-
-                      {emp.firstName}
-                      {" "}
-                      {emp.lastName}
-
-                    </strong>
-
-                    {" "}
-                    is eligible for promotion
-                    based on performance.
-
-                  </div>
-
-                ))
-              }
+              </div>
 
             </div>
 
@@ -345,4 +463,4 @@ function PerformanceInsights() {
 
 }
 
-export default PerformanceInsights;
+export default PayslipManagement;

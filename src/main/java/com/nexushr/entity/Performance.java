@@ -3,10 +3,12 @@ package com.nexushr.entity;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "performance")
 public class Performance {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy =
+            GenerationType.IDENTITY)
     private Long id;
 
     private Long employeeId;
@@ -15,117 +17,96 @@ public class Performance {
 
     private String reviewMonth;
 
-  
-
-
-   
-    public Double getBehaviorScore() {
-		return behaviorScore;
-	}
-
-	public void setBehaviorScore(Double behaviorScore) {
-		this.behaviorScore = behaviorScore;
-	}
-
-	public String getManagerComments() {
-		return managerComments;
-	}
-
-	public void setManagerComments(String managerComments) {
-		this.managerComments = managerComments;
-	}
-
-	public Boolean getPromotionRecommended() {
-		return promotionRecommended;
-	}
-
-	public void setPromotionRecommended(Boolean promotionRecommended) {
-		this.promotionRecommended = promotionRecommended;
-	}
-
-	private Double kpiScore;
     private Double attendanceScore;
+
     private Double taskScore;
-    private Double behaviorScore;
 
     private Double overallScore;
 
     private String rating;
 
+    @Column(length = 1000)
     private String managerComments;
 
-    private Boolean promotionRecommended;
-	public Long getId() {
-		return id;
-	}
+    public Performance() {
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public Long getEmployeeId() {
-		return employeeId;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setEmployeeId(Long employeeId) {
-		this.employeeId = employeeId;
-	}
+    public Long getEmployeeId() {
+        return employeeId;
+    }
 
-	public String getEmployeeName() {
-		return employeeName;
-	}
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
+    }
 
-	public void setEmployeeName(String employeeName) {
-		this.employeeName = employeeName;
-	}
+    public String getEmployeeName() {
+        return employeeName;
+    }
 
-	public String getReviewMonth() {
-		return reviewMonth;
-	}
+    public void setEmployeeName(
+            String employeeName) {
+        this.employeeName = employeeName;
+    }
 
-	public void setReviewMonth(String reviewMonth) {
-		this.reviewMonth = reviewMonth;
-	}
+    public String getReviewMonth() {
+        return reviewMonth;
+    }
 
-	public Double getKpiScore() {
-		return kpiScore;
-	}
+    public void setReviewMonth(
+            String reviewMonth) {
+        this.reviewMonth = reviewMonth;
+    }
 
-	public void setKpiScore(Double kpiScore) {
-		this.kpiScore = kpiScore;
-	}
+    public Double getAttendanceScore() {
+        return attendanceScore;
+    }
 
-	public Double getAttendanceScore() {
-		return attendanceScore;
-	}
+    public void setAttendanceScore(
+            Double attendanceScore) {
+        this.attendanceScore = attendanceScore;
+    }
 
-	public void setAttendanceScore(Double attendanceScore) {
-		this.attendanceScore = attendanceScore;
-	}
+    public Double getTaskScore() {
+        return taskScore;
+    }
 
-	public Double getTaskScore() {
-		return taskScore;
-	}
+    public void setTaskScore(
+            Double taskScore) {
+        this.taskScore = taskScore;
+    }
 
-	public void setTaskScore(Double taskScore) {
-		this.taskScore = taskScore;
-	}
+    public Double getOverallScore() {
+        return overallScore;
+    }
 
-	public Double getOverallScore() {
-		return overallScore;
-	}
+    public void setOverallScore(
+            Double overallScore) {
+        this.overallScore = overallScore;
+    }
 
-	public void setOverallScore(Double overallScore) {
-		this.overallScore = overallScore;
-	}
+    public String getRating() {
+        return rating;
+    }
 
-	public String getRating() {
-		return rating;
-	}
+    public void setRating(
+            String rating) {
+        this.rating = rating;
+    }
 
-	public void setRating(String rating) {
-		this.rating = rating;
-	}
+    public String getManagerComments() {
+        return managerComments;
+    }
 
-    // Getters and Setters
+    public void setManagerComments(
+            String managerComments) {
+        this.managerComments = managerComments;
+    }
 }

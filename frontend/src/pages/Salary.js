@@ -5,71 +5,78 @@ import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function Salary() {
-
   const [employee, setEmployee] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadEmployee();
+
+    const interval = setInterval(() => {
+      loadEmployee();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const loadEmployee = async () => {
-
     try {
-
       const employeeId =
         localStorage.getItem("employeeId");
 
-      const response =
-        await API.get(
-          `/employees/${employeeId}`
-        );
-
-      setEmployee(
-        response.data
+      const response = await API.get(
+        `/employees/${employeeId}`
       );
 
+      setEmployee(response.data);
     } catch (error) {
-
       console.error(
         "Salary Load Error",
         error
       );
-
     } finally {
-
       setLoading(false);
-
     }
   };
 
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat(
+      "en-IN",
+      {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0
+      }
+    ).format(amount || 0);
+  };
+
   const basicSalary =
-    employee.salary || 0;
+    Number(employee.salary) || 0;
+
+  const hra =
+    Math.round(basicSalary * 0.20);
 
   const bonus =
-    Math.round(
-      basicSalary * 0.10
-    );
+    Math.round(basicSalary * 0.10);
 
-  const deduction =
-    Math.round(
-      basicSalary * 0.02
-    );
+  const pf =
+    Math.round(basicSalary * 0.12);
+
+  const tax =
+    Math.round(basicSalary * 0.05);
 
   const netSalary =
     basicSalary +
+    hra +
     bonus -
-    deduction;
+    pf -
+    tax;
 
   const downloadPayslip = () => {
-
-    const doc =
-      new jsPDF();
+    const doc = new jsPDF();
 
     doc.setFontSize(22);
-
     doc.text(
-      "NexusHR Payslip",
+      "NexusHR Enterprise Payslip",
       20,
       20
     );
@@ -114,27 +121,45 @@ function Salary() {
     );
 
     doc.text(
-      `Basic Salary : ₹${basicSalary}`,
+      `Basic Salary : ${formatCurrency(
+        basicSalary
+      )}`,
       20,
       110
     );
 
     doc.text(
-      `Bonus : ₹${bonus}`,
+      `HRA : ${formatCurrency(hra)}`,
       20,
       120
     );
 
     doc.text(
-      `Deduction : ₹${deduction}`,
+      `Bonus : ${formatCurrency(
+        bonus
+      )}`,
       20,
       130
     );
 
     doc.text(
-      `Net Salary : ₹${netSalary}`,
+      `PF : ${formatCurrency(pf)}`,
       20,
-      145
+      140
+    );
+
+    doc.text(
+      `Tax : ${formatCurrency(tax)}`,
+      20,
+      150
+    );
+
+    doc.text(
+      `Net Salary : ${formatCurrency(
+        netSalary
+      )}`,
+      20,
+      165
     );
 
     doc.save(
@@ -143,146 +168,154 @@ function Salary() {
   };
 
   if (loading) {
-
     return (
-      <div className="text-center mt-5">
-        <h3>
-          Loading Salary...
-        </h3>
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <h3>Loading Salary Details...</h3>
       </div>
     );
   }
 
   return (
-
     <div className="d-flex">
-
       <Sidebar />
 
-      <div className="flex-grow-1">
-
+      <div
+        className="flex-grow-1"
+        style={{
+          background: "#f4f7fe",
+          minHeight: "100vh"
+        }}
+      >
         <Navbar />
 
         <div className="container-fluid p-4">
 
-          <h2 className="fw-bold mb-4">
-            💰 My Salary
-          </h2>
+          {/* Header */}
+
+          <div
+            className="card border-0 shadow-lg mb-4"
+            style={{
+              background:
+                "linear-gradient(135deg,#2563eb,#7c3aed)",
+              borderRadius: "20px"
+            }}
+          >
+            <div className="card-body text-white">
+              <h2>
+                💰 Salary & Payslip Portal
+              </h2>
+
+              <p>
+                View Salary Details,
+                Earnings & Download
+                Payslip
+              </p>
+            </div>
+          </div>
+
+          {/* Salary Cards */}
 
           <div className="row g-4">
 
             <div className="col-md-3">
-
-              <div className="card bg-primary text-white shadow-lg border-0">
-
+              <div className="card border-0 shadow">
                 <div className="card-body text-center">
-
-                  <h5>
+                  <h6>
                     Basic Salary
-                  </h5>
+                  </h6>
 
-                  <h2>
-                    ₹{basicSalary}
-                  </h2>
-
+                  <h3 className="text-primary">
+                    {formatCurrency(
+                      basicSalary
+                    )}
+                  </h3>
                 </div>
-
               </div>
-
             </div>
 
             <div className="col-md-3">
-
-              <div className="card bg-success text-white shadow-lg border-0">
-
+              <div className="card border-0 shadow">
                 <div className="card-body text-center">
+                  <h6>HRA</h6>
 
-                  <h5>
-                    Bonus
-                  </h5>
-
-                  <h2>
-                    ₹{bonus}
-                  </h2>
-
+                  <h3 className="text-success">
+                    {formatCurrency(
+                      hra
+                    )}
+                  </h3>
                 </div>
-
               </div>
-
             </div>
 
             <div className="col-md-3">
-
-              <div className="card bg-warning shadow-lg border-0">
-
+              <div className="card border-0 shadow">
                 <div className="card-body text-center">
+                  <h6>Bonus</h6>
 
-                  <h5>
-                    Deduction
-                  </h5>
-
-                  <h2>
-                    ₹{deduction}
-                  </h2>
-
+                  <h3 className="text-warning">
+                    {formatCurrency(
+                      bonus
+                    )}
+                  </h3>
                 </div>
-
               </div>
-
             </div>
 
             <div className="col-md-3">
-
-              <div className="card bg-danger text-white shadow-lg border-0">
-
+              <div className="card border-0 shadow">
                 <div className="card-body text-center">
-
-                  <h5>
+                  <h6>
                     Net Salary
-                  </h5>
+                  </h6>
 
-                  <h2>
-                    ₹{netSalary}
-                  </h2>
-
+                  <h3 className="text-danger">
+                    {formatCurrency(
+                      netSalary
+                    )}
+                  </h3>
                 </div>
-
               </div>
-
             </div>
 
           </div>
 
-          <div className="card shadow-lg border-0 mt-4">
+          {/* Employee Info */}
 
+          <div className="card border-0 shadow mt-4">
             <div className="card-body">
 
-              <h3 className="mb-4">
-                Employee Details
-              </h3>
+              <h4 className="mb-4">
+                Employee Information
+              </h4>
 
               <div className="row">
 
                 <div className="col-md-6">
 
                   <p>
-                    <strong>ID :</strong> {employee.id}
+                    <strong>ID :</strong>
+                    {" "}
+                    {employee.id}
                   </p>
 
                   <p>
-                    <strong>Name :</strong> {employee.firstName} {employee.lastName}
+                    <strong>Name :</strong>
+                    {" "}
+                    {employee.firstName}
+                    {" "}
+                    {employee.lastName}
                   </p>
 
                   <p>
-                    <strong>Email :</strong> {employee.email}
+                    <strong>Email :</strong>
+                    {" "}
+                    {employee.email}
                   </p>
 
                   <p>
-                    <strong>Department :</strong> {employee.department}
-                  </p>
-
-                  <p>
-                    <strong>Designation :</strong> {employee.designation}
+                    <strong>Phone :</strong>
+                    {" "}
+                    {employee.phone}
                   </p>
 
                 </div>
@@ -290,41 +323,56 @@ function Salary() {
                 <div className="col-md-6">
 
                   <p>
-                    <strong>Status :</strong>
+                    <strong>Department :</strong>
+                    {" "}
+                    {employee.department}
+                  </p>
 
-                    <span className="badge bg-success ms-2">
+                  <p>
+                    <strong>Designation :</strong>
+                    {" "}
+                    {employee.designation}
+                  </p>
+
+                  <p>
+                    <strong>Status :</strong>
+                    {" "}
+
+                    <span className="badge bg-success">
                       {employee.status}
                     </span>
 
                   </p>
 
                   <p>
-                    <strong>Attendance :</strong> {employee.attendancePercentage || 0}%
-                  </p>
-
-                  <p>
-                    <strong>Current Project :</strong> {employee.currentProject || "N/A"}
-                  </p>
-
-                  <p>
-                    <strong>Total Projects :</strong> {employee.projectCount || 0}
+                    <strong>Attendance :</strong>
+                    {" "}
+                    {employee.attendancePercentage || 0}%
                   </p>
 
                 </div>
 
               </div>
 
-              <hr />
+            </div>
+          </div>
+
+          {/* Salary Breakdown */}
+
+          <div className="card border-0 shadow mt-4">
+            <div className="card-body">
+
+              <h4 className="mb-4">
+                Salary Breakdown
+              </h4>
 
               <table className="table table-bordered">
 
                 <thead className="table-dark">
 
                   <tr>
-
                     <th>Description</th>
                     <th>Amount</th>
-
                   </tr>
 
                 </thead>
@@ -332,28 +380,77 @@ function Salary() {
                 <tbody>
 
                   <tr>
-                    <td>Basic Salary</td>
-                    <td>₹{basicSalary}</td>
+                    <td>
+                      Basic Salary
+                    </td>
+
+                    <td>
+                      {formatCurrency(
+                        basicSalary
+                      )}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>HRA</td>
+
+                    <td>
+                      {formatCurrency(
+                        hra
+                      )}
+                    </td>
                   </tr>
 
                   <tr>
                     <td>Bonus</td>
-                    <td>₹{bonus}</td>
+
+                    <td>
+                      {formatCurrency(
+                        bonus
+                      )}
+                    </td>
                   </tr>
 
                   <tr>
-                    <td>Deduction</td>
-                    <td>₹{deduction}</td>
+                    <td>
+                      PF Deduction
+                    </td>
+
+                    <td>
+                      -
+                      {formatCurrency(
+                        pf
+                      )}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      Income Tax
+                    </td>
+
+                    <td>
+                      -
+                      {formatCurrency(
+                        tax
+                      )}
+                    </td>
                   </tr>
 
                   <tr className="table-success">
 
                     <td>
-                      <strong>Net Salary</strong>
+                      <strong>
+                        Net Salary
+                      </strong>
                     </td>
 
                     <td>
-                      <strong>₹{netSalary}</strong>
+                      <strong>
+                        {formatCurrency(
+                          netSalary
+                        )}
+                      </strong>
                     </td>
 
                   </tr>
@@ -362,11 +459,13 @@ function Salary() {
 
               </table>
 
-              <div className="text-center">
+              <div className="text-center mt-4">
 
                 <button
                   className="btn btn-primary btn-lg"
-                  onClick={downloadPayslip}
+                  onClick={
+                    downloadPayslip
+                  }
                 >
                   📄 Download Payslip
                 </button>
@@ -374,13 +473,10 @@ function Salary() {
               </div>
 
             </div>
-
           </div>
 
         </div>
-
       </div>
-
     </div>
   );
 }

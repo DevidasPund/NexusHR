@@ -1,45 +1,58 @@
 package com.nexushr.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "departments")
 public class Department {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy =
+            GenerationType.IDENTITY)
     private Long id;
 
     private String departmentName;
 
+    private String departmentHead;
+
+    @Column(length = 1000)
     private String description;
 
-	public Long getId() {
-		return id;
-	}
+    public Department() {
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public String getDepartmentName() {
-		return departmentName;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setDepartmentName(String departmentName) {
-		this.departmentName = departmentName;
-	}
+    public String getDepartmentName() {
+        return departmentName;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    public void setDepartmentName(
+            String departmentName) {
+        this.departmentName = departmentName;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
-    
-    
-    
+    public String getDepartmentHead() {
+        return departmentHead;
+    }
+
+    public void setDepartmentHead(
+            String departmentHead) {
+        this.departmentHead = departmentHead;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(
+            String description) {
+        this.description = description;
+    }
 }

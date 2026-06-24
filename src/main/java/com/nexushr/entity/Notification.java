@@ -1,14 +1,14 @@
 package com.nexushr.entity;
 
-import java.time.LocalDateTime;
-
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "notifications")
 public class Notification {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String title;
@@ -20,105 +20,61 @@ public class Notification {
 
     private String receiver;
 
-    private String priority; // LOW, MEDIUM, HIGH
+    private String status;
 
-    private String notificationType; // ANNOUNCEMENT, ALERT, TASK
+    public Notification() {
+    }
 
-    private String status; // ACTIVE, READ, EXPIRED
+    public Long getId() {
+        return id;
+    }
 
-    private Boolean pinned = false;
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    private LocalDateTime createdAt;
+    public String getTitle() {
+        return title;
+    }
 
-    private LocalDateTime expiryDate;
+    public void setTitle(
+            String title) {
+        this.title = title;
+    }
 
-	public Long getId() {
-		return id;
-	}
+    public String getMessage() {
+        return message;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setMessage(
+            String message) {
+        this.message = message;
+    }
 
-	public String getTitle() {
-		return title;
-	}
+    public String getSender() {
+        return sender;
+    }
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
+    public void setSender(
+            String sender) {
+        this.sender = sender;
+    }
 
-	public String getMessage() {
-		return message;
-	}
+    public String getReceiver() {
+        return receiver;
+    }
 
-	public void setMessage(String message) {
-		this.message = message;
-	}
+    public void setReceiver(
+            String receiver) {
+        this.receiver = receiver;
+    }
 
-	public String getSender() {
-		return sender;
-	}
+    public String getStatus() {
+        return status;
+    }
 
-	public void setSender(String sender) {
-		this.sender = sender;
-	}
-
-	public String getReceiver() {
-		return receiver;
-	}
-
-	public void setReceiver(String receiver) {
-		this.receiver = receiver;
-	}
-
-	public String getPriority() {
-		return priority;
-	}
-
-	public void setPriority(String priority) {
-		this.priority = priority;
-	}
-
-	public String getNotificationType() {
-		return notificationType;
-	}
-
-	public void setNotificationType(String notificationType) {
-		this.notificationType = notificationType;
-	}
-
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
-	}
-
-	public Boolean getPinned() {
-		return pinned;
-	}
-
-	public void setPinned(Boolean pinned) {
-		this.pinned = pinned;
-	}
-
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
-
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
-
-	public LocalDateTime getExpiryDate() {
-		return expiryDate;
-	}
-
-	public void setExpiryDate(LocalDateTime expiryDate) {
-		this.expiryDate = expiryDate;
-	}
-
-    
+    public void setStatus(
+            String status) {
+        this.status = status;
+    }
 }

@@ -29,7 +29,9 @@ public class DepartmentService {
             Long id) {
 
         return repository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Department Not Found"));
     }
 
     public Department update(
@@ -37,11 +39,13 @@ public class DepartmentService {
             Department department) {
 
         Department existing =
-                repository.findById(id)
-                .orElseThrow();
+                getById(id);
 
         existing.setDepartmentName(
                 department.getDepartmentName());
+
+        existing.setDepartmentHead(
+                department.getDepartmentHead());
 
         existing.setDescription(
                 department.getDescription());
@@ -49,7 +53,8 @@ public class DepartmentService {
         return repository.save(existing);
     }
 
-    public void delete(Long id) {
+    public void delete(
+            Long id) {
 
         repository.deleteById(id);
     }

@@ -38,6 +38,23 @@ public class SalaryController {
                 id,
                 salary);
     }
+    @GetMapping("/average")
+    public Double averageSalary() {
+
+        return service.getAverageSalary();
+    }
+
+    @GetMapping("/department/{department}")
+    public List<Employee> getDepartmentPayroll(
+            @PathVariable String department) {
+
+        return service.getPayroll()
+                .stream()
+                .filter(emp ->
+                        department.equalsIgnoreCase(
+                                emp.getDepartment()))
+                .toList();
+    }
 
     @GetMapping("/summary")
     public Double totalPayroll() {

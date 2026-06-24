@@ -6,13 +6,12 @@ import org.springframework.stereotype.Service;
 import com.nexushr.entity.UserSettings;
 import com.nexushr.repository.SettingsRepository;
 
+
 @Service
 public class SettingsService {
 
     @Autowired
     private SettingsRepository repository;
-
-    // Get Settings
 
     public UserSettings getSettings(
             String username) {
@@ -27,30 +26,16 @@ public class SettingsService {
                     settings.setUsername(
                             username);
 
-                    settings.setDarkMode(
-                            false);
+                    settings.setDarkMode(false);
+                    settings.setEmailNotifications(true);
+                    settings.setSmsNotifications(false);
+                    settings.setTaskAlerts(true);
+                    settings.setLeaveAlerts(true);
+                    settings.setAttendanceAlerts(true);
 
-                    settings.setEmailNotifications(
-                            true);
-
-                    settings.setSmsNotifications(
-                            false);
-
-                    settings.setTaskAlerts(
-                            true);
-
-                    settings.setLeaveAlerts(
-                            true);
-
-                    settings.setAttendanceAlerts(
-                            true);
-
-                    return repository.save(
-                            settings);
+                    return repository.save(settings);
                 });
     }
-
-    // Save Settings
 
     public UserSettings saveSettings(
             String username,
@@ -58,32 +43,23 @@ public class SettingsService {
 
         UserSettings existing =
                 repository
-                .findByUsername(
-                        username)
+                .findByUsername(username)
                 .orElse(new UserSettings());
 
-        existing.setUsername(
-                username);
-
+        existing.setUsername(username);
         existing.setDarkMode(
-                settings.getDarkMode());
-
+                settings.isDarkMode());
         existing.setEmailNotifications(
-                settings.getEmailNotifications());
-
+                settings.isEmailNotifications());
         existing.setSmsNotifications(
-                settings.getSmsNotifications());
-
+                settings.isSmsNotifications());
         existing.setTaskAlerts(
-                settings.getTaskAlerts());
-
+                settings.isTaskAlerts());
         existing.setLeaveAlerts(
-                settings.getLeaveAlerts());
-
+                settings.isLeaveAlerts());
         existing.setAttendanceAlerts(
-                settings.getAttendanceAlerts());
+                settings.isAttendanceAlerts());
 
-        return repository.save(
-                existing);
+        return repository.save(existing);
     }
 }

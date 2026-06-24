@@ -1,92 +1,176 @@
-import React,
-{
- useEffect,
- useState
-}
-from "react";
+import React, {
+useEffect,
+useState
+} from "react";
+
+import API from "../services/ApiService";
 
 function Navbar() {
 
- const [count,
-        setCount] =
-        useState(0);
+const [notificationCount,
+setNotificationCount] =
+useState(0);
 
- useEffect(() => {
+const [username,
+setUsername] =
+useState("");
 
-  loadCount();
+useEffect(() => {
 
-  window.addEventListener(
-   "notification-update",
-   loadCount
+
+const storedUsername =
+  localStorage.getItem(
+    "username"
   );
 
-  return () => {
+setUsername(
+  storedUsername || ""
+);
 
-   window.removeEventListener(
-    "notification-update",
-    loadCount
-   );
+loadNotifications();
 
-  };
+const interval =
+  setInterval(() => {
 
- }, []);
+    loadNotifications();
 
- const loadCount = () => {
+  }, 5000);
 
-  const notifications =
-   JSON.parse(
-    localStorage.getItem(
-     "notifications"
-    ) || "[]"
-   );
+return () =>
+  clearInterval(interval);
 
-  setCount(
-   notifications.length
-  );
 
- };
+}, []);
 
- return (
+const loadNotifications =
+async () => {
 
- <div className=
- "navbar navbar-light bg-white shadow-sm px-4">
 
-  <h4>
-   NexusHR
-  </h4>
+  try {
 
-  <div className=
-  "position-relative">
+    const username =
+      localStorage.getItem(
+        "username"
+      );
 
-   <span
-    style={{
-     fontSize:"28px",
-     cursor:"pointer"
-    }}
-   >
-    🔔
-   </span>
+    if (!username) {
+      return;
+    }
 
-   {
-    count > 0 && (
+    const response =
+      await API.get(
+        `/notifications/employee/${username}`
+      );
 
-    <span
-     className=
-     "badge bg-danger position-absolute top-0 start-100 translate-middle"
+    setNotificationCount(
+      response.data.length
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Notification Error",
+      error
+    );
+
+  }
+
+};
+
+
+const logout = () => {
+
+
+localStorage.clear();
+
+window.location.href = "/";
+
+
+};
+
+return (
+
+
+<nav
+  className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4"
+  style={{
+    height: "70px"
+  }}
+>
+
+  <div className="container-fluid">
+
+    <h4
+      className="fw-bold text-primary mb-0"
     >
+      NexusHR
+    </h4>
 
-     {count}
+    <div className="d-flex align-items-center">
 
-    </span>
+      <div
+        className="position-relative me-4"
+        style={{
+          cursor: "pointer"
+        }}
+      >
 
-    )
-   }
+        <span
+          style={{
+            fontSize: "28px"
+          }}
+        >
+          🔔
+        </span>
+
+        {
+          notificationCount > 0 && (
+
+            <span
+              className="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill"
+            >
+
+              {notificationCount}
+
+            </span>
+
+          )
+        }
+
+      </div>
+
+      <div className="text-end me-3">
+
+        <div
+          className="fw-bold"
+        >
+          {username}
+        </div>
+
+        <small
+          className="text-muted"
+        >
+          Logged In
+        </small>
+
+      </div>
+
+      <button
+        className="btn btn-danger btn-sm"
+        onClick={logout}
+      >
+        Logout
+      </button>
+
+    </div>
 
   </div>
 
- </div>
+</nav>
 
- );
+
+);
+
 }
 
 export default Navbar;

@@ -6,239 +6,138 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.nexushr.entity.LeaveRequest;
-import com.nexushr.entity.Notification;
 import com.nexushr.repository.LeaveRepository;
 
 @Service
 public class LeaveService {
 
+    @Autowired
+    private LeaveRepository repository;
 
-@Autowired
-private LeaveRepository repository;
+    // Apply Leave
+    public LeaveRequest applyLeave(
+            LeaveRequest leave) {
 
-@Autowired
-private NotificationService notificationService;
+        leave.setManagerStatus("PENDING");
+        leave.setAdminStatus("PENDING");
+        leave.setStatus("PENDING");
 
-// Employee Apply Leave
+        return repository.save(leave);
+    }
 
-public LeaveRequest applyLeave(
-        LeaveRequest leave) {
+    // Employee Leave History
+    public List<LeaveRequest> getEmployeeLeaves(
+            Long employeeId) {
 
-    leave.setStatus("PENDING");
+        return repository.findByEmployeeId(
+                employeeId);
+    }
 
-    leave.setManagerStatus(
-            "PENDING");
+    // Get All Leaves
+    public List<LeaveRequest> getAll() {
 
-    leave.setAdminStatus(
-            "PENDING");
+        return repository.findAll();
+    }
 
-    LeaveRequest savedLeave =
-            repository.save(leave);
+    // Manager Approve
+    public LeaveRequest managerApprove(
+            Long id) {
 
-    Notification notification =
-            new Notification();
+        LeaveRequest leave =
+                repository.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Leave Not Found"));
 
-    notification.setTitle(
-            "New Leave Request");
+        leave.setManagerStatus(
+                "APPROVED");
 
-    notification.setMessage(
-            "Employee ID "
-            + leave.getEmployeeId()
-            + " applied for "
-            + leave.getLeaveType()
-            + " leave");
+        leave.setStatus(
+                "MANAGER_APPROVED");
 
-    notification.setSender(
-            "EMPLOYEE");
+        return repository.save(leave);
+    }
 
-    notification.setReceiver(
-            "MANAGER");
+    // Manager Reject
+    public LeaveRequest managerReject(
+            Long id) {
 
-    notificationService.save(
-            notification);
+        LeaveRequest leave =
+                repository.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Leave Not Found"));
 
-    return savedLeave;
-}
+        leave.setManagerStatus(
+                "REJECTED");
 
-// Get All Leaves
+        leave.setStatus(
+                "REJECTED");
 
-public List<LeaveRequest> getAll() {
+        return repository.save(leave);
+    }
 
-    return repository.findAll();
-}
+    // Admin Approve
+    public LeaveRequest adminApprove(
+            Long id) {
 
-// Get Employee Leaves
+        LeaveRequest leave =
+                repository.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Leave Not Found"));
 
-public List<LeaveRequest> getEmployeeLeaves(
-        Long employeeId) {
+        leave.setAdminStatus(
+                "APPROVED");
 
-    return repository.findByEmployeeId(
-            employeeId);
-}
+        leave.setStatus(
+                "APPROVED");
 
-// Manager Approve
+        return repository.save(leave);
+    }
 
-public LeaveRequest managerApprove(
-        Long id) {
+    // Admin Reject
+    public LeaveRequest reject(
+            Long id) {
 
-    LeaveRequest leave =
-            repository.findById(id)
-                    .orElseThrow();
+        LeaveRequest leave =
+                repository.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Leave Not Found"));
 
-    leave.setManagerStatus(
-            "APPROVED");
+        leave.setAdminStatus(
+                "REJECTED");
 
-    leave.setStatus(
-            "PENDING_ADMIN");
+        leave.setStatus(
+                "REJECTED");
 
-    LeaveRequest updated =
-            repository.save(leave);
+        return repository.save(leave);
+    }
 
-    Notification notification =
-            new Notification();
+    // Delete Leave
+    public void delete(
+            Long id) {
 
-    notification.setTitle(
-            "Leave Approved By Manager");
+        repository.deleteById(id);
+    }
 
-    notification.setMessage(
-            "Leave request requires final admin approval");
+    // Dashboard Counts
+    public long getPendingLeaves() {
 
-    notification.setSender(
-            "MANAGER");
+        return repository.countByStatus(
+                "PENDING");
+    }
 
-    notification.setReceiver(
-            "ADMIN");
+    public long getApprovedLeaves() {
 
-    notificationService.save(
-            notification);
+        return repository.countByStatus(
+                "APPROVED");
+    }
 
-    return updated;
-}
+    public long getRejectedLeaves() {
 
-// Manager Reject
-
-public LeaveRequest managerReject(
-        Long id) {
-
-    LeaveRequest leave =
-            repository.findById(id)
-                    .orElseThrow();
-
-    leave.setManagerStatus(
-            "REJECTED");
-
-    leave.setStatus(
-            "REJECTED");
-
-    LeaveRequest updated =
-            repository.save(leave);
-
-    Notification notification =
-            new Notification();
-
-    notification.setTitle(
-            "Leave Rejected");
-
-    notification.setMessage(
-            "Manager rejected your leave request");
-
-    notification.setSender(
-            "MANAGER");
-
-    notification.setReceiver(
-            "EMPLOYEE");
-
-    notificationService.save(
-            notification);
-
-    return updated;
-}
-
-// Admin Final Approval
-
-public LeaveRequest adminApprove(
-        Long id) {
-
-    LeaveRequest leave =
-            repository.findById(id)
-                    .orElseThrow();
-
-    leave.setAdminStatus(
-            "APPROVED");
-
-    leave.setStatus(
-            "APPROVED");
-
-    LeaveRequest updated =
-            repository.save(leave);
-
-    Notification notification =
-            new Notification();
-
-    notification.setTitle(
-            "Leave Approved");
-
-    notification.setMessage(
-            "Your leave request has been approved");
-
-    notification.setSender(
-            "ADMIN");
-
-    notification.setReceiver(
-            "EMPLOYEE");
-
-    notificationService.save(
-            notification);
-
-    return updated;
-}
-
-// Admin Reject
-
-public LeaveRequest reject(
-        Long id) {
-
-    LeaveRequest leave =
-            repository.findById(id)
-                    .orElseThrow();
-
-    leave.setAdminStatus(
-            "REJECTED");
-
-    leave.setStatus(
-            "REJECTED");
-
-    LeaveRequest updated =
-            repository.save(leave);
-
-    Notification notification =
-            new Notification();
-
-    notification.setTitle(
-            "Leave Rejected");
-
-    notification.setMessage(
-            "Admin rejected your leave request");
-
-    notification.setSender(
-            "ADMIN");
-
-    notification.setReceiver(
-            "EMPLOYEE");
-
-    notificationService.save(
-            notification);
-
-    return updated;
-}
-
-// Delete Leave
-
-public void delete(
-        Long id) {
-
-    repository.deleteById(id);
-}
-
-
+        return repository.countByStatus(
+                "REJECTED");
+    }
 }

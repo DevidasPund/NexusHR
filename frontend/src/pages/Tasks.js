@@ -1,39 +1,37 @@
-import React, {
-  useEffect,
-  useState
-} from "react";
-
+import React, { useEffect, useState } from "react";
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function Tasks() {
 
-  const [tasks, setTasks] =
-    useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [employees, setEmployees] =
-    useState([]);
+  const [search, setSearch] = useState("");
 
-  const [projects, setProjects] =
-    useState([]);
-const [search, setSearch] =
-useState("");
-  const [task, setTask] =
-    useState({
-      taskName: "",
-      employeeName: "",
-      projectName: "",
-      dueDate: "",
-      priority: "HIGH",
-      status: "PENDING"
-    });
+  const [task, setTask] = useState({
+    taskName: "",
+    employeeName: "",
+    projectName: "",
+    dueDate: "",
+    priority: "HIGH",
+    status: "PENDING"
+  });
 
   useEffect(() => {
 
     loadTasks();
     loadEmployees();
     loadProjects();
+
+    const interval = setInterval(() => {
+      loadTasks();
+    }, 5000);
+
+    return () => clearInterval(interval);
 
   }, []);
 
@@ -44,33 +42,20 @@ useState("");
       const response =
         await API.get("/tasks");
 
-      setTasks(
-        response.data
-      );
+      setTasks(response.data);
 
     } catch (error) {
 
-      console.log(error);
+      console.error(error);
+
+    } finally {
+
+      setLoading(false);
 
     }
+
   };
-const totalTasks =
-tasks.length;
 
-const pendingTasks =
-tasks.filter(
- t => t.status === "PENDING"
-).length;
-
-const progressTasks =
-tasks.filter(
- t => t.status === "IN_PROGRESS"
-).length;
-
-const completedTasks =
-tasks.filter(
- t => t.status === "COMPLETED"
-).length;
   const loadEmployees = async () => {
 
     try {
@@ -78,15 +63,14 @@ tasks.filter(
       const response =
         await API.get("/employees");
 
-      setEmployees(
-        response.data
-      );
+      setEmployees(response.data);
 
     } catch (error) {
 
-      console.log(error);
+      console.error(error);
 
     }
+
   };
 
   const loadProjects = async () => {
@@ -96,84 +80,92 @@ tasks.filter(
       const response =
         await API.get("/projects");
 
-      setProjects(
-        response.data
-      );
+      setProjects(response.data);
 
     } catch (error) {
 
-      console.log(error);
+      console.error(error);
 
     }
+
   };
 
-  const assignTask =
-    async () => {
+  const assignTask = async () => {
 
-      try {
+    if (
+      !task.taskName ||
+      !task.employeeName ||
+      !task.projectName ||
+      !task.dueDate
+    ) {
 
-        await API.post(
-          "/tasks",
-          task
-        );
+      alert("Please fill all fields");
+      return;
 
-        alert(
-          "Task Assigned Successfully"
-        );
+    }
 
-        setTask({
-          taskName: "",
-          employeeName: "",
-          projectName: "",
-          dueDate: "",
-          priority: "HIGH",
-          status: "PENDING"
-        });
+    try {
 
-        loadTasks();
+      await API.post(
+        "/tasks",
+        task
+      );
 
-      } catch (error) {
+      alert(
+        "Task Assigned Successfully"
+      );
 
-        console.log(error);
+      setTask({
+        taskName: "",
+        employeeName: "",
+        projectName: "",
+        dueDate: "",
+        priority: "HIGH",
+        status: "PENDING"
+      });
 
-      }
-    };
-const filteredTasks =
-tasks.filter(
- (task) =>
- task.taskName
- ?.toLowerCase()
- .includes(
-  search.toLowerCase()
- )
- ||
- task.employeeName
- ?.toLowerCase()
- .includes(
-  search.toLowerCase()
- )
-);
-  const deleteTask =
-    async (id) => {
+      loadTasks();
 
-      if (
-        !window.confirm(
-          "Delete Task?"
-        )
-      ) return;
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  };
+
+  const deleteTask = async (id) => {
+
+    if (
+      !window.confirm(
+        "Delete this task?"
+      )
+    ) {
+      return;
+    }
+
+    try {
 
       await API.delete(
         `/tasks/${id}`
       );
 
       loadTasks();
-    };
 
-  const updateStatus =
-    async (
-      id,
-      status
-    ) => {
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  };
+
+  const updateStatus = async (
+    id,
+    status
+  ) => {
+
+    try {
 
       await API.put(
         `/tasks/${id}/status`,
@@ -186,7 +178,67 @@ tasks.filter(
       );
 
       loadTasks();
-    };
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  };
+
+  const filteredTasks =
+    tasks.filter(
+      (t) =>
+        t.taskName
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          ) ||
+        t.employeeName
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          ) ||
+        t.projectName
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
+    );
+
+  const totalTasks =
+    tasks.length;
+
+  const pendingTasks =
+    tasks.filter(
+      t =>
+        t.status === "PENDING"
+    ).length;
+
+  const progressTasks =
+    tasks.filter(
+      t =>
+        t.status === "IN_PROGRESS"
+    ).length;
+
+  const completedTasks =
+    tasks.filter(
+      t =>
+        t.status === "COMPLETED"
+    ).length;
+
+  if (loading) {
+
+    return (
+      <div className="text-center mt-5">
+        <h3>
+          Loading Tasks...
+        </h3>
+      </div>
+    );
+
+  }
 
   return (
 
@@ -194,215 +246,275 @@ tasks.filter(
 
       <Sidebar />
 
-      <div className="flex-grow-1">
+      <div
+        className="flex-grow-1"
+        style={{
+          background: "#f4f7fe",
+          minHeight: "100vh"
+        }}
+      >
 
         <Navbar />
 
         <div className="container-fluid p-4">
-<div className="row mb-4">
 
- <div className="col-md-3">
-  <div className="card bg-primary text-white shadow border-0">
-   <div className="card-body text-center">
-    <h6>Total Tasks</h6>
-    <h2>{totalTasks}</h2>
-   </div>
-  </div>
- </div>
+          <div
+            className="card border-0 shadow-lg mb-4"
+            style={{
+              borderRadius: "20px",
+              background:
+                "linear-gradient(135deg,#2563eb,#7c3aed)"
+            }}
+          >
 
- <div className="col-md-3">
-  <div className="card bg-warning shadow border-0">
-   <div className="card-body text-center">
-    <h6>Pending</h6>
-    <h2>{pendingTasks}</h2>
-   </div>
-  </div>
- </div>
+            <div className="card-body text-white">
 
- <div className="col-md-3">
-  <div className="card bg-info text-white shadow border-0">
-   <div className="card-body text-center">
-    <h6>In Progress</h6>
-    <h2>{progressTasks}</h2>
-   </div>
-  </div>
- </div>
+              <h2>
+                📋 Task Management
+              </h2>
 
- <div className="col-md-3">
-  <div className="card bg-success text-white shadow border-0">
-   <div className="card-body text-center">
-    <h6>Completed</h6>
-    <h2>{completedTasks}</h2>
-   </div>
-  </div>
- </div>
+              <p>
+                Assign, Monitor &
+                Track Employee Tasks
+              </p>
 
-</div>
-          <div className="card shadow mb-4">
+            </div>
+
+          </div>
+
+          <div className="row g-4 mb-4">
+
+            <div className="col-md-3">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Total Tasks
+                  </h6>
+
+                  <h2 className="text-primary">
+                    {totalTasks}
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-3">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Pending
+                  </h6>
+
+                  <h2 className="text-warning">
+                    {pendingTasks}
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-3">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    In Progress
+                  </h6>
+
+                  <h2 className="text-info">
+                    {progressTasks}
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-3">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Completed
+                  </h6>
+
+                  <h2 className="text-success">
+                    {completedTasks}
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="card shadow border-0 mb-4">
 
             <div className="card-body">
 
-              <h2>
-                Task Management
-              </h2>
+              <h4>
+                Assign New Task
+              </h4>
 
-              <input
-                className="form-control mb-3"
-                placeholder="Task Name"
-                value={
-                  task.taskName
-                }
-                onChange={(e) =>
-                  setTask({
-                    ...task,
-                    taskName:
-                      e.target.value
-                  })
-                }
-              />
-<input
- className="form-control mb-3"
- placeholder="Search Task or Employee..."
- value={search}
- onChange={(e)=>
-  setSearch(
-   e.target.value
-  )
- }
-/>
-              <select
-                className="form-control mb-3"
-                value={
-                  task.employeeName
-                }
-                onChange={(e) =>
-                  setTask({
-                    ...task,
-                    employeeName:
-                      e.target.value
-                  })
-                }
-              >
+              <hr />
 
-                <option value="">
-                  Select Employee
-                </option>
+              <div className="row">
 
-                {
-                  employees.map(
-                    (emp) => (
-                      <option
-                        key={emp.id}
-                        value={
-                          emp.firstName +
-                          " " +
-                          emp.lastName
-                        }
-                      >
-                        {
-                          emp.firstName
-                        }{" "}
-                        {
-                          emp.lastName
-                        }
-                        {" - "}
-                        {
-                          emp.department
-                        }
-                      </option>
-                    )
-                  )
-                }
+                <div className="col-md-6 mb-3">
 
-              </select>
+                  <input
+                    className="form-control"
+                    placeholder="Task Name"
+                    value={task.taskName}
+                    onChange={(e) =>
+                      setTask({
+                        ...task,
+                        taskName:
+                          e.target.value
+                      })
+                    }
+                  />
 
-              <select
-                className="form-control mb-3"
-                value={
-                  task.projectName
-                }
-                onChange={(e) =>
-                  setTask({
-                    ...task,
-                    projectName:
-                      e.target.value
-                  })
-                }
-              >
+                </div>
 
-                <option value="">
-                  Select Project
-                </option>
+                <div className="col-md-6 mb-3">
 
-                {
-                  projects.map(
-                    (project) => (
-                      <option
-                        key={
-                          project.id
-                        }
-                        value={
-                          project.projectName
-                        }
-                      >
-                        {
-                          project.projectName
-                        }
-                      </option>
-                    )
-                  )
-                }
+                  <select
+                    className="form-select"
+                    value={task.employeeName}
+                    onChange={(e) =>
+                      setTask({
+                        ...task,
+                        employeeName:
+                          e.target.value
+                      })
+                    }
+                  >
 
-              </select>
+                    <option value="">
+                      Select Employee
+                    </option>
 
-              <input
-                type="date"
-                className="form-control mb-3"
-                value={
-                  task.dueDate
-                }
-                onChange={(e) =>
-                  setTask({
-                    ...task,
-                    dueDate:
-                      e.target.value
-                  })
-                }
-              />
+                    {employees.map(
+                      emp => (
+                        <option
+                          key={emp.id}
+                          value={`${emp.firstName} ${emp.lastName}`}
+                        >
+                          {emp.firstName}
+                          {" "}
+                          {emp.lastName}
+                        </option>
+                      )
+                    )}
 
-              <select
-                className="form-control mb-3"
-                value={
-                  task.priority
-                }
-                onChange={(e) =>
-                  setTask({
-                    ...task,
-                    priority:
-                      e.target.value
-                  })
-                }
-              >
+                  </select>
 
-                <option>
-                  HIGH
-                </option>
+                </div>
 
-                <option>
-                  MEDIUM
-                </option>
+                <div className="col-md-4 mb-3">
 
-                <option>
-                  LOW
-                </option>
+                  <select
+                    className="form-select"
+                    value={task.projectName}
+                    onChange={(e) =>
+                      setTask({
+                        ...task,
+                        projectName:
+                          e.target.value
+                      })
+                    }
+                  >
 
-              </select>
+                    <option value="">
+                      Select Project
+                    </option>
+
+                    {projects.map(
+                      project => (
+                        <option
+                          key={project.id}
+                          value={project.projectName}
+                        >
+                          {project.projectName}
+                        </option>
+                      )
+                    )}
+
+                  </select>
+
+                </div>
+
+                <div className="col-md-4 mb-3">
+
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={task.dueDate}
+                    onChange={(e) =>
+                      setTask({
+                        ...task,
+                        dueDate:
+                          e.target.value
+                      })
+                    }
+                  />
+
+                </div>
+
+                <div className="col-md-4 mb-3">
+
+                  <select
+                    className="form-select"
+                    value={task.priority}
+                    onChange={(e) =>
+                      setTask({
+                        ...task,
+                        priority:
+                          e.target.value
+                      })
+                    }
+                  >
+
+                    <option>
+                      HIGH
+                    </option>
+
+                    <option>
+                      MEDIUM
+                    </option>
+
+                    <option>
+                      LOW
+                    </option>
+
+                  </select>
+
+                </div>
+
+              </div>
 
               <button
-                className="btn btn-success"
-                onClick={
-                  assignTask
-                }
+                className="btn btn-primary"
+                onClick={assignTask}
               >
                 Assign Task
               </button>
@@ -411,43 +523,57 @@ tasks.filter(
 
           </div>
 
-          <div className="card shadow">
+          <div className="card shadow border-0">
 
             <div className="card-body">
 
-              <h2>
-                Task List
-              </h2>
+              <div className="d-flex justify-content-between mb-3">
 
-              <table className="table table-hover align-middle">
+                <h4>
+                  Task List
+                </h4>
 
-             <thead className="table-dark">
+                <input
+                  className="form-control w-25"
+                  placeholder="Search..."
+                  value={search}
+                  onChange={(e) =>
+                    setSearch(
+                      e.target.value
+                    )
+                  }
+                />
 
-                  <tr>
+              </div>
 
-                    <th>ID</th>
-                    <th>Task</th>
-                    <th>Employee</th>
-                    <th>Project</th>
-                    <th>Due Date</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Action</th>
+              <div className="table-responsive">
 
-                  </tr>
+                <table className="table table-hover align-middle">
 
-                </thead>
+                  <thead className="table-dark">
 
-                <tbody>
+                    <tr>
 
-                  {
-                    tasks.map(
-                      (task) => (
+                      <th>ID</th>
+                      <th>Task</th>
+                      <th>Employee</th>
+                      <th>Project</th>
+                      <th>Due Date</th>
+                      <th>Priority</th>
+                      <th>Status</th>
+                      <th>Action</th>
+
+                    </tr>
+
+                  </thead>
+
+                  <tbody>
+
+                    {filteredTasks.map(
+                      task => (
 
                         <tr
-                          key={
-                            task.id
-                          }
+                          key={task.id}
                         >
 
                           <td>
@@ -455,61 +581,49 @@ tasks.filter(
                           </td>
 
                           <td>
-                            {
-                              task.taskName
-                            }
+                            {task.taskName}
                           </td>
 
                           <td>
-                            {
-                              task.employeeName
-                            }
+                            {task.employeeName}
                           </td>
 
                           <td>
-                            {
-                              task.projectName
-                            }
+                            {task.projectName}
                           </td>
 
                           <td>
-                            {
-                              task.dueDate
-                            }
+                            {task.dueDate}
                           </td>
 
-                        <td>
+                          <td>
 
- <span
-  className={
-   task.priority === "HIGH"
-   ? "badge bg-danger"
-   : task.priority === "MEDIUM"
-   ? "badge bg-warning text-dark"
-   : "badge bg-success"
-  }
- >
+                            <span
+                              className={
+                                task.priority === "HIGH"
+                                  ? "badge bg-danger"
+                                  : task.priority === "MEDIUM"
+                                  ? "badge bg-warning text-dark"
+                                  : "badge bg-success"
+                              }
+                            >
 
-  {task.priority}
+                              {task.priority}
 
- </span>
+                            </span>
 
-</td>
+                          </td>
 
                           <td>
 
                             <select
-                              value={
-                                task.status
-                              }
-                              onChange={
-                                (
-                                  e
-                                ) =>
-                                  updateStatus(
-                                    task.id,
-                                    e.target.value
-                                  )
+                              className="form-select"
+                              value={task.status}
+                              onChange={(e) =>
+                                updateStatus(
+                                  task.id,
+                                  e.target.value
+                                )
                               }
                             >
 
@@ -547,12 +661,13 @@ tasks.filter(
                         </tr>
 
                       )
-                    )
-                  }
+                    )}
 
-                </tbody>
+                  </tbody>
 
-              </table>
+                </table>
+
+              </div>
 
             </div>
 
@@ -565,6 +680,7 @@ tasks.filter(
     </div>
 
   );
+
 }
 
 export default Tasks;

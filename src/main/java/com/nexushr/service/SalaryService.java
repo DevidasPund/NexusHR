@@ -6,111 +6,66 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.nexushr.entity.Employee;
-import com.nexushr.entity.Notification;
 import com.nexushr.repository.EmployeeRepository;
 
 @Service
 public class SalaryService {
 
     @Autowired
-    private EmployeeRepository employeeRepository;
+    private EmployeeRepository repository;
 
-    @Autowired
-    private NotificationService notificationService;
+    // Get All Payroll Records
+    public List<Employee> getPayroll() {
 
-    @Autowired
-    private AuditLogService auditLogService;
-
-//    @Autowired
-//    private EmailService emailService;
+        return repository.findAll();
+    }
 
     // Get Employee Salary
-
     public Employee getEmployeeSalary(
-            Long employeeId) {
+            Long id) {
 
-        return employeeRepository
-                .findById(employeeId)
+        return repository.findById(id)
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Employee Not Found"));
-    }
-
-    // Get All Employees Payroll
-
-    public List<Employee> getPayroll() {
-
-        return employeeRepository.findAll();
     }
 
     // Update Salary
-
     public Employee updateSalary(
-            Long employeeId,
+            Long id,
             Double salary) {
 
         Employee employee =
-                employeeRepository
-                .findById(employeeId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Employee Not Found"));
+                getEmployeeSalary(id);
 
-        Double oldSalary =
-                employee.getSalary();
+        employee.setSalary(salary);
 
-        employee.setSalary(
-                salary);
-
-        Employee updated =
-                employeeRepository.save(
-                        employee);
-
-        // Audit Log
-
-        auditLogService.saveLog(
-                "ADMIN",
-                "SALARY_UPDATED",
-                employee.getFirstName()
-                + " Salary Updated From ₹"
-                + oldSalary
-                + " To ₹"
-                + salary);
-
-        // Notification
-
-        Notification notification =
-                new Notification();
-
-        notification.setTitle(
-                "Salary Updated");
-
-        notification.setMessage(
-                "Your salary has been updated to ₹"
-                + salary);
-
-        notification.setSender(
-                "ADMIN");
-
-        notification.setReceiver(
-                employee.getUsername());
-
-        notificationService.save(
-                notification);
-
-        // Email
-
-
-        return updated;
+        return repository.save(employee);
     }
 
-    // Payroll Summary
-
+    // Total Payroll
     public Double getTotalPayroll() {
 
-        Double total =
-                employeeRepository.getTotalSalary();
+        return repository.findAll()
+                .stream()
+                .mapToDouble(emp ->
+                        emp.getSalary() == null
+                                ? 0
+                                : emp.getSalary())
+                .sum();
+    }
 
-        return total == null ? 0 : total;
+    // Average Salary
+    public Double getAverageSalary() {
+
+        List<Employee> employees =
+                repository.findAll();
+
+        if (employees.isEmpty()) {
+            return 0.0;
+        }
+
+        return getTotalPayroll()
+                / employees.size();
     }
 }

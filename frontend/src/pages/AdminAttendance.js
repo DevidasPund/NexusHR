@@ -5,71 +5,94 @@ import Navbar from "../components/Navbar";
 
 function AdminAttendance() {
 
-  const [attendance, setAttendance] = useState([]);
-  const [search, setSearch] = useState("");
+  const [attendance, setAttendance] =
+    useState([]);
 
-  const [summary, setSummary] = useState({
-    totalEmployees: 0,
-    presentToday: 0,
-    absentToday: 0,
-    attendancePercentage: 0
-  });
+  const [search, setSearch] =
+    useState("");
+
+  const [summary, setSummary] =
+    useState({
+      totalEmployees: 0,
+      presentToday: 0,
+      absentToday: 0,
+      attendancePercentage: 0
+    });
 
   useEffect(() => {
 
     loadAttendance();
     loadSummary();
 
-    const interval = setInterval(() => {
+    const interval =
+      setInterval(() => {
 
-      loadAttendance();
-      loadSummary();
+        loadAttendance();
+        loadSummary();
 
-    }, 30000);
+      }, 30000);
 
-    return () => clearInterval(interval);
+    return () =>
+      clearInterval(interval);
 
   }, []);
 
-  const loadAttendance = async (
-    url = "/attendance/history"
-  ) => {
+  const loadAttendance =
+    async (
+      url = "/attendance/history"
+    ) => {
 
-    try {
+      try {
 
-      const response =
-        await API.get(url);
+        const response =
+          await API.get(url);
 
-      setAttendance(response.data);
+        setAttendance(
+          response.data
+        );
 
-    } catch (error) {
+      } catch (error) {
 
-      console.error(error);
+        console.error(error);
 
-    }
-  };
+      }
 
-  const loadSummary = async () => {
+    };
 
-    try {
+  const loadSummary =
+    async () => {
 
-      const response =
-        await API.get("/attendance/summary");
+      try {
 
-      setSummary(response.data);
+        const response =
+          await API.get(
+            "/attendance/summary"
+          );
 
-    } catch (error) {
+        setSummary(
+          response.data
+        );
 
-      console.error(error);
+      } catch (error) {
 
-    }
-  };
+        console.error(error);
+
+      }
+
+    };
 
   const filteredAttendance =
     attendance.filter((item) =>
       String(item.employeeId)
         .toLowerCase()
-        .includes(search.toLowerCase())
+        .includes(
+          search.toLowerCase()
+        ) ||
+      String(item.status)
+        .toLowerCase()
+        .includes(
+          search.toLowerCase()
+        )
     );
 
   return (
@@ -81,6 +104,7 @@ function AdminAttendance() {
       <div
         className="flex-grow-1"
         style={{
+          marginLeft: "280px",
           background: "#f4f7fc",
           minHeight: "100vh"
         }}
@@ -93,21 +117,23 @@ function AdminAttendance() {
           {/* Header */}
 
           <div
-            className="card border-0 shadow-lg text-white mb-4"
+            className="card border-0 shadow-lg mb-4"
             style={{
               background:
-                "linear-gradient(135deg,#2563eb,#7c3aed)"
+                "linear-gradient(135deg,#2563eb,#7c3aed)",
+              borderRadius: "20px"
             }}
           >
 
-            <div className="card-body">
+            <div className="card-body text-white">
 
               <h2>
                 📅 Attendance Dashboard
               </h2>
 
               <p className="mb-0">
-                Real-Time Employee Attendance Monitoring
+                Real-Time Employee
+                Attendance Monitoring
               </p>
 
             </div>
@@ -116,93 +142,239 @@ function AdminAttendance() {
 
           {/* Summary Cards */}
 
-          <div className="row mb-4">
+          <div className="row g-4 mb-4">
 
             <div className="col-md-3">
-              <div className="card border-0 shadow">
+
+              <div
+                className="card shadow border-0"
+                style={{
+                  height: "140px"
+                }}
+              >
+
                 <div className="card-body text-center">
-                  <h6>Total Employees</h6>
+
+                  <h6>
+                    Total Employees
+                  </h6>
+
                   <h2 className="text-primary">
-                    {summary.totalEmployees}
+                    {
+                      summary.totalEmployees
+                    }
                   </h2>
+
                 </div>
+
               </div>
+
             </div>
 
             <div className="col-md-3">
-              <div className="card border-0 shadow">
+
+              <div
+                className="card shadow border-0"
+                style={{
+                  height: "140px"
+                }}
+              >
+
                 <div className="card-body text-center">
-                  <h6>Present Today</h6>
+
+                  <h6>
+                    Present Today
+                  </h6>
+
                   <h2 className="text-success">
-                    {summary.presentToday}
+                    {
+                      summary.presentToday
+                    }
                   </h2>
+
                 </div>
+
               </div>
+
             </div>
 
             <div className="col-md-3">
-              <div className="card border-0 shadow">
+
+              <div
+                className="card shadow border-0"
+                style={{
+                  height: "140px"
+                }}
+              >
+
                 <div className="card-body text-center">
-                  <h6>Absent Today</h6>
+
+                  <h6>
+                    Absent Today
+                  </h6>
+
                   <h2 className="text-danger">
-                    {summary.absentToday}
+                    {
+                      summary.absentToday
+                    }
                   </h2>
+
                 </div>
+
               </div>
+
             </div>
 
             <div className="col-md-3">
-              <div className="card border-0 shadow">
+
+              <div
+                className="card shadow border-0"
+                style={{
+                  height: "140px"
+                }}
+              >
+
                 <div className="card-body text-center">
-                  <h6>Attendance %</h6>
+
+                  <h6>
+                    Attendance %
+                  </h6>
+
                   <h2 className="text-warning">
-                    {summary.attendancePercentage}%
+                    {
+                      summary.attendancePercentage
+                    }%
                   </h2>
+
                 </div>
+
               </div>
+
             </div>
 
           </div>
 
           {/* Analytics */}
 
-          <div className="row mb-4">
+          <div className="row g-4 mb-4">
 
             <div className="col-md-3">
-              <div className="card border-0 shadow">
+
+              <div className="card shadow border-0">
+
                 <div className="card-body text-center">
-                  <h6>Late Arrivals</h6>
-                  <h2 className="text-warning">
+
+                  <h6>
+                    Present
+                  </h6>
+
+                  <h2 className="text-success">
+
                     {
                       attendance.filter(
-                        a => a.status === "LATE"
+                        a =>
+                          a.status ===
+                          "PRESENT"
                       ).length
                     }
+
                   </h2>
+
                 </div>
+
               </div>
+
             </div>
 
             <div className="col-md-3">
-              <div className="card border-0 shadow">
+
+              <div className="card shadow border-0">
+
                 <div className="card-body text-center">
-                  <h6>Work From Home</h6>
-                  <h2 className="text-info">
+
+                  <h6>
+                    Absent
+                  </h6>
+
+                  <h2 className="text-danger">
+
                     {
                       attendance.filter(
-                        a => a.status === "WFH"
+                        a =>
+                          a.status ===
+                          "ABSENT"
                       ).length
                     }
+
                   </h2>
+
                 </div>
+
               </div>
+
+            </div>
+
+            <div className="col-md-3">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Late Arrivals
+                  </h6>
+
+                  <h2 className="text-warning">
+
+                    {
+                      attendance.filter(
+                        a =>
+                          a.status ===
+                          "LATE"
+                      ).length
+                    }
+
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-3">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Work From Home
+                  </h6>
+
+                  <h2 className="text-info">
+
+                    {
+                      attendance.filter(
+                        a =>
+                          a.status ===
+                          "WFH"
+                      ).length
+                    }
+
+                  </h2>
+
+                </div>
+
+              </div>
+
             </div>
 
           </div>
 
           {/* Filters */}
 
-          <div className="card border-0 shadow mb-4">
+          <div className="card shadow border-0 mb-4">
 
             <div className="card-body">
 
@@ -231,7 +403,7 @@ function AdminAttendance() {
                 </button>
 
                 <button
-                  className="btn btn-dark"
+                  className="btn btn-dark me-2"
                   onClick={() =>
                     loadAttendance(
                       "/attendance/history"
@@ -241,39 +413,29 @@ function AdminAttendance() {
                   All Records
                 </button>
 
-              </div>
-
-              <div className="row">
-
-                <div className="col-md-6">
-
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Search Employee ID"
-                    value={search}
-                    onChange={(e) =>
-                      setSearch(
-                        e.target.value
-                      )
-                    }
-                  />
-
-                </div>
-
-                <div className="col-md-6 text-end">
-
-                  <button className="btn btn-success me-2">
-                    Export Excel
-                  </button>
-
-                  <button className="btn btn-danger">
-                    Export PDF
-                  </button>
-
-                </div>
+                <button
+                  className="btn btn-info"
+                  onClick={() => {
+                    loadAttendance();
+                    loadSummary();
+                  }}
+                >
+                  Refresh
+                </button>
 
               </div>
+
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search Employee ID or Status"
+                value={search}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+              />
 
             </div>
 
@@ -281,17 +443,18 @@ function AdminAttendance() {
 
           {/* Attendance Table */}
 
-          <div className="card border-0 shadow">
+          <div className="card shadow border-0">
 
             <div className="card-body">
 
               <h4 className="mb-4">
-                Employee Attendance Records
+                Employee Attendance
+                Records
               </h4>
 
               <div className="table-responsive">
 
-                <table className="table table-hover align-middle">
+                <table className="table table-hover">
 
                   <thead className="table-dark">
 
@@ -311,53 +474,79 @@ function AdminAttendance() {
                   <tbody>
 
                     {
-                      filteredAttendance.length > 0 ?
+                      filteredAttendance
+                        .length > 0 ?
 
-                        filteredAttendance.map((item) => (
+                        filteredAttendance
+                          .map(
+                            item => (
 
-                          <tr key={item.id}>
-
-                            <td>{item.id}</td>
-
-                            <td>
-                              <span className="fw-bold">
-                                EMP-{item.employeeId}
-                              </span>
-                            </td>
-
-                            <td>
-                              {item.attendanceDate}
-                            </td>
-
-                            <td>
-                              {item.checkInTime || "-"}
-                            </td>
-
-                            <td>
-                              {item.checkOutTime || "-"}
-                            </td>
-
-                            <td>
-
-                              <span
-                                className={
-                                  item.status === "PRESENT"
-                                    ? "badge bg-success"
-                                    : item.status === "LATE"
-                                    ? "badge bg-warning text-dark"
-                                    : item.status === "WFH"
-                                    ? "badge bg-info"
-                                    : "badge bg-danger"
+                              <tr
+                                key={
+                                  item.id
                                 }
                               >
-                                {item.status}
-                              </span>
 
-                            </td>
+                                <td>
+                                  {item.id}
+                                </td>
 
-                          </tr>
+                                <td>
+                                  EMP-
+                                  {
+                                    item.employeeId
+                                  }
+                                </td>
 
-                        ))
+                                <td>
+                                  {
+                                    item.attendanceDate
+                                  }
+                                </td>
+
+                                <td>
+                                  {
+                                    item.checkInTime ||
+                                    "-"
+                                  }
+                                </td>
+
+                                <td>
+                                  {
+                                    item.checkOutTime ||
+                                    "-"
+                                  }
+                                </td>
+
+                                <td>
+
+                                  <span
+                                    className={
+                                      item.status ===
+                                      "PRESENT"
+                                        ? "badge bg-success"
+                                        : item.status ===
+                                          "LATE"
+                                        ? "badge bg-warning text-dark"
+                                        : item.status ===
+                                          "WFH"
+                                        ? "badge bg-info"
+                                        : "badge bg-danger"
+                                    }
+                                  >
+
+                                    {
+                                      item.status
+                                    }
+
+                                  </span>
+
+                                </td>
+
+                              </tr>
+
+                            )
+                          )
 
                         :
 
@@ -371,6 +560,7 @@ function AdminAttendance() {
                           </td>
 
                         </tr>
+
                     }
 
                   </tbody>

@@ -20,12 +20,10 @@ public class MilestoneService {
         if(milestone.getStatus() == null ||
            milestone.getStatus().isEmpty()) {
 
-            milestone.setStatus(
-                    "PENDING");
+            milestone.setStatus("PENDING");
         }
 
-        return repository.save(
-                milestone);
+        return repository.save(milestone);
     }
 
     public List<Milestone> getAll() {
@@ -33,15 +31,21 @@ public class MilestoneService {
         return repository.findAll();
     }
 
+    public Milestone getById(
+            Long id) {
+
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Milestone Not Found"));
+    }
+
     public Milestone update(
             Long id,
             Milestone milestone) {
 
         Milestone existing =
-                repository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Milestone Not Found"));
+                getById(id);
 
         existing.setProjectName(
                 milestone.getProjectName());
@@ -49,11 +53,17 @@ public class MilestoneService {
         existing.setMilestoneName(
                 milestone.getMilestoneName());
 
+        existing.setDescription(
+                milestone.getDescription());
+
         existing.setDueDate(
                 milestone.getDueDate());
 
         existing.setStatus(
                 milestone.getStatus());
+
+        existing.setProgress(
+                milestone.getProgress());
 
         return repository.save(
                 existing);
@@ -65,12 +75,20 @@ public class MilestoneService {
         repository.deleteById(id);
     }
 
-    public Milestone getById(
-            Long id) {
+    public long totalMilestones() {
 
-        return repository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Milestone Not Found"));
+        return repository.count();
+    }
+
+    public long completedMilestones() {
+
+        return repository.countByStatus(
+                "COMPLETED");
+    }
+
+    public long pendingMilestones() {
+
+        return repository.countByStatus(
+                "PENDING");
     }
 }

@@ -1,15 +1,37 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState
+} from "react";
+
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function MyTasks() {
 
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [search, setSearch] =
+    useState("");
 
   useEffect(() => {
+
     loadTasks();
+
+    const interval =
+      setInterval(() => {
+
+        loadTasks();
+
+      }, 5000);
+
+    return () =>
+      clearInterval(interval);
+
   }, []);
 
   const loadTasks = async () => {
@@ -17,51 +39,63 @@ function MyTasks() {
     try {
 
       const username =
-        localStorage.getItem("username");
-
-      console.log("Username:", username);
-
-      if (!username) {
-
-        console.log("Username Missing");
-
-        setLoading(false);
-        return;
-      }
+        localStorage.getItem(
+          "username"
+        );
 
       const response =
         await API.get(
           `/tasks/employee/${username}`
         );
 
-      console.log(
-        "Tasks:",
+      setTasks(
         response.data
       );
 
-      setTasks(response.data);
-
     } catch (error) {
 
-      console.error(
-        "Task Load Error:",
-        error
-      );
+      console.error(error);
 
     } finally {
 
       setLoading(false);
+
     }
+
   };
 
-  if (loading) {
+  const filteredTasks =
+    tasks.filter(
+      task =>
+        task.taskName
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          ) ||
 
-    return (
-      <div className="text-center mt-5">
-        <h3>Loading Tasks...</h3>
-      </div>
+        task.projectName
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
     );
-  }
+
+  const completedTasks =
+    tasks.filter(
+      t => t.status === "COMPLETED"
+    ).length;
+
+  const pendingTasks =
+    tasks.filter(
+      t => t.status === "PENDING"
+    ).length;
+
+  const inProgressTasks =
+    tasks.filter(
+      t =>
+        t.status ===
+        "IN_PROGRESS"
+    ).length;
 
   return (
 
@@ -69,105 +103,254 @@ function MyTasks() {
 
       <Sidebar />
 
-      <div className="flex-grow-1">
+      <div
+        className="flex-grow-1"
+        style={{
+          background: "#f4f7fe",
+          minHeight: "100vh"
+        }}
+      >
 
         <Navbar />
 
         <div className="container-fluid p-4">
 
-          <h2 className="mb-4">
-            📋 My Tasks
-          </h2>
+          {/* Header */}
+
+          <div
+            className="card border-0 shadow-lg mb-4"
+            style={{
+              background:
+                "linear-gradient(135deg,#2563eb,#7c3aed)",
+              borderRadius: "20px"
+            }}
+          >
+
+            <div className="card-body text-white">
+
+              <h2>
+                📋 My Tasks
+              </h2>
+
+              <p>
+                Manage Assigned Tasks
+              </p>
+
+            </div>
+
+          </div>
+
+          {/* Statistics */}
+
+          <div className="row g-4 mb-4">
+
+            <div className="col-md-4">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Completed
+                  </h6>
+
+                  <h2 className="text-success">
+                    {completedTasks}
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-4">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    In Progress
+                  </h6>
+
+                  <h2 className="text-primary">
+                    {inProgressTasks}
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-4">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Pending
+                  </h6>
+
+                  <h2 className="text-warning">
+                    {pendingTasks}
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* Search */}
+
+          <div className="card shadow border-0 mb-4">
+
+            <div className="card-body">
+
+              <input
+                type="text"
+                className="form-control"
+                placeholder="🔍 Search Task"
+                value={search}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+              />
+
+            </div>
+
+          </div>
+
+          {/* Task Table */}
 
           <div className="card shadow border-0">
 
             <div className="card-body">
 
-              <table className="table table-bordered table-hover">
+              <h4>
+                Assigned Tasks
+              </h4>
 
-                <thead className="table-dark">
+              {loading ? (
 
-                  <tr>
-                    <th>ID</th>
-                    <th>Task</th>
-                    <th>Project</th>
-                    <th>Due Date</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                  </tr>
+                <h5>
+                  Loading...
+                </h5>
 
-                </thead>
+              ) : (
 
-                <tbody>
+                <div className="table-responsive">
 
-                  {
-                    tasks.length > 0 ?
+                  <table className="table table-hover">
 
-                    tasks.map((task) => (
+                    <thead className="table-dark">
 
-                      <tr key={task.id}>
+                      <tr>
 
-                        <td>{task.id}</td>
-
-                        <td>{task.taskName}</td>
-
-                        <td>{task.projectName}</td>
-
-                        <td>{task.dueDate}</td>
-
-                        <td>
-
-                          <span
-                            className={
-                              task.priority === "HIGH"
-                                ? "badge bg-danger"
-                                : task.priority === "MEDIUM"
-                                ? "badge bg-warning"
-                                : "badge bg-success"
-                            }
-                          >
-                            {task.priority}
-                          </span>
-
-                        </td>
-
-                        <td>
-
-                          <span
-                            className={
-                              task.status === "COMPLETED"
-                                ? "badge bg-success"
-                                : task.status === "IN_PROGRESS"
-                                ? "badge bg-primary"
-                                : "badge bg-secondary"
-                            }
-                          >
-                            {task.status}
-                          </span>
-
-                        </td>
+                        <th>ID</th>
+                        <th>Task</th>
+                        <th>Project</th>
+                        <th>Due Date</th>
+                        <th>Priority</th>
+                        <th>Status</th>
 
                       </tr>
 
-                    ))
+                    </thead>
 
-                    :
+                    <tbody>
 
-                    <tr>
+                      {
+                        filteredTasks.length > 0
+                        ?
 
-                      <td
-                        colSpan="6"
-                        className="text-center"
-                      >
-                        No Tasks Assigned
-                      </td>
+                        filteredTasks.map(
+                          task => (
 
-                    </tr>
-                  }
+                            <tr key={task.id}>
 
-                </tbody>
+                              <td>
+                                {task.id}
+                              </td>
 
-              </table>
+                              <td>
+                                {task.taskName}
+                              </td>
+
+                              <td>
+                                {task.projectName}
+                              </td>
+
+                              <td>
+                                {task.dueDate}
+                              </td>
+
+                              <td>
+
+                                <span
+                                  className={
+                                    task.priority === "HIGH"
+                                      ? "badge bg-danger"
+                                      : task.priority === "MEDIUM"
+                                      ? "badge bg-warning text-dark"
+                                      : "badge bg-success"
+                                  }
+                                >
+                                  {task.priority}
+                                </span>
+
+                              </td>
+
+                              <td>
+
+                                <span
+                                  className={
+                                    task.status === "COMPLETED"
+                                      ? "badge bg-success"
+                                      : task.status === "IN_PROGRESS"
+                                      ? "badge bg-primary"
+                                      : "badge bg-secondary"
+                                  }
+                                >
+                                  {task.status}
+                                </span>
+
+                              </td>
+
+                            </tr>
+
+                          )
+                        )
+
+                        :
+
+                        <tr>
+
+                          <td
+                            colSpan="6"
+                            className="text-center"
+                          >
+                            No Tasks Found
+                          </td>
+
+                        </tr>
+
+                      }
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+              )}
 
             </div>
 
@@ -178,7 +361,9 @@ function MyTasks() {
       </div>
 
     </div>
+
   );
+
 }
 
 export default MyTasks;

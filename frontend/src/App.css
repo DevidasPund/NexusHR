@@ -1,29 +1,232 @@
+/* Global */
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #f4f7fe;
+  font-family: "Segoe UI", sans-serif;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* Layout */
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  margin-left: 300px;
+  width: calc(100% - 300px);
+  padding: 25px;
+  background: #f4f7fe;
+  transition: all 0.3s ease;
+}
+
+/* Cards */
+
 .card {
-  transition: 0.3s;
+  border: none;
+  border-radius: 18px;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
 }
 
-body {
-  background: #f5f7fb;
-}
-.nav-link{
-  border-radius:12px;
-  margin:4px 10px;
-  transition:0.3s;
-}
+/* Sidebar */
 
-.nav-link:hover{
-  background:#2563eb;
-  transform:translateX(5px);
-}
-
-.active-menu{
-  background:linear-gradient(
-      135deg,
-      #2563eb,
-      #7c3aed
+.sidebar {
+  width: 300px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  overflow-y: auto;
+  background: linear-gradient(
+    180deg,
+    #1e3a8a,
+    #2563eb,
+    #7c3aed
   );
+  color: white;
+  box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+  z-index: 1000;
+}
+
+.sidebar-title {
+  font-size: 24px;
+  font-weight: 700;
+  padding: 20px;
+  text-align: center;
+}
+
+.nav-link {
+  color: white !important;
+  border-radius: 12px;
+  margin: 6px 12px;
+  padding: 12px 16px;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  background: rgba(255,255,255,0.15);
+  transform: translateX(6px);
+}
+
+.active-menu {
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #7c3aed
+  );
+  box-shadow: 0 4px 12px rgba(37,99,235,0.4);
+}
+
+/* Navbar */
+
+.navbar {
+  background: white !important;
+  border-radius: 15px;
+  margin-bottom: 20px;
+  padding: 15px 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+/* Dashboard Cards */
+
+.dashboard-card {
+  border-radius: 18px;
+  color: white;
+  padding: 20px;
+  transition: 0.3s;
+}
+
+.dashboard-card:hover {
+  transform: scale(1.03);
+}
+
+.primary-card {
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #3b82f6
+  );
+}
+
+.success-card {
+  background: linear-gradient(
+    135deg,
+    #10b981,
+    #34d399
+  );
+}
+
+.warning-card {
+  background: linear-gradient(
+    135deg,
+    #f59e0b,
+    #fbbf24
+  );
+}
+
+.danger-card {
+  background: linear-gradient(
+    135deg,
+    #ef4444,
+    #f87171
+  );
+}
+
+/* Buttons */
+
+.btn {
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Tables */
+
+.table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table thead {
+  background: #1e293b;
+  color: white;
+}
+
+.table-hover tbody tr:hover {
+  background: #eef2ff;
+}
+
+/* Forms */
+
+.form-control,
+.form-select {
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 8px rgba(37,99,235,0.2);
+}
+
+/* Progress */
+
+.progress {
+  height: 12px;
+  border-radius: 20px;
+}
+
+.progress-bar {
+  border-radius: 20px;
+}
+
+/* Notification Badge */
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -10px;
+  font-size: 12px;
+}
+
+/* Responsive */
+
+@media (max-width: 992px) {
+
+  .sidebar {
+    width: 80px;
+  }
+
+  .main-content {
+    margin-left: 80px;
+    width: calc(100% - 80px);
+  }
+}
+
+@media (max-width: 768px) {
+
+  .sidebar {
+    display: none;
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
 }

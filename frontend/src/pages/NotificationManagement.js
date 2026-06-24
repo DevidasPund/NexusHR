@@ -1,23 +1,40 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState
+} from "react";
+
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function NotificationManagement() {
 
-  const [notifications, setNotifications] =
+  const [notifications,
+    setNotifications] =
     useState([]);
 
-  const [employees, setEmployees] =
+  const [employees,
+    setEmployees] =
     useState([]);
 
-  const [title, setTitle] =
+  const [loading,
+    setLoading] =
+    useState(true);
+
+  const [search,
+    setSearch] =
     useState("");
 
-  const [message, setMessage] =
+  const [title,
+    setTitle] =
     useState("");
 
-  const [receiver, setReceiver] =
+  const [message,
+    setMessage] =
+    useState("");
+
+  const [receiver,
+    setReceiver] =
     useState("ALL");
 
   useEffect(() => {
@@ -37,71 +54,152 @@ function NotificationManagement() {
 
   }, []);
 
-  const loadNotifications = async () => {
+  const loadNotifications =
+    async () => {
 
-    try {
+      try {
 
-      const response =
-        await API.get("/notifications");
+        const response =
+          await API.get(
+            "/notifications"
+          );
 
-      setNotifications(response.data);
+        setNotifications(
+          response.data
+        );
 
-    } catch (error) {
+      } catch (error) {
 
-      console.error(error);
+        console.error(error);
 
-    }
+      } finally {
 
-  };
+        setLoading(false);
 
-  const loadEmployees = async () => {
+      }
 
-    try {
+    };
 
-      const response =
-        await API.get("/employees");
+  const loadEmployees =
+    async () => {
 
-      setEmployees(response.data);
+      try {
 
-    } catch (error) {
+        const response =
+          await API.get(
+            "/employees"
+          );
 
-      console.error(error);
+        setEmployees(
+          response.data
+        );
 
-    }
+      } catch (error) {
 
-  };
+        console.error(error);
 
-  const sendNotification = async () => {
+      }
 
-    try {
+    };
 
-      await API.post(
-        "/notifications",
-        {
-          title,
-          message,
-          sender: "ADMIN",
-          receiver
-        }
-      );
+  const sendNotification =
+    async () => {
 
-      alert(
-        "Notification Sent Successfully"
-      );
+      if (
+        !title ||
+        !message
+      ) {
 
-      setTitle("");
-      setMessage("");
-      setReceiver("ALL");
+        alert(
+          "Please Enter Title And Message"
+        );
 
-      loadNotifications();
+        return;
 
-    } catch (error) {
+      }
 
-      console.error(error);
+      try {
 
-    }
+        await API.post(
+          "/notifications",
+          {
+            title,
+            message,
+            sender: "ADMIN",
+            receiver
+          }
+        );
 
-  };
+        alert(
+          "Notification Sent Successfully"
+        );
+
+        setTitle("");
+        setMessage("");
+        setReceiver("ALL");
+
+        loadNotifications();
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Failed To Send Notification"
+        );
+
+      }
+
+    };
+
+  const deleteNotification =
+    async (id) => {
+
+      if (
+        !window.confirm(
+          "Delete Notification?"
+        )
+      ) {
+        return;
+      }
+
+      try {
+
+        await API.delete(
+          `/notifications/${id}`
+        );
+
+        loadNotifications();
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+    };
+
+  const filteredNotifications =
+    notifications.filter(
+      (n) =>
+        n.title
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          ) ||
+
+        n.message
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          ) ||
+
+        n.receiver
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
+    );
 
   return (
 
@@ -112,8 +210,10 @@ function NotificationManagement() {
       <div
         className="flex-grow-1"
         style={{
-          background:"#f4f7fe",
-          minHeight:"100vh"
+          background:
+            "#f4f7fe",
+          minHeight:
+            "100vh"
         }}
       >
 
@@ -127,8 +227,9 @@ function NotificationManagement() {
             className="card border-0 shadow-lg mb-4"
             style={{
               background:
-              "linear-gradient(135deg,#2563eb,#7c3aed)",
-              borderRadius:"20px"
+                "linear-gradient(135deg,#2563eb,#7c3aed)",
+              borderRadius:
+                "20px"
             }}
           >
 
@@ -138,16 +239,15 @@ function NotificationManagement() {
                 🔔 Notification Center
               </h2>
 
-              <p>
-                Real-Time Employee
-                Communication System
+              <p className="mb-0">
+                Employee Communication System
               </p>
 
             </div>
 
           </div>
 
-          {/* Analytics */}
+          {/* Statistics */}
 
           <div className="row g-4 mb-4">
 
@@ -161,13 +261,9 @@ function NotificationManagement() {
                     Total Notifications
                   </h6>
 
-                  <h1 className="text-primary">
-
-                    {
-                      notifications.length
-                    }
-
-                  </h1>
+                  <h2 className="text-primary">
+                    {notifications.length}
+                  </h2>
 
                 </div>
 
@@ -182,16 +278,12 @@ function NotificationManagement() {
                 <div className="card-body text-center">
 
                   <h6>
-                    Total Employees
+                    Employees
                   </h6>
 
-                  <h1 className="text-success">
-
-                    {
-                      employees.length
-                    }
-
-                  </h1>
+                  <h2 className="text-success">
+                    {employees.length}
+                  </h2>
 
                 </div>
 
@@ -206,17 +298,15 @@ function NotificationManagement() {
                 <div className="card-body text-center">
 
                   <h6>
-                    Today
+                    Date
                   </h6>
 
-                  <h4>
-
+                  <h5>
                     {
                       new Date()
                       .toLocaleDateString()
                     }
-
-                  </h4>
+                  </h5>
 
                 </div>
 
@@ -238,83 +328,118 @@ function NotificationManagement() {
 
               <hr />
 
-              <input
-                className="form-control mb-3"
-                placeholder="Enter Title"
-                value={title}
-                onChange={(e)=>
-                  setTitle(
-                    e.target.value
-                  )
-                }
-              />
+              <div className="row">
+
+                <div className="col-md-6">
+
+                  <input
+                    type="text"
+                    className="form-control mb-3"
+                    placeholder="Notification Title"
+                    value={title}
+                    onChange={(e) =>
+                      setTitle(
+                        e.target.value
+                      )
+                    }
+                  />
+
+                </div>
+
+                <div className="col-md-6">
+
+                  <select
+                    className="form-select mb-3"
+                    value={receiver}
+                    onChange={(e) =>
+                      setReceiver(
+                        e.target.value
+                      )
+                    }
+                  >
+
+                    <option value="ALL">
+                      📢 All Employees
+                    </option>
+
+                    {
+                      employees.map(
+                        (emp) => (
+
+                          <option
+                            key={emp.id}
+                            value={
+                              emp.username
+                            }
+                          >
+
+                            {
+                              emp.firstName
+                            }{" "}
+                            {
+                              emp.lastName
+                            }
+
+                          </option>
+
+                        )
+                      )
+                    }
+
+                  </select>
+
+                </div>
+
+              </div>
 
               <textarea
-                className="form-control mb-3"
                 rows="4"
-                placeholder="Enter Message"
+                className="form-control mb-3"
+                placeholder="Notification Message"
                 value={message}
-                onChange={(e)=>
+                onChange={(e) =>
                   setMessage(
                     e.target.value
                   )
                 }
               />
 
-              <select
-                className="form-select mb-3"
-                value={receiver}
-                onChange={(e)=>
-                  setReceiver(
-                    e.target.value
-                  )
-                }
-              >
-
-                <option value="ALL">
-
-                  📢 All Employees
-
-                </option>
-
-                {
-                  employees.map(emp => (
-
-                    <option
-                      key={emp.id}
-                      value={
-                        emp.username
-                      }
-                    >
-
-                      {emp.firstName}
-                      {" "}
-                      {emp.lastName}
-
-                    </option>
-
-                  ))
-                }
-
-              </select>
-
               <button
-                className=
-                "btn btn-primary"
+                className="btn btn-primary"
                 onClick={
                   sendNotification
                 }
               >
-
                 Send Notification
-
               </button>
 
             </div>
 
           </div>
 
-          {/* Notification History */}
+          {/* Search */}
+
+          <div className="card shadow border-0 mb-4">
+
+            <div className="card-body">
+
+              <input
+                type="text"
+                className="form-control"
+                placeholder="🔍 Search Notification"
+                value={search}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+              />
+
+            </div>
+
+          </div>
+
+          {/* History */}
 
           <div className="card shadow border-0">
 
@@ -324,82 +449,128 @@ function NotificationManagement() {
                 📜 Notification History
               </h4>
 
-              <table
-                className=
-                "table table-hover"
-              >
+              {
 
-                <thead
-                  className=
-                  "table-dark"
-                >
+                loading
 
-                  <tr>
+                ?
 
-                    <th>ID</th>
-                    <th>Title</th>
-                    <th>Message</th>
-                    <th>Sender</th>
-                    <th>Receiver</th>
-                    <th>Status</th>
+                <h5>
+                  Loading...
+                </h5>
 
-                  </tr>
+                :
 
-                </thead>
+                <div className="table-responsive">
 
-                <tbody>
+                  <table className="table table-hover">
 
-                  {
-                    notifications.map(
-                      n => (
+                    <thead className="table-dark">
 
-                      <tr
-                        key={n.id}
-                      >
+                      <tr>
 
-                        <td>
-                          {n.id}
-                        </td>
-
-                        <td>
-                          {n.title}
-                        </td>
-
-                        <td>
-                          {n.message}
-                        </td>
-
-                        <td>
-                          {n.sender}
-                        </td>
-
-                        <td>
-                          {n.receiver}
-                        </td>
-
-                        <td>
-
-                          <span
-                            className=
-                            "badge bg-success"
-                          >
-
-                            {
-                              n.status
-                            }
-
-                          </span>
-
-                        </td>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Message</th>
+                        <th>Sender</th>
+                        <th>Receiver</th>
+                        <th>Status</th>
+                        <th>Action</th>
 
                       </tr>
 
-                    ))
-                  }
+                    </thead>
 
-                </tbody>
+                    <tbody>
 
-              </table>
+                      {
+
+                        filteredNotifications.length > 0
+
+                        ?
+
+                        filteredNotifications.map(
+                          (n) => (
+
+                            <tr
+                              key={n.id}
+                            >
+
+                              <td>
+                                {n.id}
+                              </td>
+
+                              <td>
+                                {n.title}
+                              </td>
+
+                              <td>
+                                {n.message}
+                              </td>
+
+                              <td>
+                                {n.sender}
+                              </td>
+
+                              <td>
+                                {n.receiver}
+                              </td>
+
+                              <td>
+
+                                <span className="badge bg-success">
+
+                                  {
+                                    n.status ||
+                                    "SENT"
+                                  }
+
+                                </span>
+
+                              </td>
+
+                              <td>
+
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() =>
+                                    deleteNotification(
+                                      n.id
+                                    )
+                                  }
+                                >
+                                  Delete
+                                </button>
+
+                              </td>
+
+                            </tr>
+
+                          )
+                        )
+
+                        :
+
+                        <tr>
+
+                          <td
+                            colSpan="7"
+                            className="text-center"
+                          >
+                            No Notifications Found
+                          </td>
+
+                        </tr>
+
+                      }
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+              }
 
             </div>
 
@@ -412,6 +583,7 @@ function NotificationManagement() {
     </div>
 
   );
+
 }
 
 export default NotificationManagement;

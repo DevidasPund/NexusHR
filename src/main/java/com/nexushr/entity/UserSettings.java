@@ -1,95 +1,102 @@
 package com.nexushr.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 @Entity
 @Table(name = "user_settings")
 public class UserSettings {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy =
+            GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
     private String username;
 
-    private Boolean darkMode;
+    private boolean darkMode;
 
-    private Boolean emailNotifications;
+    private boolean emailNotifications;
 
-    private Boolean smsNotifications;
+    private boolean smsNotifications;
 
-    private Boolean taskAlerts;
+    private boolean taskAlerts;
+
+    private boolean leaveAlerts;
+
+    private boolean attendanceAlerts;
+
+    public UserSettings() {
+    }
 
     public Long getId() {
-		return id;
-	}
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public String getUsername() {
-		return username;
-	}
+    public String getUsername() {
+        return username;
+    }
 
-	public void setUsername(String username) {
-		this.username = username;
-	}
+    public void setUsername(
+            String username) {
+        this.username = username;
+    }
 
-	public Boolean getDarkMode() {
-		return darkMode;
-	}
+    public boolean isDarkMode() {
+        return darkMode;
+    }
 
-	public void setDarkMode(Boolean darkMode) {
-		this.darkMode = darkMode;
-	}
+    public void setDarkMode(
+            boolean darkMode) {
+        this.darkMode = darkMode;
+    }
 
-	public Boolean getEmailNotifications() {
-		return emailNotifications;
-	}
+    public boolean isEmailNotifications() {
+        return emailNotifications;
+    }
 
-	public void setEmailNotifications(Boolean emailNotifications) {
-		this.emailNotifications = emailNotifications;
-	}
+    public void setEmailNotifications(
+            boolean emailNotifications) {
+        this.emailNotifications = emailNotifications;
+    }
 
-	public Boolean getSmsNotifications() {
-		return smsNotifications;
-	}
+    public boolean isSmsNotifications() {
+        return smsNotifications;
+    }
 
-	public void setSmsNotifications(Boolean smsNotifications) {
-		this.smsNotifications = smsNotifications;
-	}
+    public void setSmsNotifications(
+            boolean smsNotifications) {
+        this.smsNotifications = smsNotifications;
+    }
 
-	public Boolean getTaskAlerts() {
-		return taskAlerts;
-	}
+    public boolean isTaskAlerts() {
+        return taskAlerts;
+    }
 
-	public void setTaskAlerts(Boolean taskAlerts) {
-		this.taskAlerts = taskAlerts;
-	}
+    public void setTaskAlerts(
+            boolean taskAlerts) {
+        this.taskAlerts = taskAlerts;
+    }
 
-	public Boolean getLeaveAlerts() {
-		return leaveAlerts;
-	}
+    public boolean isLeaveAlerts() {
+        return leaveAlerts;
+    }
 
-	public void setLeaveAlerts(Boolean leaveAlerts) {
-		this.leaveAlerts = leaveAlerts;
-	}
+    public void setLeaveAlerts(
+            boolean leaveAlerts) {
+        this.leaveAlerts = leaveAlerts;
+    }
 
-	public Boolean getAttendanceAlerts() {
-		return attendanceAlerts;
-	}
+    public boolean isAttendanceAlerts() {
+        return attendanceAlerts;
+    }
 
-	public void setAttendanceAlerts(Boolean attendanceAlerts) {
-		this.attendanceAlerts = attendanceAlerts;
-	}
-
-	private Boolean leaveAlerts;
-
-    private Boolean attendanceAlerts;
-
-    // ALL getters and setters
+    public void setAttendanceAlerts(
+            boolean attendanceAlerts) {
+        this.attendanceAlerts = attendanceAlerts;
+    }
 }

@@ -5,15 +5,19 @@ import java.time.LocalDate;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "payslips")
 public class Payslip {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy =
+            GenerationType.IDENTITY)
     private Long id;
 
     private Long employeeId;
 
     private String employeeName;
+
+    private String department;
 
     private Double basicSalary;
 
@@ -27,77 +31,94 @@ public class Payslip {
 
     private LocalDate generatedDate;
 
-	public Long getId() {
-		return id;
-	}
+    public Payslip() {
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public Long getEmployeeId() {
-		return employeeId;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setEmployeeId(Long employeeId) {
-		this.employeeId = employeeId;
-	}
+    public Long getEmployeeId() {
+        return employeeId;
+    }
 
-	public String getEmployeeName() {
-		return employeeName;
-	}
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
+    }
 
-	public void setEmployeeName(String employeeName) {
-		this.employeeName = employeeName;
-	}
+    public String getEmployeeName() {
+        return employeeName;
+    }
 
-	public Double getBasicSalary() {
-		return basicSalary;
-	}
+    public void setEmployeeName(
+            String employeeName) {
+        this.employeeName = employeeName;
+    }
 
-	public void setBasicSalary(Double basicSalary) {
-		this.basicSalary = basicSalary;
-	}
+    public String getDepartment() {
+        return department;
+    }
 
-	public Double getBonus() {
-		return bonus;
-	}
+    public void setDepartment(
+            String department) {
+        this.department = department;
+    }
 
-	public void setBonus(Double bonus) {
-		this.bonus = bonus;
-	}
+    public Double getBasicSalary() {
+        return basicSalary;
+    }
 
-	public Double getDeduction() {
-		return deduction;
-	}
+    public void setBasicSalary(
+            Double basicSalary) {
+        this.basicSalary = basicSalary;
+    }
 
-	public void setDeduction(Double deduction) {
-		this.deduction = deduction;
-	}
+    public Double getBonus() {
+        return bonus;
+    }
 
-	public Double getNetSalary() {
-		return netSalary;
-	}
+    public void setBonus(
+            Double bonus) {
+        this.bonus = bonus;
+    }
 
-	public void setNetSalary(Double netSalary) {
-		this.netSalary = netSalary;
-	}
+    public Double getDeduction() {
+        return deduction;
+    }
 
-	public String getMonth() {
-		return month;
-	}
+    public void setDeduction(
+            Double deduction) {
+        this.deduction = deduction;
+    }
 
-	public void setMonth(String month) {
-		this.month = month;
-	}
+    public Double getNetSalary() {
+        return netSalary;
+    }
 
-	public LocalDate getGeneratedDate() {
-		return generatedDate;
-	}
+    public void setNetSalary(
+            Double netSalary) {
+        this.netSalary = netSalary;
+    }
 
-	public void setGeneratedDate(LocalDate generatedDate) {
-		this.generatedDate = generatedDate;
-	}
+    public String getMonth() {
+        return month;
+    }
 
-    
+    public void setMonth(
+            String month) {
+        this.month = month;
+    }
+
+    public LocalDate getGeneratedDate() {
+        return generatedDate;
+    }
+
+    public void setGeneratedDate(
+            LocalDate generatedDate) {
+        this.generatedDate = generatedDate;
+    }
 }

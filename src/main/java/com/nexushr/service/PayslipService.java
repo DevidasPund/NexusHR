@@ -18,22 +18,19 @@ public class PayslipService {
     public Payslip generatePayslip(
             Payslip payslip) {
 
+        if (payslip.getGeneratedDate() == null) {
+            payslip.setGeneratedDate(
+                    LocalDate.now());
+        }
+
         double netSalary =
                 payslip.getBasicSalary()
                 + payslip.getBonus()
                 - payslip.getDeduction();
 
-        payslip.setNetSalary(
-                netSalary);
+        payslip.setNetSalary(netSalary);
 
-        payslip.setGeneratedDate(
-                LocalDate.now());
-
-        Payslip savedPayslip =
-                repository.save(
-                        payslip);
-
-        return savedPayslip;
+        return repository.save(payslip);
     }
 
     public List<Payslip> getAllPayslips() {
@@ -46,5 +43,20 @@ public class PayslipService {
 
         return repository.findByEmployeeId(
                 employeeId);
+    }
+
+    public Payslip getById(
+            Long id) {
+
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Payslip Not Found"));
+    }
+
+    public void delete(
+            Long id) {
+
+        repository.deleteById(id);
     }
 }

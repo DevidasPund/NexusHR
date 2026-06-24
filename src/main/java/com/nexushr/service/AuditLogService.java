@@ -15,32 +15,32 @@ public class AuditLogService {
     @Autowired
     private AuditLogRepository repository;
 
-    public void saveLog(
+    public AuditLog saveLog(
             String username,
             String action,
-            String details){
+            String description) {
 
-        AuditLog log =
-                new AuditLog();
+        AuditLog log = new AuditLog();
 
-        log.setUsername(
-                username);
+        log.setUsername(username);
+        log.setAction(action);
+        log.setDescription(description);
+        log.setTimestamp(LocalDateTime.now());
 
-        log.setAction(
-                action);
-
-        log.setDetails(
-                details);
-
-        log.setCreatedAt(
-                LocalDateTime.now());
-
-        repository.save(
-                log);
+        return repository.save(log);
     }
 
-    public List<AuditLog> getAllLogs(){
-
+    public List<AuditLog> getAllLogs() {
         return repository.findAll();
+    }
+
+    public List<AuditLog> getLogsByUser(
+            String username) {
+
+        return repository.findByUsername(username);
+    }
+
+    public void deleteLog(Long id) {
+        repository.deleteById(id);
     }
 }

@@ -1,15 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState
+} from "react";
+
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function EmployeeNotification() {
 
-  const [notifications, setNotifications] =
+  const [notifications,
+    setNotifications] =
     useState([]);
 
-  const [reply, setReply] =
+  const [reply,
+    setReply] =
     useState({});
+
+  const [loading,
+    setLoading] =
+    useState(true);
 
   const username =
     localStorage.getItem(
@@ -46,42 +56,89 @@ function EmployeeNotification() {
           response.data
         );
 
-      } catch(error){
+      } catch (error) {
 
         console.error(error);
 
+      } finally {
+
+        setLoading(false);
+
       }
-  };
+
+    };
 
   const sendReply =
-    async(id) => {
+    async (id) => {
+
+      if (
+        !reply[id] ||
+        reply[id].trim() === ""
+      ) {
+
+        alert(
+          "Please Enter Reply"
+        );
+
+        return;
+
+      }
 
       try {
 
         await API.post(
           "/notifications/reply",
           {
-            notificationId:id,
-            sender:username,
-            message:reply[id]
+            notificationId: id,
+            sender: username,
+            message: reply[id]
           }
         );
 
         alert(
-          "Reply Sent"
+          "Reply Sent Successfully"
         );
 
         setReply({
+
           ...reply,
-          [id]:""
+
+          [id]: ""
+
         });
 
-      } catch(error){
+      } catch (error) {
 
         console.error(error);
 
+        alert(
+          "Failed To Send Reply"
+        );
+
       }
-  };
+
+    };
+
+  if (loading) {
+
+    return (
+
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{
+          height: "100vh"
+        }}
+      >
+
+        <h3>
+          Loading Notifications...
+        </h3>
+
+      </div>
+
+    );
+
+  }
 
   return (
 
@@ -92,8 +149,9 @@ function EmployeeNotification() {
       <div
         className="flex-grow-1"
         style={{
-          background:"#f4f7fe",
-          minHeight:"100vh"
+          marginLeft: "280px",
+          background: "#f4f7fe",
+          minHeight: "100vh"
         }}
       >
 
@@ -101,12 +159,14 @@ function EmployeeNotification() {
 
         <div className="container-fluid p-4">
 
+          {/* Header */}
+
           <div
             className="card border-0 shadow-lg mb-4"
             style={{
               background:
-              "linear-gradient(135deg,#2563eb,#7c3aed)",
-              borderRadius:"20px"
+                "linear-gradient(135deg,#2563eb,#7c3aed)",
+              borderRadius: "20px"
             }}
           >
 
@@ -116,111 +176,232 @@ function EmployeeNotification() {
                 🔔 Employee Notifications
               </h2>
 
-              <p>
-                Real-Time Messages
-                From Admin & Manager
+              <p className="mb-0">
+                Real-Time Messages From
+                Admin & Managers
               </p>
 
             </div>
 
           </div>
 
-          {
-            notifications.length > 0 ?
+          {/* Summary Cards */}
 
-            notifications.map(
-              (n) => (
+          <div className="row g-4 mb-4">
 
-              <div
-                key={n.id}
-                className=
-                "card shadow border-0 mb-3"
-              >
+            <div className="col-md-4">
 
-                <div className="card-body">
+              <div className="card shadow border-0">
 
-                  <div className=
-                  "d-flex justify-content-between">
+                <div className="card-body text-center">
 
-                    <h5>
-                      {n.title}
-                    </h5>
+                  <h6>
+                    Total Notifications
+                  </h6>
 
-                    <span
-                     className=
-                     "badge bg-primary"
-                    >
-                      {n.sender}
-                    </span>
+                  <h2 className="text-primary">
 
-                  </div>
+                    {notifications.length}
 
-                  <hr />
-
-                  <p>
-                    {n.message}
-                  </p>
-
-                  <small
-                    className=
-                    "text-muted"
-                  >
-                    Receiver :
-                    {n.receiver}
-                  </small>
-
-                  <div className="mt-3">
-
-                    <textarea
-                      className=
-                      "form-control"
-                      rows="2"
-                      placeholder=
-                      "Reply to Admin/Manager"
-                      value={
-                        reply[n.id] || ""
-                      }
-                      onChange={(e)=>
-                        setReply({
-                          ...reply,
-                          [n.id]:
-                          e.target.value
-                        })
-                      }
-                    />
-
-                    <button
-                      className=
-                      "btn btn-primary mt-2"
-                      onClick={() =>
-                        sendReply(
-                          n.id
-                        )
-                      }
-                    >
-
-                      Send Reply
-
-                    </button>
-
-                  </div>
+                  </h2>
 
                 </div>
 
               </div>
 
-            ))
+            </div>
 
-            :
+            <div className="col-md-4">
 
-            <div
-              className=
-              "alert alert-info"
-            >
+              <div className="card shadow border-0">
 
-              No Notifications Found
+                <div className="card-body text-center">
+
+                  <h6>
+                    Username
+                  </h6>
+
+                  <h2 className="text-success">
+
+                    {username}
+
+                  </h2>
+
+                </div>
+
+              </div>
 
             </div>
+
+            <div className="col-md-4">
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Status
+                  </h6>
+
+                  <h2>
+
+                    🟢 Active
+
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* Notifications */}
+
+          {
+
+            notifications.length > 0
+
+              ?
+
+              notifications.map(
+                (notification) => (
+
+                  <div
+                    key={
+                      notification.id
+                    }
+                    className="card shadow border-0 mb-4"
+                    style={{
+                      borderRadius: "15px"
+                    }}
+                  >
+
+                    <div className="card-body">
+
+                      <div className="d-flex justify-content-between align-items-center">
+
+                        <h5 className="fw-bold">
+
+                          {
+                            notification.title
+                          }
+
+                        </h5>
+
+                        <span className="badge bg-primary">
+
+                          {
+                            notification.sender
+                          }
+
+                        </span>
+
+                      </div>
+
+                      <hr />
+
+                      <p>
+
+                        {
+                          notification.message
+                        }
+
+                      </p>
+
+                      <div className="mb-3">
+
+                        <small className="text-muted">
+
+                          Receiver :
+                          {" "}
+                          {
+                            notification.receiver
+                          }
+
+                        </small>
+
+                      </div>
+
+                      <div className="mt-3">
+
+                        <label className="form-label">
+
+                          Reply Message
+
+                        </label>
+
+                        <textarea
+                          className="form-control"
+                          rows="3"
+                          placeholder="Type Your Reply..."
+                          value={
+                            reply[
+                              notification.id
+                            ] || ""
+                          }
+                          onChange={(e) =>
+                            setReply({
+
+                              ...reply,
+
+                              [notification.id]:
+                                e.target.value
+
+                            })
+                          }
+                        />
+
+                        <button
+                          className="btn btn-primary mt-3"
+                          disabled={
+                            !reply[
+                              notification.id
+                            ]
+                          }
+                          onClick={() =>
+                            sendReply(
+                              notification.id
+                            )
+                          }
+                        >
+
+                          📤 Send Reply
+
+                        </button>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                )
+              )
+
+              :
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h4>
+                    📭 No Notifications Found
+                  </h4>
+
+                  <p className="text-muted">
+
+                    You currently have
+                    no messages from
+                    Admin or Manager.
+
+                  </p>
+
+                </div>
+
+              </div>
+
           }
 
         </div>
@@ -230,6 +411,7 @@ function EmployeeNotification() {
     </div>
 
   );
+
 }
 
 export default EmployeeNotification;

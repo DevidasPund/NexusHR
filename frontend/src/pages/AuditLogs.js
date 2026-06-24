@@ -22,6 +22,14 @@ function AuditLogs() {
 
     loadLogs();
 
+    const interval =
+      setInterval(() => {
+        loadLogs();
+      }, 30000);
+
+    return () =>
+      clearInterval(interval);
+
   }, []);
 
   const loadLogs = async () => {
@@ -31,45 +39,62 @@ function AuditLogs() {
       const response =
         await API.get("/audit");
 
-      setLogs(
-        response.data
-      );
+      setLogs(response.data);
 
-    } catch(error) {
+    } catch (error) {
 
       console.error(error);
 
     } finally {
 
       setLoading(false);
+
     }
+
   };
 
   const filteredLogs =
     logs.filter(log =>
 
       (log.username || "")
-      .toLowerCase()
-      .includes(
-        search.toLowerCase()
-      )
+        .toLowerCase()
+        .includes(
+          search.toLowerCase()
+        )
 
       ||
 
       (log.action || "")
-      .toLowerCase()
-      .includes(
-        search.toLowerCase()
-      )
+        .toLowerCase()
+        .includes(
+          search.toLowerCase()
+        )
 
       ||
 
       (log.details || "")
-      .toLowerCase()
-      .includes(
-        search.toLowerCase()
-      )
+        .toLowerCase()
+        .includes(
+          search.toLowerCase()
+        )
+
     );
+
+  const loginCount =
+    logs.filter(
+      log =>
+        log.action ===
+        "LOGIN"
+    ).length;
+
+  const employeeActions =
+    logs.filter(
+      log =>
+        (log.action || "")
+          .includes(
+            "EMPLOYEE"
+          )
+    ).length;
 
   return (
 
@@ -77,30 +102,122 @@ function AuditLogs() {
 
       <Sidebar />
 
-      <div className="flex-grow-1">
+      <div
+        className="flex-grow-1"
+        style={{
+          marginLeft: "280px",
+          background: "#f4f7fe",
+          minHeight: "100vh"
+        }}
+      >
 
         <Navbar />
 
         <div className="container-fluid p-4">
 
-          <h2 className="fw-bold mb-4">
-            📋 Audit Logs
-          </h2>
+          {/* Header */}
 
-          {/* Summary */}
+          <div
+            className="card border-0 shadow-lg mb-4"
+            style={{
+              background:
+                "linear-gradient(135deg,#2563eb,#7c3aed)",
+              borderRadius: "20px"
+            }}
+          >
 
-          <div className="row mb-4">
+            <div className="card-body text-white">
 
-            <div className="col-md-3">
+              <h2>
+                📋 Audit Logs
+              </h2>
 
-              <div className="card shadow border-0 bg-primary text-white">
+              <p className="mb-0">
+                Monitor system activities,
+                user actions and security events
+              </p>
 
-                <div className="card-body">
+            </div>
 
-                  <h6>Total Logs</h6>
+          </div>
 
-                  <h2>
+          {/* Statistics */}
+
+          <div className="row g-4 mb-4">
+
+            <div className="col-md-4">
+
+              <div
+                className="card border-0 shadow"
+                style={{
+                  height: "140px"
+                }}
+              >
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Total Logs
+                  </h6>
+
+                  <h2 className="text-primary">
+
                     {logs.length}
+
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-4">
+
+              <div
+                className="card border-0 shadow"
+                style={{
+                  height: "140px"
+                }}
+              >
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Login Activities
+                  </h6>
+
+                  <h2 className="text-success">
+
+                    {loginCount}
+
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-4">
+
+              <div
+                className="card border-0 shadow"
+                style={{
+                  height: "140px"
+                }}
+              >
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Employee Actions
+                  </h6>
+
+                  <h2 className="text-warning">
+
+                    {employeeActions}
+
                   </h2>
 
                 </div>
@@ -111,51 +228,76 @@ function AuditLogs() {
 
           </div>
 
-          {/* Search */}
+          {/* Search & Refresh */}
 
-          <div className="card shadow border-0 mb-4">
+          <div className="card border-0 shadow mb-4">
 
             <div className="card-body">
 
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Search Username, Action..."
-                value={search}
-                onChange={(e) =>
-                  setSearch(
-                    e.target.value
-                  )
-                }
-              />
+              <div className="row">
+
+                <div className="col-md-8">
+
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search Username, Action, Details..."
+                    value={search}
+                    onChange={(e) =>
+                      setSearch(
+                        e.target.value
+                      )
+                    }
+                  />
+
+                </div>
+
+                <div className="col-md-4 text-end">
+
+                  <button
+                    className="btn btn-primary"
+                    onClick={loadLogs}
+                  >
+                    🔄 Refresh
+                  </button>
+
+                </div>
+
+              </div>
 
             </div>
 
           </div>
 
-          {/* Table */}
+          {/* Logs Table */}
 
-          <div className="card shadow border-0">
+          <div className="card border-0 shadow">
 
             <div className="card-body">
 
-              <h4 className="mb-3">
+              <h4 className="mb-4">
                 System Activity Logs
               </h4>
 
               {
 
-                loading ?
+                loading
 
-                <h5>
-                  Loading...
-                </h5>
+                ?
+
+                <div className="text-center">
+
+                  <h5>
+                    Loading Logs...
+                  </h5>
+
+                </div>
 
                 :
 
                 <div className="table-responsive">
 
-                  <table className="table table-bordered table-hover">
+                  <table className="table table-hover align-middle">
 
                     <thead className="table-dark">
 
@@ -175,7 +317,9 @@ function AuditLogs() {
 
                       {
 
-                        filteredLogs.length > 0 ?
+                        filteredLogs.length > 0
+
+                        ?
 
                         filteredLogs.map(
                           log => (
@@ -194,7 +338,17 @@ function AuditLogs() {
 
                               <td>
 
-                                <span className="badge bg-primary">
+                                <span
+                                  className={
+                                    log.action === "LOGIN"
+                                      ? "badge bg-success"
+                                      : log.action === "DELETE"
+                                      ? "badge bg-danger"
+                                      : log.action === "UPDATE"
+                                      ? "badge bg-warning text-dark"
+                                      : "badge bg-primary"
+                                  }
+                                >
 
                                   {log.action}
 
@@ -251,6 +405,7 @@ function AuditLogs() {
     </div>
 
   );
+
 }
 
 export default AuditLogs;

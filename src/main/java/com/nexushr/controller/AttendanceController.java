@@ -11,66 +11,97 @@ import com.nexushr.service.AttendanceService;
 
 @RestController
 @RequestMapping("/attendance")
-@CrossOrigin("*")
+@CrossOrigin(origins = "*")
 public class AttendanceController {
 
     @Autowired
-    private AttendanceService service;
+    private AttendanceService attendanceService;
 
+    // Save Attendance
     @PostMapping
-    public Attendance save(
-            @RequestBody Attendance attendance){
+    public Attendance saveAttendance(
+            @RequestBody Attendance attendance) {
 
-        return service.save(attendance);
+        return attendanceService.save(attendance);
     }
+
+    // Get All Attendance
+    @GetMapping
+    public List<Attendance> getAllAttendance() {
+
+        return attendanceService.getAll();
+    }
+
+    // Attendance Summary
     @GetMapping("/summary")
     public AttendanceSummary getSummary() {
 
-        return service.getSummary();
-    }
-    @GetMapping
-    public List<Attendance> getAll(){
-
-        return service.getAll();
+        return attendanceService.getSummary();
     }
 
+    // Employee Attendance History
     @GetMapping("/employee/{employeeId}")
     public List<Attendance> getEmployeeAttendance(
-            @PathVariable Long employeeId){
+            @PathVariable Long employeeId) {
 
-        return service.getEmployeeAttendance(
-                employeeId);
+        return attendanceService.getEmployeeAttendance(employeeId);
     }
+
+    // Today's Attendance
     @GetMapping("/today")
-    public List<Attendance> today() {
+    public List<Attendance> getTodayAttendance() {
 
-        return service.getTodayAttendance();
+        return attendanceService.getTodayAttendance();
     }
 
+    // Monthly Attendance
     @GetMapping("/month")
-    public List<Attendance> month() {
+    public List<Attendance> getMonthlyAttendance() {
 
-        return service.getMonthlyAttendance();
+        return attendanceService.getMonthlyAttendance();
     }
 
+    // Attendance History
     @GetMapping("/history")
-    public List<Attendance> history() {
+    public List<Attendance> getAttendanceHistory() {
 
-        return service.getAllAttendanceHistory();
+        return attendanceService.getAllAttendanceHistory();
     }
+
+    // Employee Check In
     @PostMapping("/checkin/{employeeId}")
     public Attendance checkIn(
-            @PathVariable Long employeeId){
+            @PathVariable Long employeeId) {
 
-        return service.checkIn(
-                employeeId);
+        return attendanceService.checkIn(employeeId);
     }
 
+    // Employee Check Out
     @PostMapping("/checkout/{employeeId}")
     public Attendance checkOut(
-            @PathVariable Long employeeId){
+            @PathVariable Long employeeId) {
 
-        return service.checkOut(
-                employeeId);
+        return attendanceService.checkOut(employeeId);
+    }
+
+    // Update Attendance Status
+    @PutMapping("/{id}")
+    public Attendance updateAttendance(
+            @PathVariable Long id,
+            @RequestBody Attendance attendance) {
+
+        return attendanceService.updateAttendanceStatus(
+                id,
+                attendance.getAttendanceStatus());
+    }
+
+    // Delete Attendance Record
+    @DeleteMapping("/{id}")
+    public String deleteAttendance(
+            @PathVariable Long id) {
+
+        attendanceService.deleteAttendance(id);
+
+        return "Attendance Deleted Successfully";
     }
 }

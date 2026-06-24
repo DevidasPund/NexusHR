@@ -1,16 +1,14 @@
 package com.nexushr.entity;
 
-import java.time.LocalDateTime;
+import jakarta.persistence.*;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 @Entity
+@Table(name = "ratings")
 public class Rating {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy = GenerationType.IDENTITY)
     private Long id;
 
     private Long employeeId;
@@ -19,87 +17,84 @@ public class Rating {
 
     private Double attendanceScore;
 
-    private Double taskScore;
+    private Double projectScore;
 
-    private Double managerRating;
-
-    private Double finalScore;
-
-    private String feedback;
+    private Double finalRating;
 
     private String performanceLevel;
 
-	public Long getId() {
-		return id;
-	}
+    @Column(length = 1000)
+    private String managerFeedback;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    // Getters & Setters
 
-	public Long getEmployeeId() {
-		return employeeId;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setEmployeeId(Long employeeId) {
-		this.employeeId = employeeId;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public String getEmployeeName() {
-		return employeeName;
-	}
+    public Long getEmployeeId() {
+        return employeeId;
+    }
 
-	public void setEmployeeName(String employeeName) {
-		this.employeeName = employeeName;
-	}
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
+    }
 
-	public Double getAttendanceScore() {
-		return attendanceScore;
-	}
+    public String getEmployeeName() {
+        return employeeName;
+    }
 
-	public void setAttendanceScore(Double attendanceScore) {
-		this.attendanceScore = attendanceScore;
-	}
+    public void setEmployeeName(
+            String employeeName) {
+        this.employeeName = employeeName;
+    }
 
-	public Double getTaskScore() {
-		return taskScore;
-	}
+    public Double getAttendanceScore() {
+        return attendanceScore;
+    }
 
-	public void setTaskScore(Double taskScore) {
-		this.taskScore = taskScore;
-	}
+    public void setAttendanceScore(
+            Double attendanceScore) {
+        this.attendanceScore = attendanceScore;
+    }
 
-	public Double getManagerRating() {
-		return managerRating;
-	}
+    public Double getProjectScore() {
+        return projectScore;
+    }
 
-	public void setManagerRating(Double managerRating) {
-		this.managerRating = managerRating;
-	}
+    public void setProjectScore(
+            Double projectScore) {
+        this.projectScore = projectScore;
+    }
 
-	public Double getFinalScore() {
-		return finalScore;
-	}
+    public Double getFinalRating() {
+        return finalRating;
+    }
 
-	public void setFinalScore(Double finalScore) {
-		this.finalScore = finalScore;
-	}
+    public void setFinalRating(
+            Double finalRating) {
+        this.finalRating = finalRating;
+    }
 
-	public String getFeedback() {
-		return feedback;
-	}
+    public String getPerformanceLevel() {
+        return performanceLevel;
+    }
 
-	public void setFeedback(String feedback) {
-		this.feedback = feedback;
-	}
+    public void setPerformanceLevel(
+            String performanceLevel) {
+        this.performanceLevel = performanceLevel;
+    }
 
-	public String getPerformanceLevel() {
-		return performanceLevel;
-	}
+    public String getManagerFeedback() {
+        return managerFeedback;
+    }
 
-	public void setPerformanceLevel(String performanceLevel) {
-		this.performanceLevel = performanceLevel;
-	}
-
-   
+    public void setManagerFeedback(
+            String managerFeedback) {
+        this.managerFeedback = managerFeedback;
+    }
 }

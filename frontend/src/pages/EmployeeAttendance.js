@@ -1,6 +1,6 @@
 import React, {
-useEffect,
-useState
+  useEffect,
+  useState
 } from "react";
 
 import API from "../services/ApiService";
@@ -9,442 +9,564 @@ import Navbar from "../components/Navbar";
 
 function EmployeeAttendance() {
 
-const [attendance,
-setAttendance] =
-useState([]);
+  const [attendance, setAttendance] =
+    useState([]);
 
-const [employee,
-setEmployee] =
-useState({});
+  const [employee, setEmployee] =
+    useState({});
 
-const [currentTime,
-setCurrentTime] =
-useState(new Date());
+  const [loading, setLoading] =
+    useState(true);
 
-useEffect(() => {
+  const [currentTime, setCurrentTime] =
+    useState(new Date());
 
+  useEffect(() => {
 
-loadEmployee();
+    loadEmployee();
 
-const clock =
-  setInterval(() => {
+    const clock =
+      setInterval(() => {
 
-    setCurrentTime(
-      new Date()
+        setCurrentTime(
+          new Date()
+        );
+
+      }, 1000);
+
+    const refresh =
+      setInterval(() => {
+
+        loadEmployee();
+
+      }, 10000);
+
+    return () => {
+
+      clearInterval(clock);
+      clearInterval(refresh);
+
+    };
+
+  }, []);
+
+  const loadEmployee =
+    async () => {
+
+      try {
+
+        const username =
+          localStorage.getItem(
+            "username"
+          );
+
+        const response =
+          await API.get(
+            `/employees/username/${username}`
+          );
+
+        setEmployee(
+          response.data
+        );
+
+        await loadAttendance(
+          response.data.id
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+      } finally {
+
+        setLoading(false);
+
+      }
+
+    };
+
+  const loadAttendance =
+    async (employeeId) => {
+
+      try {
+
+        const response =
+          await API.get(
+            `/attendance/employee/${employeeId}`
+          );
+
+        setAttendance(
+          response.data
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+    };
+
+  const checkIn =
+    async () => {
+
+      try {
+
+        await API.post(
+          `/attendance/checkin/${employee.id}`
+        );
+
+        alert(
+          "✅ Checked In Successfully"
+        );
+
+        loadAttendance(
+          employee.id
+        );
+
+      } catch (error) {
+
+        alert(
+          error.response?.data ||
+          "Already Checked In Today"
+        );
+
+      }
+
+    };
+
+  const checkOut =
+    async () => {
+
+      try {
+
+        await API.post(
+          `/attendance/checkout/${employee.id}`
+        );
+
+        alert(
+          "✅ Checked Out Successfully"
+        );
+
+        loadAttendance(
+          employee.id
+        );
+
+      } catch (error) {
+
+        alert(
+          error.response?.data ||
+          "Check In First"
+        );
+
+      }
+
+    };
+
+  const today =
+    new Date()
+      .toISOString()
+      .split("T")[0];
+
+  const todayAttendance =
+    attendance.find(
+      a =>
+        a.attendanceDate ===
+        today
     );
 
-  }, 1000);
-
-const refresh =
-  setInterval(() => {
-
-    const employeeId =
-      localStorage.getItem(
-        "employeeId"
-      );
-
-    if(employeeId){
-
-      loadAttendance(
-        employeeId
-      );
-    }
-
-  }, 5000);
-
-return () => {
-
-  clearInterval(clock);
-  clearInterval(refresh);
-
-};
-
-
-}, []);
-
-const loadEmployee =
-async () => {
-
-
-try {
-
-  const employeeId =
-    localStorage.getItem(
-      "employeeId"
-    );
-
-  const response =
-    await API.get(
-      `/employees/${employeeId}`
-    );
-
-  setEmployee(
-    response.data
-  );
-
-  loadAttendance(
-    employeeId
-  );
-
-} catch(error){
-
-  console.error(error);
-}
-
-
-};
-
-const loadAttendance =
-async(employeeId) => {
-
-
-try {
-
-  const response =
-    await API.get(
-      `/attendance/employee/${employeeId}`
-    );
-
-  setAttendance(
-    response.data
-  );
-
-} catch(error){
-
-  console.error(error);
-}
-
-
-};
-
-const checkIn =
-async () => {
-
-
-try {
-
-  await API.post(
-    `/attendance/checkin/${employee.id}`
-  );
-
-  alert(
-    "Checked In Successfully"
-  );
-
-  loadAttendance(
-    employee.id
-  );
-
-} catch(error){
-
-  alert(
-    error.response?.data ||
-    "Already Checked In Today"
-  );
-}
-
-
-};
-
-const checkOut =
-async () => {
-
-
-try {
-
-  await API.post(
-    `/attendance/checkout/${employee.id}`
-  );
-
-  alert(
-    "Checked Out Successfully"
-  );
-
-  loadAttendance(
-    employee.id
-  );
-
-} catch(error){
-
-  alert(
-    error.response?.data ||
-    "Already Checked Out Today"
-  );
-}
-
-
-};
-
-const today =
-new Date()
-.toISOString()
-.split("T")[0];
-
-const todayAttendance =
-attendance.find(
-a =>
-a.attendanceDate ===
-today
-);
-
-const presentDays =
-attendance.filter(
-a =>
-a.status ===
-"PRESENT"
-).length;
-
-return (
-
-
-<div className="d-flex">
-
-  <Sidebar />
-
-  <div className="flex-grow-1">
-
-    <Navbar />
-
-    <div className="container-fluid p-4">
-
-      <h2 className="fw-bold mb-4">
-        🕒 Employee Attendance
-      </h2>
-
-      <div className="card shadow border-0 mb-4">
-
-        <div className="card-body text-center">
-
-          <h1 className="fw-bold">
-            {
-              currentTime
-              .toLocaleTimeString()
-            }
-          </h1>
-
-          <h5>
-            {
-              currentTime
-              .toDateString()
-            }
-          </h5>
-
-        </div>
+  const presentDays =
+    attendance.filter(
+      a =>
+        a.status ===
+        "PRESENT"
+    ).length;
+
+  const attendancePercentage =
+    attendance.length > 0
+      ?
+      (
+        presentDays /
+        attendance.length
+      ) * 100
+      :
+      0;
+
+  if (loading) {
+
+    return (
+
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{
+          height: "100vh"
+        }}
+      >
+
+        <h3>
+          Loading Attendance...
+        </h3>
 
       </div>
 
-      <div className="row mb-4">
+    );
 
-        <div className="col-md-3">
+  }
 
-          <div className="card bg-success text-white shadow">
+  return (
 
-            <div className="card-body">
+    <div className="d-flex">
 
-              <h6>
-                Present Days
-              </h6>
+      <Sidebar />
+
+      <div
+        className="flex-grow-1"
+        style={{
+          marginLeft: "280px",
+          background: "#f4f7fe",
+          minHeight: "100vh"
+        }}
+      >
+
+        <Navbar />
+
+        <div className="container-fluid p-4">
+
+          {/* Header */}
+
+          <div
+            className="card border-0 shadow-lg mb-4"
+            style={{
+              background:
+                "linear-gradient(135deg,#2563eb,#7c3aed)",
+              borderRadius: "20px"
+            }}
+          >
+
+            <div className="card-body text-white">
 
               <h2>
-                {presentDays}
+                🕒 Employee Attendance
               </h2>
 
-            </div>
-
-          </div>
-
-        </div>
-
-        <div className="col-md-3">
-
-          <div className="card bg-primary text-white shadow">
-
-            <div className="card-body">
-
-              <h6>
-                Employee
-              </h6>
-
-              <h5>
-                {employee.firstName}
-              </h5>
+              <p className="mb-0">
+                Real-Time Attendance Tracking
+              </p>
 
             </div>
 
           </div>
 
-        </div>
+          {/* Live Clock */}
 
-        <div className="col-md-3">
+          <div className="card shadow border-0 mb-4">
 
-          <div className="card bg-warning shadow">
+            <div className="card-body text-center">
 
-            <div className="card-body">
+              <h1 className="fw-bold text-primary">
 
-              <h6>
-                Department
-              </h6>
-
-              <h5>
-                {employee.department}
-              </h5>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        <div className="col-md-3">
-
-          <div className="card bg-info text-white shadow">
-
-            <div className="card-body">
-
-              <h6>
-                Today's Status
-              </h6>
-
-              <h5>
                 {
-                  todayAttendance
-                  ?
-                  "PRESENT"
-                  :
-                  "ABSENT"
+                  currentTime
+                    .toLocaleTimeString()
                 }
+
+              </h1>
+
+              <h5>
+
+                {
+                  currentTime
+                    .toDateString()
+                }
+
               </h5>
 
             </div>
 
           </div>
 
-        </div>
+          {/* Summary Cards */}
 
-      </div>
+          <div className="row g-4 mb-4">
 
-      <div className="card shadow border-0 mb-4">
+            <div className="col-md-3">
 
-        <div className="card-body">
+              <div className="card shadow border-0">
 
-          <h4 className="mb-3">
-            Today's Attendance
-          </h4>
+                <div className="card-body text-center">
 
-          <button
-            className="btn btn-success me-3"
-            onClick={checkIn}
-            disabled={
-              todayAttendance
-            }
-          >
-            ✅ Check In
-          </button>
+                  <h6>
+                    Present Days
+                  </h6>
 
-          <button
-            className="btn btn-danger"
-            onClick={checkOut}
-            disabled={
-              !todayAttendance ||
-              todayAttendance.checkOutTime
-            }
-          >
-            ❌ Check Out
-          </button>
+                  <h2 className="text-success">
 
-        </div>
+                    {presentDays}
 
-      </div>
+                  </h2>
 
-      <div className="card shadow border-0">
+                </div>
 
-        <div className="card-body">
+              </div>
 
-          <h4 className="mb-3">
-            Attendance History
-          </h4>
+            </div>
 
-          <table className="table table-hover table-bordered">
+            <div className="col-md-3">
 
-            <thead className="table-dark">
+              <div className="card shadow border-0">
 
-              <tr>
+                <div className="card-body text-center">
 
-                <th>ID</th>
-                <th>Date</th>
-                <th>Check In</th>
-                <th>Check Out</th>
-                <th>Status</th>
+                  <h6>
+                    Attendance %
+                  </h6>
 
-              </tr>
+                  <h2 className="text-warning">
 
-            </thead>
+                    {
+                      attendancePercentage
+                        .toFixed(1)
+                    }%
 
-            <tbody>
+                  </h2>
 
-              {
-                attendance.length > 0 ?
+                </div>
 
-                attendance.map(
-                (a) => (
+              </div>
 
-                  <tr key={a.id}>
+            </div>
 
-                    <td>{a.id}</td>
+            <div className="col-md-3">
 
-                    <td>
-                      {a.attendanceDate}
-                    </td>
+              <div className="card shadow border-0">
 
-                    <td>
-                      {a.checkInTime}
-                    </td>
+                <div className="card-body text-center">
 
-                    <td>
-                      {
-                        a.checkOutTime
-                        || "-"
-                      }
-                    </td>
+                  <h6>
+                    Employee
+                  </h6>
 
-                    <td>
+                  <h5>
 
-                      <span
-                        className={
-                          a.status ===
-                          "PRESENT"
-                          ?
-                          "badge bg-success"
-                          :
-                          "badge bg-danger"
-                        }
-                      >
-                        {a.status}
-                      </span>
+                    {
+                      employee.firstName
+                    }
 
-                    </td>
+                  </h5>
 
-                  </tr>
+                </div>
 
-                ))
+              </div>
 
-                :
+            </div>
 
-                <tr>
+            <div className="col-md-3">
 
-                  <td
-                    colSpan="5"
-                    className="text-center"
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Department
+                  </h6>
+
+                  <h5>
+
+                    {
+                      employee.department
+                    }
+
+                  </h5>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* Today Status */}
+
+          <div className="card shadow border-0 mb-4">
+
+            <div className="card-body">
+
+              <div className="row align-items-center">
+
+                <div className="col-md-6">
+
+                  <h4>
+                    Today's Status
+                  </h4>
+
+                  <span
+                    className={
+                      todayAttendance
+                        ?
+                        "badge bg-success fs-6"
+                        :
+                        "badge bg-danger fs-6"
+                    }
                   >
-                    No Attendance Found
-                  </td>
 
-                </tr>
-              }
+                    {
+                      todayAttendance
+                        ?
+                        "PRESENT"
+                        :
+                        "ABSENT"
+                    }
 
-            </tbody>
+                  </span>
 
-          </table>
+                </div>
+
+                <div className="col-md-6 text-end">
+
+                  <button
+                    className="btn btn-success me-3"
+                    onClick={
+                      checkIn
+                    }
+                    disabled={
+                      todayAttendance
+                    }
+                  >
+                    ✅ Check In
+                  </button>
+
+                  <button
+                    className="btn btn-danger"
+                    onClick={
+                      checkOut
+                    }
+                    disabled={
+                      !todayAttendance ||
+                      todayAttendance.checkOutTime
+                    }
+                  >
+                    🚪 Check Out
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* Attendance History */}
+
+          <div className="card shadow border-0">
+
+            <div className="card-body">
+
+              <h4 className="mb-4">
+                Attendance History
+              </h4>
+
+              <div className="table-responsive">
+
+                <table className="table table-hover">
+
+                  <thead className="table-dark">
+
+                    <tr>
+
+                      <th>ID</th>
+                      <th>Date</th>
+                      <th>Check In</th>
+                      <th>Check Out</th>
+                      <th>Status</th>
+
+                    </tr>
+
+                  </thead>
+
+                  <tbody>
+
+                    {
+                      attendance.length > 0
+
+                        ?
+
+                        attendance.map(
+                          (a) => (
+
+                            <tr
+                              key={a.id}
+                            >
+
+                              <td>
+                                {a.id}
+                              </td>
+
+                              <td>
+                                {a.attendanceDate}
+                              </td>
+
+                              <td>
+                                {a.checkInTime}
+                              </td>
+
+                              <td>
+                                {
+                                  a.checkOutTime ||
+                                  "-"
+                                }
+                              </td>
+
+                              <td>
+
+                                <span
+                                  className={
+                                    a.status === "PRESENT"
+                                      ? "badge bg-success"
+                                      : a.status === "LATE"
+                                      ? "badge bg-warning text-dark"
+                                      : "badge bg-danger"
+                                  }
+                                >
+
+                                  {a.status}
+
+                                </span>
+
+                              </td>
+
+                            </tr>
+
+                          )
+                        )
+
+                        :
+
+                        <tr>
+
+                          <td
+                            colSpan="5"
+                            className="text-center"
+                          >
+
+                            No Attendance Found
+
+                          </td>
+
+                        </tr>
+
+                    }
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            </div>
+
+          </div>
 
         </div>
 
@@ -452,12 +574,8 @@ return (
 
     </div>
 
-  </div>
+  );
 
-</div>
-
-
-);
 }
 
 export default EmployeeAttendance;

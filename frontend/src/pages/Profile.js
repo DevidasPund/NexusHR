@@ -5,39 +5,50 @@ import Navbar from "../components/Navbar";
 
 function Profile() {
 
-  const [dashboard, setDashboard] =
-    useState({});
-
-  const username =
-    localStorage.getItem("username");
-
-  const role =
-    localStorage.getItem("role");
+  const [profile, setProfile] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
 
-    loadDashboard();
+    loadProfile();
 
   }, []);
 
-  const loadDashboard =
-    async () => {
+  const loadProfile = async () => {
 
-      try {
+    try {
 
-        const response =
-          await API.get("/dashboard");
+      const username =
+        localStorage.getItem("username");
 
-        setDashboard(
-          response.data
+      const response =
+        await API.get(
+          `/employees/username/${username}`
         );
 
-      } catch (error) {
+      setProfile(response.data);
 
-        console.log(error);
+    } catch (error) {
 
-      }
-    };
+      console.error(error);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
+
+  if (loading) {
+
+    return (
+      <div className="text-center mt-5">
+        <h3>Loading Profile...</h3>
+      </div>
+    );
+
+  }
 
   return (
 
@@ -45,73 +56,81 @@ function Profile() {
 
       <Sidebar />
 
-      <div className="flex-grow-1">
+      <div
+        className="flex-grow-1"
+        style={{
+          background: "#f4f7fc",
+          minHeight: "100vh"
+        }}
+      >
 
         <Navbar />
 
         <div className="container-fluid p-4">
 
+          {/* Profile Header */}
+
           <div
-            className="card border-0 shadow-lg"
+            className="card border-0 shadow-lg mb-4"
             style={{
+              background:
+                "linear-gradient(135deg,#2563eb,#7c3aed)",
               borderRadius: "20px"
             }}
           >
 
-            <div
-              className="card-body text-center p-5"
-            >
+            <div className="card-body text-center text-white">
 
               <img
-                src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                alt="profile"
+                src={
+                  profile.profileImage
+                    ? `http://localhost:8080/uploads/${profile.profileImage}`
+                    : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                }
+                alt="Profile"
                 width="140"
                 height="140"
+                className="rounded-circle border border-4 border-white shadow"
                 style={{
-                  borderRadius: "50%",
-                  border: "5px solid #0d6efd"
+                  objectFit: "cover"
                 }}
               />
 
-              <h1 className="mt-3">
-                {username}
-              </h1>
+              <h2 className="mt-3">
+                {profile.firstName} {profile.lastName}
+              </h2>
 
-              <span
-                className="badge bg-danger fs-6"
-              >
-                {role}
-              </span>
+              <h5>
+                {profile.designation}
+              </h5>
 
-              <p className="text-muted mt-3">
-                NexusHR System Administrator
+              <p>
+                {profile.department}
               </p>
+
+              <span className="badge bg-light text-dark">
+                {profile.role || "EMPLOYEE"}
+              </span>
 
             </div>
 
           </div>
 
-          <div className="row mt-4">
+          {/* Stats */}
+
+          <div className="row g-4 mb-4">
 
             <div className="col-md-3">
 
-              <div
-                className="card text-white shadow"
-                style={{
-                  background:
-                    "linear-gradient(135deg,#667eea,#764ba2)"
-                }}
-              >
+              <div className="card shadow border-0">
 
                 <div className="card-body text-center">
 
-                  <h6>Total Employees</h6>
+                  <h6>Salary</h6>
 
-                  <h2>
-                    {
-                      dashboard.totalEmployees || 0
-                    }
-                  </h2>
+                  <h3 className="text-success">
+                    ₹{profile.salary || 0}
+                  </h3>
 
                 </div>
 
@@ -121,23 +140,15 @@ function Profile() {
 
             <div className="col-md-3">
 
-              <div
-                className="card text-white shadow"
-                style={{
-                  background:
-                    "linear-gradient(135deg,#11998e,#38ef7d)"
-                }}
-              >
+              <div className="card shadow border-0">
 
                 <div className="card-body text-center">
 
-                  <h6>Departments</h6>
+                  <h6>Status</h6>
 
-                  <h2>
-                    {
-                      dashboard.totalDepartments || 0
-                    }
-                  </h2>
+                  <h3 className="text-primary">
+                    {profile.status || "ACTIVE"}
+                  </h3>
 
                 </div>
 
@@ -147,23 +158,15 @@ function Profile() {
 
             <div className="col-md-3">
 
-              <div
-                className="card text-white shadow"
-                style={{
-                  background:
-                    "linear-gradient(135deg,#f7971e,#ffd200)"
-                }}
-              >
+              <div className="card shadow border-0">
 
                 <div className="card-body text-center">
 
                   <h6>Attendance</h6>
 
-                  <h2>
-                    {
-                      dashboard.totalAttendance || 0
-                    }
-                  </h2>
+                  <h3 className="text-warning">
+                    {profile.attendancePercentage || 0}%
+                  </h3>
 
                 </div>
 
@@ -173,23 +176,15 @@ function Profile() {
 
             <div className="col-md-3">
 
-              <div
-                className="card text-white shadow"
-                style={{
-                  background:
-                    "linear-gradient(135deg,#fc466b,#3f5efb)"
-                }}
-              >
+              <div className="card shadow border-0">
 
                 <div className="card-body text-center">
 
-                  <h6>Total Salary</h6>
+                  <h6>Performance</h6>
 
-                  <h2>
-                    ₹{
-                      dashboard.totalSalary || 0
-                    }
-                  </h2>
+                  <h3 className="text-info">
+                    {profile.performanceScore || 0}%
+                  </h3>
 
                 </div>
 
@@ -199,48 +194,48 @@ function Profile() {
 
           </div>
 
-          <div className="row mt-4">
+          {/* Profile Details */}
+
+          <div className="row">
 
             <div className="col-md-6">
 
-              <div className="card shadow">
+              <div className="card shadow border-0">
 
                 <div className="card-body">
 
-                  <h4>
-                    👨‍💼 Admin Information
-                  </h4>
+                  <h4>Personal Information</h4>
 
                   <hr />
 
                   <p>
-                    <strong>
-                      Username :
-                    </strong>
-                    {" "}
-                    {username}
+                    <strong>Employee ID:</strong>{" "}
+                    {profile.id}
                   </p>
 
                   <p>
-                    <strong>
-                      Role :
-                    </strong>
-                    {" "}
-                    {role}
+                    <strong>First Name:</strong>{" "}
+                    {profile.firstName}
                   </p>
 
                   <p>
-                    <strong>
-                      Access :
-                    </strong>
-                    Full System Access
+                    <strong>Last Name:</strong>{" "}
+                    {profile.lastName}
                   </p>
 
                   <p>
-                    <strong>
-                      Status :
-                    </strong>
-                    Active
+                    <strong>Email:</strong>{" "}
+                    {profile.email}
+                  </p>
+
+                  <p>
+                    <strong>Phone:</strong>{" "}
+                    {profile.phone}
+                  </p>
+
+                  <p>
+                    <strong>Username:</strong>{" "}
+                    {profile.username}
                   </p>
 
                 </div>
@@ -251,102 +246,44 @@ function Profile() {
 
             <div className="col-md-6">
 
-              <div className="card shadow">
+              <div className="card shadow border-0">
 
                 <div className="card-body">
 
-                  <h4>
-                    📊 Admin Privileges
-                  </h4>
+                  <h4>Employment Details</h4>
 
                   <hr />
 
-                  <ul>
+                  <p>
+                    <strong>Department:</strong>{" "}
+                    {profile.department}
+                  </p>
 
-                    <li>
-                      Employee Management
-                    </li>
+                  <p>
+                    <strong>Designation:</strong>{" "}
+                    {profile.designation}
+                  </p>
 
-                    <li>
-                      Department Management
-                    </li>
+                  <p>
+                    <strong>Salary:</strong>{" "}
+                    ₹{profile.salary}
+                  </p>
 
-                    <li>
-                      Attendance Tracking
-                    </li>
+                  <p>
+                    <strong>Status:</strong>{" "}
+                    {profile.status}
+                  </p>
 
-                    <li>
-                      Leave Approval
-                    </li>
+                  <p>
+                    <strong>Attrition Risk:</strong>{" "}
+                    {profile.attritionRisk || "LOW"}
+                  </p>
 
-                    <li>
-                      Payroll Management
-                    </li>
+                  <p>
+                    <strong>Current Project:</strong>{" "}
+                    {profile.currentProject || "N/A"}
+                  </p>
 
-                    <li>
-                      Reports & Analytics
-                    </li>
-
-                    <li>
-                      Notifications
-                    </li>
-
-                  </ul>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-          <div className="card shadow mt-4">
-
-            <div className="card-body">
-
-              <h4>
-                🚀 System Overview
-              </h4>
-
-              <hr />
-
-              <div className="row text-center">
-
-                <div className="col-md-3">
-                  <h2 className="text-primary">
-                    {
-                      dashboard.activeEmployees || 0
-                    }
-                  </h2>
-                  Active Employees
-                </div>
-
-                <div className="col-md-3">
-                  <h2 className="text-success">
-                    {
-                      dashboard.pendingLeaves || 0
-                    }
-                  </h2>
-                  Pending Leaves
-                </div>
-
-                <div className="col-md-3">
-                  <h2 className="text-warning">
-                    {
-                      dashboard.approvedLeaves || 0
-                    }
-                  </h2>
-                  Approved Leaves
-                </div>
-
-                <div className="col-md-3">
-                  <h2 className="text-danger">
-                    {
-                      dashboard.totalAttendance || 0
-                    }
-                  </h2>
-                  Attendance Today
                 </div>
 
               </div>
@@ -362,6 +299,7 @@ function Profile() {
     </div>
 
   );
+
 }
 
 export default Profile;

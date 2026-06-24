@@ -1,8 +1,8 @@
 package com.nexushr.service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.nexushr.dto.AttendanceSummary;
 import com.nexushr.entity.Attendance;
+import com.nexushr.entity.Employee;
 import com.nexushr.repository.AttendanceRepository;
 import com.nexushr.repository.EmployeeRepository;
 
@@ -17,250 +18,168 @@ import com.nexushr.repository.EmployeeRepository;
 public class AttendanceService {
 
     @Autowired
-    private AttendanceRepository repository;
+    private AttendanceRepository attendanceRepository;
 
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    // SAVE ATTENDANCE
+    public Attendance save(Attendance attendance) {
 
-    public Attendance save(
-            Attendance attendance) {
+        if (attendance.getAttendanceDate() == null) {
+            attendance.setAttendanceDate(LocalDate.now());
+        }
 
-        return repository.save(
-                attendance);
+        return attendanceRepository.save(attendance);
     }
-
-    // GET ALL ATTENDANCE
 
     public List<Attendance> getAll() {
 
-        return repository.findAll();
+        return attendanceRepository.findAll();
     }
 
-    // EMPLOYEE ATTENDANCE HISTORY
-
-    public List<Attendance>
-    getEmployeeAttendance(
+    public List<Attendance> getEmployeeAttendance(
             Long employeeId) {
 
-        return repository
-                .findByEmployeeIdOrderByAttendanceDateDesc(
-                        employeeId);
+        return attendanceRepository
+                .findByEmployeeId(employeeId);
     }
 
-    // CHECK IN
-    // ONE TIME PER DAY
+    public List<Attendance> getTodayAttendance() {
 
-    public Attendance checkIn(
-            Long employeeId) {
+        return attendanceRepository
+                .findByAttendanceDate(
+                        LocalDate.now());
+    }
 
-        LocalDate today =
-                LocalDate.now();
+    public List<Attendance> getMonthlyAttendance() {
+
+        LocalDate firstDay =
+                LocalDate.now().withDayOfMonth(1);
+
+        return attendanceRepository
+                .findByAttendanceDateGreaterThanEqual(
+                        firstDay);
+    }
+
+    public List<Attendance> getAllAttendanceHistory() {
+
+        return attendanceRepository.findAll();
+    }
+
+    public Attendance checkIn(Long employeeId) {
+
+        Employee employee =
+                employeeRepository.findById(employeeId)
+                        .orElseThrow(
+                                () -> new RuntimeException(
+                                        "Employee Not Found"));
 
         Attendance attendance =
-                repository
-                .findByEmployeeIdAndAttendanceDate(
-                        employeeId,
-                        today)
-                .orElse(null);
-
-        if(attendance != null) {
-
-            throw new RuntimeException(
-                    "You have already checked in today");
-        }
-
-        attendance =
                 new Attendance();
 
-        attendance.setEmployeeId(
-                employeeId);
+        attendance.setEmployeeId(employee.getId());
+
+        attendance.setEmployeeName(
+                employee.getFirstName() + " "
+                        + employee.getLastName());
+
+        attendance.setDepartment(
+                employee.getDepartment());
 
         attendance.setAttendanceDate(
-                today);
+                LocalDate.now());
 
         attendance.setCheckInTime(
-                LocalTime.now());
-
-        attendance.setStatus(
-                "PRESENT");
-
-        attendance.setAttendanceType(
-                "OFFICE");
-
-        attendance.setCreatedAt(
                 LocalDateTime.now());
 
-        return repository.save(
+        attendance.setAttendanceStatus(
+                "PRESENT");
+
+        return attendanceRepository.save(
                 attendance);
     }
 
-    // CHECK OUT
-    // ONE TIME PER DAY
-
-    public Attendance checkOut(
-            Long employeeId) {
+    public Attendance checkOut(Long employeeId) {
 
         Attendance attendance =
-                repository
-                .findByEmployeeIdAndAttendanceDate(
-                        employeeId,
-                        LocalDate.now())
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Please Check In First"));
+                attendanceRepository
+                        .findTopByEmployeeIdOrderByIdDesc(
+                                employeeId);
 
-        if(attendance.getCheckOutTime()
-                != null) {
-
+        if (attendance == null) {
             throw new RuntimeException(
-                    "You have already checked out today");
+                    "Check-In Record Not Found");
         }
 
         attendance.setCheckOutTime(
-                LocalTime.now());
+                LocalDateTime.now());
 
-        return repository.save(
+        if (attendance.getCheckInTime() != null) {
+
+            long minutes =
+                    Duration.between(
+                            attendance.getCheckInTime(),
+                            attendance.getCheckOutTime())
+                            .toMinutes();
+
+            attendance.setWorkingHours(
+                    minutes / 60.0);
+        }
+
+        return attendanceRepository.save(
                 attendance);
     }
 
-    // TODAY PRESENT COUNT
+    public Attendance updateAttendanceStatus(
+            Long id,
+            String status) {
 
-    public long getTodayPresentCount() {
+        Attendance attendance =
+                attendanceRepository.findById(id)
+                        .orElseThrow(
+                                () -> new RuntimeException(
+                                        "Attendance Not Found"));
 
-        LocalDate today =
-                LocalDate.now();
+        attendance.setAttendanceStatus(
+                status);
 
-        return repository.findAll()
-                .stream()
-                .filter(a ->
-                        today.equals(
-                                a.getAttendanceDate()))
-                .count();
+        return attendanceRepository.save(
+                attendance);
     }
 
-    // TODAY ABSENT COUNT
+    public void deleteAttendance(Long id) {
 
-    public long getTodayAbsentCount() {
-
-        long totalEmployees =
-                employeeRepository.count();
-
-        long presentToday =
-                getTodayPresentCount();
-
-        return totalEmployees -
-                presentToday;
+        attendanceRepository.deleteById(id);
     }
-
-    // ADMIN DASHBOARD SUMMARY
 
     public AttendanceSummary getSummary() {
 
         AttendanceSummary summary =
                 new AttendanceSummary();
 
-        long totalEmployees =
-                employeeRepository.count();
+        long total =
+                attendanceRepository.count();
 
-        long presentToday =
-                repository
-                .countByAttendanceDateAndStatus(
-                        LocalDate.now(),
-                        "PRESENT");
+        long present =
+                attendanceRepository
+                        .countByAttendanceStatus(
+                                "PRESENT");
 
-        long absentToday =
-                totalEmployees
-                - presentToday;
+        long absent =
+                attendanceRepository
+                        .countByAttendanceStatus(
+                                "ABSENT");
 
-        double attendancePercentage =
-                totalEmployees == 0
-                ? 0
-                : (presentToday * 100.0)
-                  / totalEmployees;
+        long leave =
+                attendanceRepository
+                        .countByAttendanceStatus(
+                                "LEAVE");
 
-        summary.setTotalEmployees(
-                totalEmployees);
-
-        summary.setPresentToday(
-                presentToday);
-
-        summary.setAbsentToday(
-                absentToday);
-
-        summary.setAttendancePercentage(
-                Math.round(
-                        attendancePercentage));
+        summary.setTotalAttendance(total);
+        summary.setPresentCount(present);
+        summary.setAbsentCount(absent);
+        summary.setLeaveCount(leave);
 
         return summary;
-    
-    }
-
-    // EMPLOYEE PRESENT DAYS
-
-    public long getPresentDays(
-            Long employeeId) {
-
-        return repository
-                .findByEmployeeIdOrderByAttendanceDateDesc(
-                        employeeId)
-                .stream()
-                .filter(a ->
-                        "PRESENT".equals(
-                                a.getStatus()))
-                .count();
-    }
-
-    // EMPLOYEE ATTENDANCE %
-
-    public double getAttendancePercentage(
-            Long employeeId) {
-
-        List<Attendance> list =
-                repository
-                .findByEmployeeIdOrderByAttendanceDateDesc(
-                        employeeId);
-
-        if(list.isEmpty()) {
-
-            return 0;
-        }
-
-        long presentDays =
-                list.stream()
-                .filter(a ->
-                        "PRESENT".equals(
-                                a.getStatus()))
-                .count();
-
-        return (presentDays * 100.0)
-                / list.size();
-    }
-    public List<Attendance> getTodayAttendance() {
-
-        return repository.findByAttendanceDate(
-                LocalDate.now());
-    }
-
-    public List<Attendance> getMonthlyAttendance() {
-
-        LocalDate start =
-                LocalDate.now()
-                .withDayOfMonth(1);
-
-        LocalDate end =
-                LocalDate.now();
-
-        return repository
-                .findByAttendanceDateBetween(
-                        start,
-                        end);
-    }
-
-    public List<Attendance> getAllAttendanceHistory() {
-
-        return repository
-                .findAllByOrderByAttendanceDateDesc();
     }
 }

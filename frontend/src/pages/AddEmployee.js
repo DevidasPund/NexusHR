@@ -8,7 +8,11 @@ function AddEmployee() {
 
   const navigate = useNavigate();
 
-  const [image, setImage] = useState(null);
+  const [loading, setLoading] =
+    useState(false);
+
+  const [image, setImage] =
+    useState(null);
 
   const [preview, setPreview] =
     useState(null);
@@ -30,11 +34,11 @@ function AddEmployee() {
       phone: "",
       department: "",
       designation: "",
-      role: "EMPLOYEE",
       salary: "",
-      status: "ACTIVE",
-      profileImage: ""
 
+      role: "EMPLOYEE",
+
+      status: "ACTIVE"
     });
 
   const handleChange = (e) => {
@@ -47,6 +51,7 @@ function AddEmployee() {
         e.target.value
 
     });
+
   };
 
   const handleImage = (e) => {
@@ -61,6 +66,7 @@ function AddEmployee() {
       setPreview(
         URL.createObjectURL(file)
       );
+
     }
   };
 
@@ -70,6 +76,8 @@ function AddEmployee() {
       e.preventDefault();
 
       try {
+
+        setLoading(true);
 
         let imageName = "";
 
@@ -109,7 +117,7 @@ function AddEmployee() {
         );
 
         alert(
-          "Employee Added Successfully"
+          `${employee.firstName} added successfully`
         );
 
         navigate(
@@ -121,8 +129,13 @@ function AddEmployee() {
         console.error(error);
 
         alert(
-          "Failed To Add Employee"
+          "Failed to add employee"
         );
+
+      } finally {
+
+        setLoading(false);
+
       }
     };
 
@@ -135,10 +148,9 @@ function AddEmployee() {
       <div
         className="flex-grow-1"
         style={{
-          background:
-            "#f4f7fe",
-          minHeight:
-            "100vh"
+          marginLeft: "280px",
+          background: "#f4f7fe",
+          minHeight: "100vh"
         }}
       >
 
@@ -146,34 +158,35 @@ function AddEmployee() {
 
         <div className="container-fluid p-4">
 
+          {/* Header */}
+
           <div
-            className="shadow-lg mb-4 p-4"
+            className="shadow-lg p-4 mb-4"
             style={{
               background:
                 "linear-gradient(135deg,#2563eb,#7c3aed)",
-              borderRadius:
-                "20px",
-              color:
-                "white"
+              borderRadius: "20px",
+              color: "white"
             }}
           >
 
             <h1>
-              Add New Employee 👨‍💼
+              👨‍💼 Add Employee
             </h1>
 
-            <p>
-              Register Employee
+            <p className="mb-0">
+              Register new employee
               in NexusHR
             </p>
 
           </div>
 
+          {/* Form */}
+
           <div
             className="card border-0 shadow-lg"
             style={{
-              borderRadius:
-                "20px"
+              borderRadius: "20px"
             }}
           >
 
@@ -185,9 +198,7 @@ function AddEmployee() {
                 }
               >
 
-                <div
-                  className="text-center mb-4"
-                >
+                <div className="text-center mb-4">
 
                   <img
                     src={
@@ -195,8 +206,8 @@ function AddEmployee() {
                       "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                     }
                     alt="profile"
-                    width="140"
-                    height="140"
+                    width="150"
+                    height="150"
                     className="rounded-circle shadow"
                     style={{
                       objectFit:
@@ -211,11 +222,9 @@ function AddEmployee() {
                 <div className="row">
 
                   <div className="col-md-6">
-
                     <label>
                       Employee Code
                     </label>
-
                     <input
                       className="form-control mb-3"
                       value={
@@ -223,15 +232,12 @@ function AddEmployee() {
                       }
                       readOnly
                     />
-
                   </div>
 
                   <div className="col-md-6">
-
                     <label>
                       Username
                     </label>
-
                     <input
                       type="text"
                       name="username"
@@ -244,15 +250,12 @@ function AddEmployee() {
                       }
                       required
                     />
-
                   </div>
 
                   <div className="col-md-6">
-
                     <label>
                       First Name
                     </label>
-
                     <input
                       type="text"
                       name="firstName"
@@ -265,15 +268,12 @@ function AddEmployee() {
                       }
                       required
                     />
-
                   </div>
 
                   <div className="col-md-6">
-
                     <label>
                       Last Name
                     </label>
-
                     <input
                       type="text"
                       name="lastName"
@@ -285,15 +285,12 @@ function AddEmployee() {
                         handleChange
                       }
                     />
-
                   </div>
 
                   <div className="col-md-6">
-
                     <label>
                       Password
                     </label>
-
                     <input
                       type="password"
                       name="password"
@@ -304,16 +301,14 @@ function AddEmployee() {
                       onChange={
                         handleChange
                       }
+                      required
                     />
-
                   </div>
 
                   <div className="col-md-6">
-
                     <label>
                       Email
                     </label>
-
                     <input
                       type="email"
                       name="email"
@@ -324,16 +319,14 @@ function AddEmployee() {
                       onChange={
                         handleChange
                       }
+                      required
                     />
-
                   </div>
 
                   <div className="col-md-6">
-
                     <label>
                       Phone
                     </label>
-
                     <input
                       type="text"
                       name="phone"
@@ -345,11 +338,9 @@ function AddEmployee() {
                         handleChange
                       }
                     />
-
                   </div>
 
                   <div className="col-md-6">
-
                     <label>
                       Department
                     </label>
@@ -363,11 +354,10 @@ function AddEmployee() {
                       onChange={
                         handleChange
                       }
+                      required
                     >
-
                       <option value="">
-                        Select
-                        Department
+                        Select Department
                       </option>
 
                       <option value="IT">
@@ -386,16 +376,18 @@ function AddEmployee() {
                         Marketing
                       </option>
 
+                      <option value="Sales">
+                        Sales
+                      </option>
+
                     </select>
 
                   </div>
 
                   <div className="col-md-6">
-
                     <label>
                       Designation
                     </label>
-
                     <input
                       type="text"
                       name="designation"
@@ -407,15 +399,12 @@ function AddEmployee() {
                         handleChange
                       }
                     />
-
                   </div>
 
                   <div className="col-md-6">
-
                     <label>
                       Salary
                     </label>
-
                     <input
                       type="number"
                       name="salary"
@@ -427,11 +416,9 @@ function AddEmployee() {
                         handleChange
                       }
                     />
-
                   </div>
 
                   <div className="col-md-6">
-
                     <label>
                       Role
                     </label>
@@ -446,7 +433,6 @@ function AddEmployee() {
                         handleChange
                       }
                     >
-
                       <option value="ADMIN">
                         ADMIN
                       </option>
@@ -464,7 +450,6 @@ function AddEmployee() {
                   </div>
 
                   <div className="col-md-6">
-
                     <label>
                       Status
                     </label>
@@ -479,7 +464,6 @@ function AddEmployee() {
                         handleChange
                       }
                     >
-
                       <option value="ACTIVE">
                         ACTIVE
                       </option>
@@ -493,20 +477,18 @@ function AddEmployee() {
                   </div>
 
                   <div className="col-md-12">
-
                     <label>
                       Profile Photo
                     </label>
 
                     <input
                       type="file"
-                      className="form-control mb-4"
                       accept="image/*"
+                      className="form-control mb-4"
                       onChange={
                         handleImage
                       }
                     />
-
                   </div>
 
                 </div>
@@ -514,8 +496,15 @@ function AddEmployee() {
                 <button
                   type="submit"
                   className="btn btn-success btn-lg"
+                  disabled={loading}
                 >
-                  💾 Save Employee
+                  {
+                    loading
+                    ?
+                    "Saving..."
+                    :
+                    "💾 Save Employee"
+                  }
                 </button>
 
               </form>

@@ -1,8 +1,6 @@
 package com.nexushr.service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,71 +14,45 @@ public class RatingService {
     @Autowired
     private RatingRepository repository;
 
-    public Rating save(
-            Rating rating){
+    public Rating save(Rating rating) {
 
-        return repository.save(
-                rating);
+        double finalRating =
+                (rating.getAttendanceScore()
+                + rating.getProjectScore()) / 2;
+
+        rating.setFinalRating(finalRating);
+
+        if (finalRating >= 90) {
+            rating.setPerformanceLevel("Excellent");
+        } else if (finalRating >= 70) {
+            rating.setPerformanceLevel("Good");
+        } else {
+            rating.setPerformanceLevel("Average");
+        }
+
+        return repository.save(rating);
     }
 
-    public List<Rating>
-    getEmployeeRatings(
-            Long employeeId){
+    public List<Rating> getEmployeeRatings(
+            Long employeeId) {
 
-        return repository
-                .findByEmployeeId(
-                        employeeId);
+        return repository.findByEmployeeId(
+                employeeId);
     }
 
-    public List<Rating> getAllRatings(){
-
+    public List<Rating> getAllRatings() {
         return repository.findAll();
     }
 
-    public Map<String,Object> getStats(){
+    public Rating getById(Long id) {
 
-        Map<String,Object> stats =
-                new HashMap<>();
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Rating Not Found"));
+    }
 
-        List<Rating> ratings =
-                repository.findAll();
-
-        stats.put(
-                "totalRatings",
-                ratings.size());
-
-        stats.put(
-                "excellent",
-                ratings.stream()
-                .filter(r ->
-                    "Excellent".equalsIgnoreCase(
-                        r.getPerformanceLevel()))
-                .count());
-
-        stats.put(
-                "good",
-                ratings.stream()
-                .filter(r ->
-                    "Good".equalsIgnoreCase(
-                        r.getPerformanceLevel()))
-                .count());
-
-        stats.put(
-                "average",
-                ratings.stream()
-                .filter(r ->
-                    "Average".equalsIgnoreCase(
-                        r.getPerformanceLevel()))
-                .count());
-
-        stats.put(
-                "poor",
-                ratings.stream()
-                .filter(r ->
-                    "Poor".equalsIgnoreCase(
-                        r.getPerformanceLevel()))
-                .count());
-
-        return stats;
+    public void delete(Long id) {
+        repository.deleteById(id);
     }
 }

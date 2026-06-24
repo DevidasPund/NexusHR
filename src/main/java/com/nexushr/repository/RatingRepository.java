@@ -7,15 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.nexushr.entity.Rating;
 
 public interface RatingRepository
-extends JpaRepository<Rating, Long>{
+        extends JpaRepository<Rating, Long> {
 
     List<Rating> findByEmployeeId(
             Long employeeId);
-
-    List<Rating> findByEmployeeName(
-            String employeeName);
-
-    long countByPerformanceLevel(
-            String performanceLevel);
-
 }

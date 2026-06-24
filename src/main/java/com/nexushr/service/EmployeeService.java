@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.nexushr.entity.Employee;
-import com.nexushr.entity.Notification;
 import com.nexushr.repository.EmployeeRepository;
 
 @Service
@@ -15,77 +14,39 @@ public class EmployeeService {
     @Autowired
     private EmployeeRepository repository;
 
-    @Autowired
-    private NotificationService notificationService;
-
-    @Autowired
-    private AuditLogService auditLogService;
-
-    // SAVE EMPLOYEE
+    // Save Employee
     public Employee save(Employee employee) {
-
-        Employee savedEmployee = repository.save(employee);
-
-        Notification notification = new Notification();
-
-        notification.setTitle("New Employee Added");
-
-        notification.setMessage(
-                savedEmployee.getFirstName()
-                + " "
-                + savedEmployee.getLastName()
-                + " joined "
-                + savedEmployee.getDepartment());
-
-        notification.setSender("SYSTEM");
-        notification.setReceiver("ALL");
-
-        notificationService.save(notification);
-
-        auditLogService.saveLog(
-                "ADMIN",
-                "EMPLOYEE_ADDED",
-                savedEmployee.getFirstName()
-                + " "
-                + savedEmployee.getLastName());
-
-        return savedEmployee;
+        return repository.save(employee);
     }
 
-    // GET ALL EMPLOYEES
+    // Get All Employees
     public List<Employee> getAllEmployees() {
         return repository.findAll();
     }
 
-    // GET EMPLOYEE BY ID
+    // Get Employee By ID
     public Employee getById(Long id) {
-
         return repository.findById(id)
                 .orElseThrow(() ->
                         new RuntimeException("Employee Not Found"));
     }
 
-    // GET EMPLOYEE BY USERNAME
+    // Get Employee By Username
     public Employee getByUsername(String username) {
-
         return repository.findByUsername(username)
                 .orElseThrow(() ->
                         new RuntimeException("Employee Not Found"));
     }
 
-    // UPDATE EMPLOYEE
-    public Employee updateEmployee(Long id,
-                                   Employee employee) {
+    // Update Employee
+    public Employee updateEmployee(
+            Long id,
+            Employee employee) {
 
-        Employee existing = repository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Employee Not Found"));
-
-        Double oldSalary = existing.getSalary();
+        Employee existing = getById(id);
 
         existing.setFirstName(employee.getFirstName());
         existing.setLastName(employee.getLastName());
-        existing.setUsername(employee.getUsername());
         existing.setEmail(employee.getEmail());
         existing.setPhone(employee.getPhone());
         existing.setDepartment(employee.getDepartment());
@@ -93,94 +54,55 @@ public class EmployeeService {
         existing.setSalary(employee.getSalary());
         existing.setRole(employee.getRole());
         existing.setStatus(employee.getStatus());
-        existing.setProfileImage(employee.getProfileImage());
+        existing.setUsername(employee.getUsername());
+        existing.setSkills(employee.getSkills());
+        existing.setMissingSkills(employee.getMissingSkills());
 
-        Employee updated = repository.save(existing);
-
-        auditLogService.saveLog(
-                "ADMIN",
-                "EMPLOYEE_UPDATED",
-                existing.getFirstName()
-                + " "
-                + existing.getLastName());
-
-        if (oldSalary != null &&
-                !oldSalary.equals(employee.getSalary())) {
-
-            auditLogService.saveLog(
-                    "ADMIN",
-                    "SALARY_UPDATED",
-                    existing.getFirstName()
-                    + " Salary Changed From ₹"
-                    + oldSalary
-                    + " To ₹"
-                    + employee.getSalary());
-        }
-
-        return updated;
+        return repository.save(existing);
     }
 
-    // DELETE EMPLOYEE
+    // Delete Employee
     public void delete(Long id) {
-
-        Employee employee = repository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Employee Not Found"));
-
-        auditLogService.saveLog(
-                "ADMIN",
-                "EMPLOYEE_DELETED",
-                employee.getFirstName()
-                + " "
-                + employee.getLastName());
-
         repository.deleteById(id);
     }
 
-    // TOTAL EMPLOYEES
+    // Count Employees
     public long count() {
         return repository.count();
     }
 
-    // ACTIVE EMPLOYEES
+    // Active Employees
     public Long getActiveEmployees() {
         return repository.countByStatus("ACTIVE");
     }
 
-    // TOTAL SALARY
+    // Total Salary
     public Double getTotalSalary() {
-        return repository.getTotalSalary();
+        Double total = repository.getTotalSalary();
+        return total == null ? 0.0 : total;
     }
 
-    public List<Employee> getEmployeesByDepartment(
-            String department) {
-        return repository.findByDepartment(department);
-    }
-
-    public List<Employee> getEmployeesByRole(
-            String role) {
-        return repository.findByRole(role);
-    }
-
-    public List<Employee> getEmployeesByAttritionRisk(
-            String risk) {
-        return repository.findByAttritionRisk(risk);
-    }
-
+    // Department Wise Employees
     public List<Employee> getByDepartment(
             String department) {
+
         return repository.findByDepartment(department);
     }
 
+    // Role Wise Employees
     public List<Employee> getByRole(
             String role) {
+
         return repository.findByRole(role);
     }
 
+    // Search Employee
     public List<Employee> searchEmployee(
             String name) {
 
         return repository
-                .findByFirstNameContainingIgnoreCase(name);
+                .findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
+                        name,
+                        name);
     }
 }

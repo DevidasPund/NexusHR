@@ -1,18 +1,17 @@
 package com.nexushr.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "teams")
 public class Team {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String teamName;
@@ -21,49 +20,70 @@ public class Team {
 
     private String projectName;
 
+    private String status;
+
     @ElementCollection
-    private List<String> members;
+    @CollectionTable(
+            name = "team_members",
+            joinColumns =
+            @JoinColumn(name = "team_id"))
+    @Column(name = "member")
+    private List<String> members =
+            new ArrayList<>();
 
-	public Long getId() {
-		return id;
-	}
+    public Team() {
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public String getTeamName() {
-		return teamName;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setTeamName(String teamName) {
-		this.teamName = teamName;
-	}
+    public String getTeamName() {
+        return teamName;
+    }
 
-	public String getTeamLead() {
-		return teamLead;
-	}
+    public void setTeamName(
+            String teamName) {
+        this.teamName = teamName;
+    }
 
-	public void setTeamLead(String teamLead) {
-		this.teamLead = teamLead;
-	}
+    public String getTeamLead() {
+        return teamLead;
+    }
 
-	public String getProjectName() {
-		return projectName;
-	}
+    public void setTeamLead(
+            String teamLead) {
+        this.teamLead = teamLead;
+    }
 
-	public void setProjectName(String projectName) {
-		this.projectName = projectName;
-	}
+    public String getProjectName() {
+        return projectName;
+    }
 
-	public List<String> getMembers() {
-		return members;
-	}
+    public void setProjectName(
+            String projectName) {
+        this.projectName = projectName;
+    }
 
-	public void setMembers(List<String> members) {
-		this.members = members;
-	}
-    
-    
-    
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(
+            String status) {
+        this.status = status;
+    }
+
+    public List<String> getMembers() {
+        return members;
+    }
+
+    public void setMembers(
+            List<String> members) {
+        this.members = members;
+    }
 }

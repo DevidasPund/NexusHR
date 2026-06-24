@@ -1,65 +1,139 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  Link
+} from "react-router-dom";
+
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function Employees() {
 
-  const [employees, setEmployees] = useState([]);
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [employees, setEmployees] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [search, setSearch] =
+    useState("");
 
   useEffect(() => {
+
     loadEmployees();
+
+    const interval =
+      setInterval(() => {
+
+        loadEmployees();
+
+      }, 30000);
+
+    return () =>
+      clearInterval(interval);
+
   }, []);
 
-  const loadEmployees = async () => {
+  const loadEmployees =
+    async () => {
 
-    try {
+      try {
 
-      const response = await API.get("/employees");
+        const response =
+          await API.get("/employees");
 
-      setEmployees(response.data);
+        setEmployees(
+          response.data
+        );
 
-    } catch (error) {
+      } catch (error) {
 
-      console.error(error);
+        console.error(error);
 
-    } finally {
+      } finally {
 
-      setLoading(false);
-    }
-  };
+        setLoading(false);
 
-  const deleteEmployee = async (id) => {
+      }
 
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this employee?"
+    };
+
+  const deleteEmployee =
+    async (id) => {
+
+      if (
+        !window.confirm(
+          "Delete Employee?"
+        )
+      ) {
+        return;
+      }
+
+      try {
+
+        await API.delete(
+          `/employees/${id}`
+        );
+
+        loadEmployees();
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+    };
+
+  const filteredEmployees =
+    employees.filter(
+      (employee) =>
+
+        employee.firstName
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
+
+        ||
+
+        employee.lastName
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
+
+        ||
+
+        employee.username
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
+
+        ||
+
+        employee.department
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
     );
 
-    if (!confirmDelete) return;
-
-    try {
-
-      await API.delete(`/employees/${id}`);
-
-      loadEmployees();
-
-    } catch (error) {
-
-      console.error(error);
-    }
-  };
-
-  const filteredEmployees = employees.filter(
-    (employee) =>
-      employee.firstName?.toLowerCase().includes(search.toLowerCase()) ||
-      employee.lastName?.toLowerCase().includes(search.toLowerCase()) ||
-      employee.username?.toLowerCase().includes(search.toLowerCase()) ||
-      employee.department?.toLowerCase().includes(search.toLowerCase())
-  );
+  const totalSalary =
+    employees.reduce(
+      (sum, emp) =>
+        sum +
+        (emp.salary || 0),
+      0
+    );
 
   return (
+
     <div className="d-flex">
 
       <Sidebar />
@@ -67,6 +141,7 @@ function Employees() {
       <div
         className="flex-grow-1"
         style={{
+          marginLeft: "280px",
           background: "#f4f7fe",
           minHeight: "100vh"
         }}
@@ -79,55 +154,58 @@ function Employees() {
           {/* Header */}
 
           <div
-            className="shadow-lg mb-4"
+            className="card border-0 shadow-lg mb-4"
             style={{
               background:
                 "linear-gradient(135deg,#2563eb,#7c3aed)",
-              borderRadius: "20px",
-              color: "white",
-              padding: "30px"
+              borderRadius: "20px"
             }}
           >
 
-            <div className="d-flex justify-content-between align-items-center">
+            <div className="card-body text-white d-flex justify-content-between align-items-center">
 
               <div>
 
-                <h1 className="fw-bold">
-                  Employee Management 👨‍💼
-                </h1>
+                <h2>
+                  👨‍💼 Employee Management
+                </h2>
 
                 <p className="mb-0">
-                  Manage Employees, Departments & Payroll
+                  Manage Employees &
+                  Organization Workforce
                 </p>
 
               </div>
 
-              <a
-                href="/add-employee"
-                className="btn btn-light btn-lg"
+              <Link
+                to="/add-employee"
+                className="btn btn-light"
               >
                 + Add Employee
-              </a>
+              </Link>
 
             </div>
 
           </div>
 
-          {/* Statistics */}
+          {/* KPI Cards */}
 
-          <div className="row mb-4">
+          <div className="row g-4 mb-4">
 
-            <div className="col-md-3">
+            <div className="col-md-4">
 
-              <div className="card border-0 shadow">
+              <div className="card shadow border-0">
 
                 <div className="card-body text-center">
 
-                  <h6>Total Employees</h6>
+                  <h6>
+                    Total Employees
+                  </h6>
 
                   <h2 className="text-primary">
+
                     {employees.length}
+
                   </h2>
 
                 </div>
@@ -136,19 +214,23 @@ function Employees() {
 
             </div>
 
-            <div className="col-md-3">
+            <div className="col-md-4">
 
-              <div className="card border-0 shadow">
+              <div className="card shadow border-0">
 
                 <div className="card-body text-center">
 
-                  <h6>Active Employees</h6>
+                  <h6>
+                    Active Employees
+                  </h6>
 
                   <h2 className="text-success">
 
                     {
                       employees.filter(
-                        e => e.status === "ACTIVE"
+                        e =>
+                          e.status ===
+                          "ACTIVE"
                       ).length
                     }
 
@@ -160,49 +242,19 @@ function Employees() {
 
             </div>
 
-            <div className="col-md-3">
+            <div className="col-md-4">
 
-              <div className="card border-0 shadow">
-
-                <div className="card-body text-center">
-
-                  <h6>Departments</h6>
-
-                  <h2 className="text-warning">
-
-                    {
-                      [...new Set(
-                        employees.map(
-                          e => e.department
-                        )
-                      )].length
-                    }
-
-                  </h2>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="col-md-3">
-
-              <div className="card border-0 shadow">
+              <div className="card shadow border-0">
 
                 <div className="card-body text-center">
 
-                  <h6>Total Salary</h6>
+                  <h6>
+                    Total Salary
+                  </h6>
 
                   <h2 className="text-danger">
 
-                    ₹{
-                      employees.reduce(
-                        (total, emp) =>
-                          total + (emp.salary || 0),
-                        0
-                      )
-                    }
+                    ₹{totalSalary}
 
                   </h2>
 
@@ -216,17 +268,19 @@ function Employees() {
 
           {/* Search */}
 
-          <div className="card border-0 shadow mb-4">
+          <div className="card shadow border-0 mb-4">
 
             <div className="card-body">
 
               <input
                 type="text"
-                className="form-control form-control-lg"
-                placeholder="🔍 Search Employee..."
+                className="form-control"
+                placeholder="Search Employee..."
                 value={search}
                 onChange={(e) =>
-                  setSearch(e.target.value)
+                  setSearch(
+                    e.target.value
+                  )
                 }
               />
 
@@ -236,22 +290,23 @@ function Employees() {
 
           {/* Employee Table */}
 
-          <div
-            className="card border-0 shadow-lg"
-            style={{
-              borderRadius: "20px"
-            }}
-          >
+          <div className="card shadow border-0">
 
             <div className="card-body">
 
-              {loading ? (
+              {
 
-                <h4 className="text-center">
-                  Loading Employees...
-                </h4>
+                loading ?
 
-              ) : (
+                <div className="text-center">
+
+                  <h4>
+                    Loading...
+                  </h4>
+
+                </div>
+
+                :
 
                 <div className="table-responsive">
 
@@ -277,100 +332,145 @@ function Employees() {
 
                     <tbody>
 
-                      {filteredEmployees.map((employee) => (
+                      {
 
-                        <tr key={employee.id}>
+                        filteredEmployees.length > 0
 
-                          <td>
-                            {employee.id}
-                          </td>
+                        ?
 
-                          <td>
+                        filteredEmployees.map(
+                          (employee) => (
 
-                            <img
-                              src={
-                                employee.profileImage
-                                  ? `https://nexushr-production-612e.up.railway.app/uploads/${employee.profileImage}`
-                                  : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                              }
-                              alt="profile"
-                              width="55"
-                              height="55"
-                              style={{
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                                border:
-                                  "3px solid #2563eb"
-                              }}
-                            />
-
-                          </td>
-
-                          <td>
-
-                            <strong>
-
-                              {employee.firstName}
-                              {" "}
-                              {employee.lastName}
-
-                            </strong>
-
-                          </td>
-
-                          <td>
-                            {employee.username}
-                          </td>
-
-                          <td>
-                            {employee.department}
-                          </td>
-
-                          <td>
-                            {employee.designation}
-                          </td>
-
-                          <td>
-                            ₹{employee.salary}
-                          </td>
-
-                          <td>
-
-                            <span
-                              className={
-                                employee.status === "ACTIVE"
-                                  ? "badge bg-success p-2"
-                                  : "badge bg-danger p-2"
+                            <tr
+                              key={
+                                employee.id
                               }
                             >
-                              {employee.status}
-                            </span>
 
-                          </td>
+                              <td>
+                                {employee.id}
+                              </td>
 
-                          <td>
+                              <td>
 
-                            <a
-                              href={`/edit-employee/${employee.id}`}
-                              className="btn btn-warning btn-sm me-2"
-                            >
-                              ✏ Edit
-                            </a>
+                                <img
+                                  src={
+                                    employee.profileImage
 
-                            <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() =>
-                                deleteEmployee(employee.id)
-                              }
-                            >
-                              🗑 Delete
-                            </button>
+                                    ?
 
+                                    `https://nexushr-production-612e.up.railway.app/uploads/${employee.profileImage}`
+
+                                    :
+
+                                    "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                                  }
+                                  alt="profile"
+                                  width="50"
+                                  height="50"
+                                  className="rounded-circle"
+                                />
+
+                              </td>
+
+                              <td>
+
+                                {
+                                  employee.firstName
+                                }
+                                {" "}
+                                {
+                                  employee.lastName
+                                }
+
+                              </td>
+
+                              <td>
+                                {
+                                  employee.username
+                                }
+                              </td>
+
+                              <td>
+                                {
+                                  employee.department
+                                }
+                              </td>
+
+                              <td>
+                                {
+                                  employee.designation
+                                }
+                              </td>
+
+                              <td>
+                                ₹
+                                {
+                                  employee.salary
+                                }
+                              </td>
+
+                              <td>
+
+                                <span
+                                  className={
+                                    employee.status === "ACTIVE"
+                                    ?
+                                    "badge bg-success"
+                                    :
+                                    "badge bg-danger"
+                                  }
+                                >
+
+                                  {
+                                    employee.status
+                                  }
+
+                                </span>
+
+                              </td>
+
+                              <td>
+
+                                <Link
+                                  to={`/edit-employee/${employee.id}`}
+                                  className="btn btn-warning btn-sm me-2"
+                                >
+                                  Edit
+                                </Link>
+
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() =>
+                                    deleteEmployee(
+                                      employee.id
+                                    )
+                                  }
+                                >
+                                  Delete
+                                </button>
+
+                              </td>
+
+                            </tr>
+
+                          )
+                        )
+
+                        :
+
+                        <tr>
+
+                          <td
+                            colSpan="9"
+                            className="text-center"
+                          >
+                            No Employees Found
                           </td>
 
                         </tr>
 
-                      ))}
+                      }
 
                     </tbody>
 
@@ -378,7 +478,7 @@ function Employees() {
 
                 </div>
 
-              )}
+              }
 
             </div>
 
@@ -389,7 +489,9 @@ function Employees() {
       </div>
 
     </div>
+
   );
+
 }
 
 export default Employees;

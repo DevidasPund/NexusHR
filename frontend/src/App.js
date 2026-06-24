@@ -1,422 +1,529 @@
 import React from "react";
 import {
-BrowserRouter,
-Routes,
-Route
+  BrowserRouter,
+  Routes,
+  Route
 } from "react-router-dom";
 
-import { ToastContainer }
-from "react-toastify";
-
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-import NotificationListener
-from "./components/NotificationListener";
+import NotificationListener from "./components/NotificationListener";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-import ProtectedRoute
-from "./components/ProtectedRoute";
-
+/* Authentication */
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 
+/* Dashboards */
 import AdminDashboard from "./pages/AdminDashboard";
 import ManagerDashboard from "./pages/ManagerDashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 
+/* Employee */
 import Employees from "./pages/Employees";
 import AddEmployee from "./pages/AddEmployee";
 import EditEmployee from "./pages/EditEmployee";
 
+/* Department */
 import Department from "./pages/Department";
 
+/* Attendance */
 import Attendance from "./pages/Attendance";
 import EmployeeAttendance from "./pages/EmployeeAttendance";
-import FaceAttendance from "./pages/FaceAttendance";
 import AdminAttendance from "./pages/AdminAttendance";
+import FaceAttendance from "./pages/FaceAttendance";
 
-import Leave from "./pages/MyLeave";
+/* Leave */
+import MyLeave from "./pages/MyLeave";
 import LeaveManagement from "./pages/LeaveManagement";
 
+/* Recruitment */
 import Recruitment from "./pages/Recruitment";
-import PerformanceManagement from "./pages/PerformanceManagement";
-import Projects from "./pages/Project";
+
+/* Project & Task */
+import Projects from "./pages/Projects";
 import Tasks from "./pages/Tasks";
 import MyTasks from "./pages/MyTasks";
-import Team from "./pages/Team";
+import Milestones from "./pages/Milestones";
 
-import Salary from "./pages/Salary";
-import SalaryManagement from "./pages/SalaryManagement";
+/* Team */
+import Team from "./pages/Team";
+import TeamMembers from "./pages/TeamMembers";
+import TeamAttendance from "./pages/TeamAttendance";
 import TeamSalary from "./pages/TeamSalary";
 
+/* Performance */
+import PerformanceManagement from "./pages/PerformanceManagement";
+import PerformanceInsights from "./pages/PerformanceInsights";
 import Ratings from "./pages/Ratings";
-import Reports from "./pages/Reports";
-import PayslipManagement from "./pages/PayslipManagement";
-import NotificationManagement
-from "./pages/NotificationManagement";
 
+/* Salary */
+import Salary from "./pages/Salary";
+import SalaryManagement from "./pages/SalaryManagement";
+import PayslipManagement from "./pages/PayslipManagement";
+
+/* Reports */
+import Reports from "./pages/Reports";
+import AuditLogs from "./pages/AuditLogs";
+
+/* Notifications */
+import NotificationManagement from "./pages/NotificationManagement";
+import EmployeeNotification from "./pages/EmployeeNotification";
+
+/* Profile */
 import Profile from "./pages/Profile";
+import ManagerProfile from "./pages/ManagerProfile";
 import Settings from "./pages/Settings";
 import ChangePassword from "./pages/ChangePassword";
-import AuditLogs from "./pages/AuditLogs";
+
+/* Email */
 import EmailManagement from "./pages/EmailManagement";
-import Milestones from "./pages/Milestones";
+
+/* AI Features */
 import AIInsights from "./pages/AIInsights";
 import AttritionRisk from "./pages/AttritionRisk";
 import SkillGapAnalysis from "./pages/SkillGapAnalysis";
-import EmployeeNotification from "./pages/EmployeeNotification";
+
 function App() {
+  return (
+    <BrowserRouter>
+      <NotificationListener />
 
-return (
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
 
-  <BrowserRouter>
+      <Routes>
 
-   <NotificationListener />
+        {/* Public Routes */}
 
-<ToastContainer
- position="top-right"
- autoClose={5000}
- newestOnTop
- closeOnClick
- pauseOnHover
-/>
+        <Route path="/" element={<Login />} />
 
-   <Routes>
+        <Route
+          path="/register"
+          element={<Register />}
+        />
 
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
 
-{/* Public Routes */}
+        {/* Dashboard */}
 
-<Route
- path="/"
- element={<Login />}
-/>
-<Route
-  path="/payslips"
-  element={<PayslipManagement />}
-/>
-<Route
- path="/register"
- element={<Register />}
-/>
-<Route
- path="/performance"
- element={<PerformanceManagement />}
-/>
-<Route
- path="/forgot-password"
- element={<ForgotPassword />}
-/>
-<Route path="/ai-insights" element={<ProtectedRoute><AIInsights /></ProtectedRoute>} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-<Route path="/attrition-risk" element={<ProtectedRoute><AttritionRisk /></ProtectedRoute>} />
+        <Route
+          path="/manager/dashboard"
+          element={
+            <ProtectedRoute>
+              <ManagerDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-<Route path="/skill-gap-analysis" element={<ProtectedRoute><SkillGapAnalysis /></ProtectedRoute>} />
-{/* Dashboard */}
+        <Route
+          path="/employee-dashboard"
+          element={
+            <ProtectedRoute>
+              <EmployeeDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/admin/dashboard"
- element={
-  <ProtectedRoute>
-   <AdminDashboard />
-  </ProtectedRoute>
- }
-/>
+        {/* Employee */}
 
-<Route
- path="/manager/dashboard"
- element={
-  <ProtectedRoute>
-   <ManagerDashboard />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/employees"
+          element={
+            <ProtectedRoute>
+              <Employees />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/employee-dashboard"
- element={
-  <ProtectedRoute>
-   <EmployeeDashboard />
-  </ProtectedRoute>
- }
-/>
-<Route
- path="/milestones"
- element={
-  <ProtectedRoute>
-   <Milestones />
-  </ProtectedRoute>
- }
-/>
-{/* Employee */}
+        <Route
+          path="/add-employee"
+          element={
+            <ProtectedRoute>
+              <AddEmployee />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/employees"
- element={
-  <ProtectedRoute>
-   <Employees />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/edit-employee/:id"
+          element={
+            <ProtectedRoute>
+              <EditEmployee />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/add-employee"
- element={
-  <ProtectedRoute>
-   <AddEmployee />
-  </ProtectedRoute>
- }
-/>
+        {/* Department */}
 
-<Route
- path="/edit-employee/:id"
- element={
-  <ProtectedRoute>
-   <EditEmployee />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/departments"
+          element={
+            <ProtectedRoute>
+              <Department />
+            </ProtectedRoute>
+          }
+        />
 
-{/* Department */}
+        {/* Attendance */}
 
-<Route
- path="/departments"
- element={
-  <ProtectedRoute>
-   <Department />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/attendance"
+          element={
+            <ProtectedRoute>
+              <Attendance />
+            </ProtectedRoute>
+          }
+        />
 
-{/* Attendance */}
+        <Route
+          path="/employee-attendance"
+          element={
+            <ProtectedRoute>
+              <EmployeeAttendance />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/attendance"
- element={
-  <ProtectedRoute>
-   <Attendance />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/admin-attendance"
+          element={
+            <ProtectedRoute>
+              <AdminAttendance />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/employee-attendance"
- element={
-  <ProtectedRoute>
-   <EmployeeAttendance />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/face-attendance"
+          element={
+            <ProtectedRoute>
+              <FaceAttendance />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/admin-attendance"
- element={
-  <ProtectedRoute>
-   <AdminAttendance />
-  </ProtectedRoute>
- }
-/>
+        {/* Leave */}
 
-<Route
- path="/face-attendance"
- element={
-  <ProtectedRoute>
-   <FaceAttendance />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/leave"
+          element={
+            <ProtectedRoute>
+              <MyLeave />
+            </ProtectedRoute>
+          }
+        />
 
-{/* Leave */}
+        <Route
+          path="/leave-management"
+          element={
+            <ProtectedRoute>
+              <LeaveManagement />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/leave"
- element={
-  <ProtectedRoute>
-   <Leave />
-  </ProtectedRoute>
- }
-/>
+        {/* Recruitment */}
 
-<Route
- path="/leave-management"
- element={
-  <ProtectedRoute>
-   <LeaveManagement />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/recruitment"
+          element={
+            <ProtectedRoute>
+              <Recruitment />
+            </ProtectedRoute>
+          }
+        />
 
-{/* Recruitment */}
+        {/* Projects */}
 
-<Route
- path="/recruitment"
- element={
-  <ProtectedRoute>
-   <Recruitment />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/projects"
+          element={
+            <ProtectedRoute>
+              <Projects />
+            </ProtectedRoute>
+          }
+        />
 
-{/* Projects */}
+        <Route
+          path="/milestones"
+          element={
+            <ProtectedRoute>
+              <Milestones />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/projects"
- element={
-  <ProtectedRoute>
-   <Projects />
-  </ProtectedRoute>
- }
-/>
+        {/* Tasks */}
 
-{/* Tasks */}
+        <Route
+          path="/tasks"
+          element={
+            <ProtectedRoute>
+              <Tasks />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/tasks"
- element={
-  <ProtectedRoute>
-   <Tasks />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/my-tasks"
+          element={
+            <ProtectedRoute>
+              <MyTasks />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/my-tasks"
- element={
-  <ProtectedRoute>
-   <MyTasks />
-  </ProtectedRoute>
- }
-/>
+        {/* Team */}
 
-{/* Team */}
+        <Route
+          path="/teams"
+          element={
+            <ProtectedRoute>
+              <Team />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/teams"
- element={
-  <ProtectedRoute>
-   <Team />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/team-members"
+          element={
+            <ProtectedRoute>
+              <TeamMembers />
+            </ProtectedRoute>
+          }
+        />
 
-{/* Salary */}
+        <Route
+          path="/team-attendance"
+          element={
+            <ProtectedRoute>
+              <TeamAttendance />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/salary"
- element={
-  <ProtectedRoute>
-   <Salary />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/team-salary"
+          element={
+            <ProtectedRoute>
+              <TeamSalary />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/salary-management"
- element={
-  <ProtectedRoute>
-   <SalaryManagement />
-  </ProtectedRoute>
- }
-/>
+        {/* Performance */}
 
-<Route
- path="/team-salary"
- element={
-  <ProtectedRoute>
-   <TeamSalary />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/performance"
+          element={
+            <ProtectedRoute>
+              <PerformanceManagement />
+            </ProtectedRoute>
+          }
+        />
 
-{/* Ratings */}
+        <Route
+          path="/performance-insights"
+          element={
+            <ProtectedRoute>
+              <PerformanceInsights />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/ratings"
- element={
-  <ProtectedRoute>
-   <Ratings />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/ratings"
+          element={
+            <ProtectedRoute>
+              <Ratings />
+            </ProtectedRoute>
+          }
+        />
 
-{/* Reports */}
+        {/* Salary */}
 
-<Route
- path="/reports"
- element={
-  <ProtectedRoute>
-   <Reports />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/salary"
+          element={
+            <ProtectedRoute>
+              <Salary />
+            </ProtectedRoute>
+          }
+        />
 
-{/* Notifications */}
+        <Route
+          path="/salary-management"
+          element={
+            <ProtectedRoute>
+              <SalaryManagement />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/employee-notification"
- element={
-  <ProtectedRoute>
-   <EmployeeNotification />
-  </ProtectedRoute>
- }
-/>
-<Route
- path="/notification-management"
- element={
-  <ProtectedRoute>
-   <NotificationManagement />
-  </ProtectedRoute>
- }
-/>
-<Route
- path="/audit-logs"
- element={
-  <ProtectedRoute>
-   <AuditLogs />
-  </ProtectedRoute>
- }
-/>
-{/* Profile */}
+        <Route
+          path="/payslips"
+          element={
+            <ProtectedRoute>
+              <PayslipManagement />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/profile"
- element={
-  <ProtectedRoute>
-   <Profile />
-  </ProtectedRoute>
- }
-/>
+        {/* Reports */}
 
-{/* Settings */}
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
- path="/settings"
- element={
-  <ProtectedRoute>
-   <Settings />
-  </ProtectedRoute>
- }
-/>
+        <Route
+          path="/audit-logs"
+          element={
+            <ProtectedRoute>
+              <AuditLogs />
+            </ProtectedRoute>
+          }
+        />
 
-{/* Password */}
+        {/* Notifications */}
 
-<Route
- path="/change-password"
- element={
-  <ProtectedRoute>
-   <ChangePassword />
-  </ProtectedRoute>
- }
-/>
-<Route
-  path="/email-management"
-  element={<EmailManagement />}
-/>
+        <Route
+          path="/notification-management"
+          element={
+            <ProtectedRoute>
+              <NotificationManagement />
+            </ProtectedRoute>
+          }
+        />
 
-   </Routes>
+        <Route
+          path="/employee-notification"
+          element={
+            <ProtectedRoute>
+              <EmployeeNotification />
+            </ProtectedRoute>
+          }
+        />
 
-  </BrowserRouter>
+        {/* Profile */}
 
-);
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/manager-profile"
+          element={
+            <ProtectedRoute>
+              <ManagerProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Settings */}
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute>
+              <ChangePassword />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Email */}
+
+        <Route
+          path="/email-management"
+          element={
+            <ProtectedRoute>
+              <EmailManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* AI */}
+
+        <Route
+          path="/ai-insights"
+          element={
+            <ProtectedRoute>
+              <AIInsights />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/attrition-risk"
+          element={
+            <ProtectedRoute>
+              <AttritionRisk />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/skill-gap-analysis"
+          element={
+            <ProtectedRoute>
+              <SkillGapAnalysis />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 404 */}
+
+        <Route
+          path="*"
+          element={
+            <div className="container text-center mt-5">
+              <h1>404</h1>
+              <h3>Page Not Found</h3>
+            </div>
+          }
+        />
+
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;

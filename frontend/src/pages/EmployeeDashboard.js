@@ -1,150 +1,138 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState
+} from "react";
+
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function EmployeeDashboard() {
 
-  const [attendance, setAttendance] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [leaves, setLeaves] = useState([]);
-  const [profile, setProfile] = useState({});
+  const [loading, setLoading] =
+    useState(true);
+
+  const [profile, setProfile] =
+    useState({});
+
+  const [attendance, setAttendance] =
+    useState([]);
+
+  const [tasks, setTasks] =
+    useState([]);
+
+  const [leaves, setLeaves] =
+    useState([]);
 
   useEffect(() => {
-    loadProfile();
+
+    loadDashboard();
+
+    const interval =
+      setInterval(() => {
+
+        loadDashboard();
+
+      }, 30000);
+
+    return () =>
+      clearInterval(interval);
+
   }, []);
 
-  const loadProfile = async () => {
-
-    try {
-
-      const employeeId =
-        localStorage.getItem("employeeId");
-
-      console.log(
-        "Employee ID:",
-        employeeId
-      );
-
-      if (!employeeId) {
-        alert("Employee ID Not Found");
-        return;
-      }
-
-      const response =
-        await API.get(
-          `/employees/${employeeId}`
-        );
-
-      console.log(
-        "Profile Data:",
-        response.data
-      );
-
-      setProfile(
-        response.data
-      );
-
-      loadAttendance(
-        employeeId
-      );
-
-      loadLeaves(
-        employeeId
-      );
-
-      if (
-        response.data.username
-      ) {
-
-        loadTasks(
-          response.data.username
-        );
-
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Profile Error:",
-        error
-      );
-
-    }
-  };
-
-  const loadAttendance =
-    async (employeeId) => {
+  const loadDashboard =
+    async () => {
 
       try {
 
-        const response =
+        const username =
+          localStorage.getItem(
+            "username"
+          );
+
+        const profileRes =
           await API.get(
-            `/attendance/employee/${employeeId}`
+            `/employees/username/${username}`
+          );
+
+        const employee =
+          profileRes.data;
+
+        setProfile(employee);
+
+        const attendanceRes =
+          await API.get(
+            `/attendance/employee/${employee.id}`
           );
 
         setAttendance(
-          response.data
+          attendanceRes.data
         );
 
-      } catch (error) {
-
-        console.error(error);
-
-      }
-    };
-
-  const loadLeaves =
-    async (employeeId) => {
-
-      try {
-
-        const response =
+        const leaveRes =
           await API.get(
-            `/leave/employee/${employeeId}`
+            `/leave/employee/${employee.id}`
           );
 
         setLeaves(
-          response.data
+          leaveRes.data
         );
 
-      } catch (error) {
-
-        console.error(error);
-
-      }
-    };
-
-  const loadTasks =
-    async (username) => {
-
-      try {
-
-        const response =
+        const taskRes =
           await API.get(
             `/tasks/employee/${username}`
           );
 
         setTasks(
-          response.data
+          taskRes.data
         );
 
       } catch (error) {
 
         console.error(error);
 
+      } finally {
+
+        setLoading(false);
+
       }
+
     };
 
   const completedTasks =
     tasks.filter(
-      t => t.status === "COMPLETED"
+      t =>
+        t.status ===
+        "COMPLETED"
     ).length;
 
   const pendingTasks =
     tasks.filter(
-      t => t.status === "PENDING"
+      t =>
+        t.status ===
+        "PENDING"
     ).length;
+
+  if (loading) {
+
+    return (
+
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{
+          height: "100vh"
+        }}
+      >
+
+        <h3>
+          Loading Dashboard...
+        </h3>
+
+      </div>
+
+    );
+
+  }
 
   return (
 
@@ -152,126 +140,269 @@ function EmployeeDashboard() {
 
       <Sidebar />
 
-      <div className="flex-grow-1">
+      <div
+        className="flex-grow-1"
+        style={{
+          marginLeft: "280px",
+          background: "#f4f7fe",
+          minHeight: "100vh"
+        }}
+      >
 
         <Navbar />
-<div
-  className="card border-0 shadow-lg mb-4"
-  style={{
-    background:
-      "linear-gradient(135deg,#2563eb,#7c3aed)",
-    borderRadius: "20px"
-  }}
->
-  <div className="card-body text-white">
 
-    <h2>
-      👋 Welcome,
-      {profile.firstName}
-    </h2>
-
-    <h5>
-      {profile.designation}
-    </h5>
-
-    <p>
-      {profile.department}
-    </p>
-
-  </div>
-</div>
         <div className="container-fluid p-4">
 
-          <h2 className="fw-bold mb-4">
-            Employee Dashboard
-          </h2>
+          {/* Welcome */}
+
+          <div
+            className="card border-0 shadow-lg mb-4"
+            style={{
+              background:
+                "linear-gradient(135deg,#2563eb,#7c3aed)",
+              borderRadius: "20px"
+            }}
+          >
+
+            <div className="card-body text-white">
+
+              <h2>
+                👋 Welcome,
+                {" "}
+                {profile.firstName}
+              </h2>
+
+              <h5>
+                {profile.designation}
+              </h5>
+
+              <p>
+                {profile.department}
+              </p>
+
+            </div>
+
+          </div>
+
+          {/* KPI */}
 
           <div className="row g-4">
 
             <div className="col-md-3">
-              <div className="card shadow border-0 bg-primary text-white">
-                <div className="card-body">
-                  <h6>Total Attendance</h6>
-                  <h2>{attendance.length}</h2>
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Attendance
+                  </h6>
+
+                  <h2 className="text-primary">
+                    {attendance.length}
+                  </h2>
+
                 </div>
+
               </div>
+
             </div>
 
             <div className="col-md-3">
-              <div className="card shadow border-0 bg-success text-white">
-                <div className="card-body">
-                  <h6>Completed Tasks</h6>
-                  <h2>{completedTasks}</h2>
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Completed Tasks
+                  </h6>
+
+                  <h2 className="text-success">
+                    {completedTasks}
+                  </h2>
+
                 </div>
+
               </div>
+
             </div>
 
             <div className="col-md-3">
-              <div className="card shadow border-0 bg-warning text-dark">
-                <div className="card-body">
-                  <h6>Pending Tasks</h6>
-                  <h2>{pendingTasks}</h2>
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Pending Tasks
+                  </h6>
+
+                  <h2 className="text-warning">
+                    {pendingTasks}
+                  </h2>
+
                 </div>
+
               </div>
+
             </div>
 
             <div className="col-md-3">
-              <div className="card shadow border-0 bg-info text-white">
-                <div className="card-body">
-                  <h6>Salary</h6>
-                  <h2>
+
+              <div className="card shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Salary
+                  </h6>
+
+                  <h2 className="text-success">
                     ₹{profile.salary || 0}
                   </h2>
+
                 </div>
+
               </div>
+
             </div>
 
           </div>
-          
 
-          <div className="card shadow mt-4 border-0">
+          {/* Analytics */}
+
+          <div className="row g-4 mt-2">
+
+            <div className="col-md-4">
+
+              <div className="card bg-primary text-white shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Attendance %
+                  </h6>
+
+                  <h2>
+                    {profile.attendancePercentage || 0}%
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-4">
+
+              <div className="card bg-success text-white shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Performance
+                  </h6>
+
+                  <h2>
+                    {profile.performanceScore || 0}%
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="col-md-4">
+
+              <div className="card bg-danger text-white shadow border-0">
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Attrition Risk
+                  </h6>
+
+                  <h2>
+                    {profile.attritionRisk || "LOW"}
+                  </h2>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* Current Project */}
+
+          <div className="card shadow border-0 mt-4">
 
             <div className="card-body">
 
-              <h4 className="mb-3">
+              <h4>
+                🚀 Current Project
+              </h4>
+
+              <hr />
+
+              <h5>
+                {
+                  profile.currentProject ||
+                  "No Project Assigned"
+                }
+              </h5>
+
+            </div>
+
+          </div>
+
+          {/* Profile */}
+
+          <div className="card shadow border-0 mt-4">
+
+            <div className="card-body">
+
+              <h4>
                 My Profile
               </h4>
+
+              <hr />
 
               <div className="row">
 
                 <div className="col-md-6">
+
                   <p>
-                    <strong>Name:</strong>{" "}
-                    {profile.firstName}{" "}
+                    <strong>Name:</strong>
+                    {" "}
+                    {profile.firstName}
+                    {" "}
                     {profile.lastName}
                   </p>
 
                   <p>
-                    <strong>Email:</strong>{" "}
+                    <strong>Email:</strong>
+                    {" "}
                     {profile.email}
                   </p>
 
-                  <p>
-                    <strong>Phone:</strong>{" "}
-                    {profile.phone}
-                  </p>
                 </div>
 
                 <div className="col-md-6">
 
                   <p>
-                    <strong>Department:</strong>{" "}
+                    <strong>Department:</strong>
+                    {" "}
                     {profile.department}
                   </p>
 
                   <p>
-                    <strong>Designation:</strong>{" "}
+                    <strong>Designation:</strong>
+                    {" "}
                     {profile.designation}
-                  </p>
-
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    {profile.status}
                   </p>
 
                 </div>
@@ -281,195 +412,10 @@ function EmployeeDashboard() {
             </div>
 
           </div>
-          
-{/* Employee Analytics */}
 
-<div className="row g-4 mt-3">
+          {/* Tasks */}
 
-  <div className="col-md-4">
-
-    <div className="card shadow border-0 bg-primary text-white">
-
-      <div className="card-body text-center">
-
-        <h6>Attendance Score</h6>
-
-        <h2>
-          {profile.attendancePercentage || 0}%
-        </h2>
-
-      </div>
-
-    </div>
-
-  </div>
-<div className="card shadow border-0 mt-4">
-
-  <div className="card-body">
-
-    <h4>🚀 Current Project</h4>
-
-    <hr />
-
-    <h5>
-      {profile.currentProject || "No Project Assigned"}
-    </h5>
-
-  </div>
-
-</div>
-  <div className="col-md-4">
-
-    <div className="card shadow border-0 bg-success text-white">
-
-      <div className="card-body text-center">
-
-        <h6>Performance Score</h6>
-
-        <h2>
-          {profile.performanceScore || 0}%
-        </h2>
-
-      </div>
-
-    </div>
-
-  </div>
-
-  <div className="col-md-4">
-
-    <div className="card shadow border-0 bg-danger text-white">
-
-      <div className="card-body text-center">
-
-        <h6>Attrition Risk</h6>
-
-        <h2>
-          {profile.attritionRisk || "LOW"}
-        </h2>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-<div className="row g-4 mt-2">
-
-  <div className="col-md-4">
-
-    <div className="card shadow border-0">
-
-      <div className="card-body text-center">
-
-        <h6>Current Projects</h6>
-
-        <h2>
-          {profile.projectCount || 0}
-        </h2>
-
-      </div>
-
-    </div>
-
-  </div>
-<div className="card shadow border-0">
-
-  <div className="card-body">
-
-    <h5>
-      Task Completion
-    </h5>
-
-    <div className="progress">
-
-      <div
-        className="progress-bar bg-success"
-        style={{
-          width:
-            tasks.length > 0
-              ? `${(
-                  completedTasks /
-                  tasks.length
-                ) * 100}%`
-              : "0%"
-        }}
-      />
-
-    </div>
-
-  </div>
-
-</div>
-  <div className="col-md-4">
-
-    <div className="card shadow border-0">
-
-      <div className="card-body text-center">
-
-        <h6>Completed Tasks</h6>
-
-       <h2>{completedTasks}</h2>
-      </div>
-
-    </div>
-
-  </div>
-
-  <div className="col-md-4">
-
-    <div className="card shadow border-0">
-
-      <div className="card-body text-center">
-
-        <h6>Pending Tasks</h6>
-
-        <h2>{pendingTasks}</h2>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-{/* AI Career Insights */}
-
-<div className="card shadow border-0 mt-4">
-
-  <div className="card-body">
-
-    <h4>
-      🤖 AI Career Insights
-    </h4>
-
-    <hr />
-
-    <p>
-      <strong>Attrition Risk:</strong>
-      {" "}
-      {profile.attritionRisk || "LOW"}
-    </p>
-
-    <p>
-      <strong>Missing Skills:</strong>
-      {" "}
-      {profile.missingSkills || "None"}
-    </p>
-
-    <p>
-      <strong>Recommended Training:</strong>
-      {" "}
-      React, Spring Boot, AWS, Microservices
-    </p>
-
-  </div>
-
-</div>
-          <div className="card shadow mt-4 border-0">
+          <div className="card shadow border-0 mt-4">
 
             <div className="card-body">
 
@@ -477,83 +423,77 @@ function EmployeeDashboard() {
                 My Tasks
               </h4>
 
-              <table className="table table-hover">
+              <div className="table-responsive">
 
-                <thead className="table-dark">
+                <table className="table table-hover">
 
-                  <tr>
-                    <th>Task</th>
-                    <th>Project</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                  </tr>
+                  <thead className="table-dark">
 
-                </thead>
+                    <tr>
 
-                <tbody>
+                      <th>Task</th>
+                      <th>Project</th>
+                      <th>Status</th>
 
-                  {
-                    tasks.length > 0 ?
+                    </tr>
 
-                      tasks.map(task => (
+                  </thead>
 
-                        <tr key={task.id}>
+                  <tbody>
 
-                          <td>
-                            {task.taskName}
-                          </td>
+                    {
+                      tasks.length > 0
 
-                          <td>
-                            {task.projectName}
-                          </td>
+                        ?
 
-                          <td>
-                            {task.priority}
-                          </td>
+                        tasks.map(task => (
 
-                          <td>
+                          <tr key={task.id}>
 
-                            <span
-                              className={
-                                task.status === "COMPLETED"
-                                  ? "badge bg-success"
-                                  : task.status === "IN_PROGRESS"
-                                  ? "badge bg-primary"
-                                  : "badge bg-warning"
-                              }
-                            >
+                            <td>
+                              {task.taskName}
+                            </td>
+
+                            <td>
+                              {task.projectName}
+                            </td>
+
+                            <td>
                               {task.status}
-                            </span>
+                            </td>
 
+                          </tr>
+
+                        ))
+
+                        :
+
+                        <tr>
+
+                          <td
+                            colSpan="3"
+                            className="text-center"
+                          >
+                            No Tasks Found
                           </td>
 
                         </tr>
 
-                      ))
+                    }
 
-                      :
+                  </tbody>
 
-                      <tr>
+                </table>
 
-                        <td
-                          colSpan="4"
-                          className="text-center"
-                        >
-                          No Tasks Found
-                        </td>
-
-                      </tr>
-                  }
-
-                </tbody>
-
-              </table>
+              </div>
 
             </div>
 
           </div>
 
-          <div className="card shadow mt-4 border-0">
+          {/* Leaves */}
+
+          <div className="card shadow border-0 mt-4">
 
             <div className="card-body">
 
@@ -561,72 +501,69 @@ function EmployeeDashboard() {
                 My Leave Requests
               </h4>
 
-              <table className="table table-hover">
+              <div className="table-responsive">
 
-                <thead className="table-dark">
+                <table className="table table-hover">
 
-                  <tr>
-                    <th>Leave Type</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                  </tr>
+                  <thead className="table-dark">
 
-                </thead>
+                    <tr>
 
-                <tbody>
+                      <th>Type</th>
+                      <th>Reason</th>
+                      <th>Status</th>
 
-                  {
-                    leaves.length > 0 ?
+                    </tr>
 
-                      leaves.map(leave => (
+                  </thead>
 
-                        <tr key={leave.id}>
+                  <tbody>
 
-                          <td>
-                            {leave.leaveType}
-                          </td>
+                    {
+                      leaves.length > 0
 
-                          <td>
-                            {leave.reason}
-                          </td>
+                        ?
 
-                          <td>
+                        leaves.map(leave => (
 
-                            <span
-                              className={
-                                leave.status === "APPROVED"
-                                  ? "badge bg-success"
-                                  : leave.status === "REJECTED"
-                                  ? "badge bg-danger"
-                                  : "badge bg-warning"
-                              }
-                            >
+                          <tr key={leave.id}>
+
+                            <td>
+                              {leave.leaveType}
+                            </td>
+
+                            <td>
+                              {leave.reason}
+                            </td>
+
+                            <td>
                               {leave.status}
-                            </span>
+                            </td>
 
+                          </tr>
+
+                        ))
+
+                        :
+
+                        <tr>
+
+                          <td
+                            colSpan="3"
+                            className="text-center"
+                          >
+                            No Leave Requests Found
                           </td>
 
                         </tr>
 
-                      ))
+                    }
 
-                      :
+                  </tbody>
 
-                      <tr>
+                </table>
 
-                        <td
-                          colSpan="3"
-                          className="text-center"
-                        >
-                          No Leave Requests Found
-                        </td>
-
-                      </tr>
-                  }
-
-                </tbody>
-
-              </table>
+              </div>
 
             </div>
 
@@ -637,7 +574,9 @@ function EmployeeDashboard() {
       </div>
 
     </div>
+
   );
+
 }
 
 export default EmployeeDashboard;

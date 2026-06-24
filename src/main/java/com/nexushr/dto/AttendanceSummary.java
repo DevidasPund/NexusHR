@@ -2,45 +2,43 @@ package com.nexushr.dto;
 
 public class AttendanceSummary {
 
-    private long totalEmployees;
-    private long presentToday;
-    private long absentToday;
-    private double attendancePercentage;
+    private long totalAttendance;
+    private long presentCount;
+    private long absentCount;
+    private long leaveCount;
 
-    public long getTotalEmployees() {
-        return totalEmployees;
+    public AttendanceSummary() {
     }
 
-    public void setTotalEmployees(
-            long totalEmployees) {
-        this.totalEmployees = totalEmployees;
+    public long getTotalAttendance() {
+        return totalAttendance;
     }
 
-    public long getPresentToday() {
-        return presentToday;
+    public void setTotalAttendance(long totalAttendance) {
+        this.totalAttendance = totalAttendance;
     }
 
-    public void setPresentToday(
-            long presentToday) {
-        this.presentToday = presentToday;
+    public long getPresentCount() {
+        return presentCount;
     }
 
-    public long getAbsentToday() {
-        return absentToday;
+    public void setPresentCount(long presentCount) {
+        this.presentCount = presentCount;
     }
 
-    public void setAbsentToday(
-            long absentToday) {
-        this.absentToday = absentToday;
+    public long getAbsentCount() {
+        return absentCount;
     }
 
-    public double getAttendancePercentage() {
-        return attendancePercentage;
+    public void setAbsentCount(long absentCount) {
+        this.absentCount = absentCount;
     }
 
-    public void setAttendancePercentage(
-            double attendancePercentage) {
-        this.attendancePercentage =
-                attendancePercentage;
+    public long getLeaveCount() {
+        return leaveCount;
+    }
+
+    public void setLeaveCount(long leaveCount) {
+        this.leaveCount = leaveCount;
     }
 }

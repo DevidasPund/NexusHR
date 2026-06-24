@@ -8,6 +8,15 @@ function Settings() {
   const username =
     localStorage.getItem("username");
 
+  const role =
+    localStorage.getItem("role");
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
+
   const [settings, setSettings] =
     useState({
       darkMode: false,
@@ -15,15 +24,25 @@ function Settings() {
       smsNotifications: false,
       taskAlerts: true,
       leaveAlerts: true,
-      attendanceAlerts: true
+      attendanceAlerts: true,
+      language: "English",
+      theme: "Blue",
+      autoLogout: false
     });
-
-  const [loading, setLoading] =
-    useState(true);
 
   useEffect(() => {
 
     loadSettings();
+
+    const interval =
+      setInterval(() => {
+
+        loadSettings();
+
+      }, 30000);
+
+    return () =>
+      clearInterval(interval);
 
   }, []);
 
@@ -37,25 +56,36 @@ function Settings() {
             `/settings/${username}`
           );
 
-        setSettings(
-          response.data
-        );
+        if (response.data) {
+
+          setSettings({
+            ...settings,
+            ...response.data
+          });
+
+        }
 
       } catch (error) {
 
-        console.log(error);
+        console.log(
+          "Settings Load Error",
+          error
+        );
 
       } finally {
 
         setLoading(false);
 
       }
+
     };
 
   const saveSettings =
     async () => {
 
       try {
+
+        setSaving(true);
 
         await API.put(
           `/settings/${username}`,
@@ -73,7 +103,13 @@ function Settings() {
         alert(
           "Unable To Save Settings"
         );
+
+      } finally {
+
+        setSaving(false);
+
       }
+
     };
 
   const handleToggle =
@@ -87,17 +123,37 @@ function Settings() {
           !settings[field]
 
       });
+
+    };
+
+  const handleChange =
+    (e) => {
+
+      setSettings({
+
+        ...settings,
+
+        [e.target.name]:
+          e.target.value
+
+      });
+
     };
 
   if (loading) {
 
     return (
-      <div className="text-center mt-5">
+
+      <div className="d-flex justify-content-center align-items-center vh-100">
+
         <h3>
           Loading Settings...
         </h3>
+
       </div>
+
     );
+
   }
 
   return (
@@ -139,15 +195,15 @@ function Settings() {
               </h2>
 
               <p className="mb-0">
-                Manage your NexusHR
-                account preferences
+                Manage Account Preferences,
+                Notifications & Security
               </p>
 
             </div>
 
           </div>
 
-          {/* Account Card */}
+          {/* Account Info */}
 
           <div className="card shadow border-0 mb-4">
 
@@ -159,34 +215,46 @@ function Settings() {
 
               <hr />
 
-              <h6>
-                Username:
-                {" "}
-                {username}
-              </h6>
+              <div className="row">
 
-              <h6>
-                Role:
-                {" "}
-                {
-                  localStorage.getItem(
-                    "role"
-                  )
-                }
-              </h6>
+                <div className="col-md-6">
+
+                  <p>
+                    <strong>
+                      Username :
+                    </strong>
+                    {" "}
+                    {username}
+                  </p>
+
+                </div>
+
+                <div className="col-md-6">
+
+                  <p>
+                    <strong>
+                      Role :
+                    </strong>
+                    {" "}
+                    {role}
+                  </p>
+
+                </div>
+
+              </div>
 
             </div>
 
           </div>
 
-          {/* Preferences */}
+          {/* Notification Settings */}
 
-          <div className="card shadow border-0">
+          <div className="card shadow border-0 mb-4">
 
             <div className="card-body">
 
               <h4>
-                🔔 Notification Preferences
+                🔔 Notification Settings
               </h4>
 
               <hr />
@@ -195,7 +263,7 @@ function Settings() {
 
                 <div className="col-md-6">
 
-                  <div className="form-check form-switch mb-4">
+                  <div className="form-check form-switch mb-3">
 
                     <input
                       className="form-check-input"
@@ -210,15 +278,13 @@ function Settings() {
                       }
                     />
 
-                    <label
-                      className="form-check-label"
-                    >
+                    <label>
                       📧 Email Notifications
                     </label>
 
                   </div>
 
-                  <div className="form-check form-switch mb-4">
+                  <div className="form-check form-switch mb-3">
 
                     <input
                       className="form-check-input"
@@ -239,7 +305,7 @@ function Settings() {
 
                   </div>
 
-                  <div className="form-check form-switch mb-4">
+                  <div className="form-check form-switch mb-3">
 
                     <input
                       className="form-check-input"
@@ -264,7 +330,7 @@ function Settings() {
 
                 <div className="col-md-6">
 
-                  <div className="form-check form-switch mb-4">
+                  <div className="form-check form-switch mb-3">
 
                     <input
                       className="form-check-input"
@@ -285,7 +351,7 @@ function Settings() {
 
                   </div>
 
-                  <div className="form-check form-switch mb-4">
+                  <div className="form-check form-switch mb-3">
 
                     <input
                       className="form-check-input"
@@ -301,12 +367,12 @@ function Settings() {
                     />
 
                     <label>
-                      ⏰ Attendance Reminders
+                      ⏰ Attendance Alerts
                     </label>
 
                   </div>
 
-                  <div className="form-check form-switch mb-4">
+                  <div className="form-check form-switch mb-3">
 
                     <input
                       className="form-check-input"
@@ -331,28 +397,152 @@ function Settings() {
 
               </div>
 
-              <button
-                className="btn btn-primary btn-lg"
-                onClick={
-                  saveSettings
-                }
-              >
+            </div>
 
-                Save Settings
+          </div>
 
-              </button>
+          {/* Preferences */}
+
+          <div className="card shadow border-0 mb-4">
+
+            <div className="card-body">
+
+              <h4>
+                🎨 Preferences
+              </h4>
+
+              <hr />
+
+              <div className="row">
+
+                <div className="col-md-6">
+
+                  <label className="mb-2">
+                    Language
+                  </label>
+
+                  <select
+                    name="language"
+                    className="form-select"
+                    value={
+                      settings.language
+                    }
+                    onChange={
+                      handleChange
+                    }
+                  >
+
+                    <option>
+                      English
+                    </option>
+
+                    <option>
+                      Hindi
+                    </option>
+
+                    <option>
+                      Marathi
+                    </option>
+
+                  </select>
+
+                </div>
+
+                <div className="col-md-6">
+
+                  <label className="mb-2">
+                    Theme
+                  </label>
+
+                  <select
+                    name="theme"
+                    className="form-select"
+                    value={
+                      settings.theme
+                    }
+                    onChange={
+                      handleChange
+                    }
+                  >
+
+                    <option>
+                      Blue
+                    </option>
+
+                    <option>
+                      Purple
+                    </option>
+
+                    <option>
+                      Green
+                    </option>
+
+                    <option>
+                      Dark
+                    </option>
+
+                  </select>
+
+                </div>
+
+              </div>
+
+              <div className="form-check form-switch mt-4">
+
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={
+                    settings.autoLogout
+                  }
+                  onChange={() =>
+                    handleToggle(
+                      "autoLogout"
+                    )
+                  }
+                />
+
+                <label>
+                  🔒 Auto Logout
+                </label>
+
+              </div>
 
             </div>
 
           </div>
 
+          {/* Save */}
+
+          <div className="text-center mb-4">
+
+            <button
+              className="btn btn-primary btn-lg px-5"
+              onClick={
+                saveSettings
+              }
+              disabled={saving}
+            >
+
+              {
+                saving
+                ?
+                "Saving..."
+                :
+                "Save Settings"
+              }
+
+            </button>
+
+          </div>
+
           {/* Quick Actions */}
 
-          <div className="row mt-4">
+          <div className="row">
 
             <div className="col-md-4">
 
-              <div className="card border-0 shadow">
+              <div className="card shadow border-0">
 
                 <div className="card-body text-center">
 
@@ -375,7 +565,7 @@ function Settings() {
 
             <div className="col-md-4">
 
-              <div className="card border-0 shadow">
+              <div className="card shadow border-0">
 
                 <div className="card-body text-center">
 
@@ -398,7 +588,7 @@ function Settings() {
 
             <div className="col-md-4">
 
-              <div className="card border-0 shadow">
+              <div className="card shadow border-0">
 
                 <div className="card-body text-center">
 
@@ -428,6 +618,7 @@ function Settings() {
     </div>
 
   );
+
 }
 
 export default Settings;
