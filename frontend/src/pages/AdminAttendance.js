@@ -161,7 +161,7 @@ function AdminAttendance() {
 
                   <h2 className="text-primary">
                     {
-                      summary.totalEmployees
+                    summary.totalAttendance
                     }
                   </h2>
 
@@ -188,7 +188,7 @@ function AdminAttendance() {
 
                   <h2 className="text-success">
                     {
-                      summary.presentToday
+                      summary.presentCount
                     }
                   </h2>
 
@@ -215,7 +215,7 @@ function AdminAttendance() {
 
                   <h2 className="text-danger">
                     {
-                      summary.absentToday
+                      summary.absentCount
                     }
                   </h2>
 
@@ -242,7 +242,9 @@ function AdminAttendance() {
 
                   <h2 className="text-warning">
                     {
-                      summary.attendancePercentage
+                      summary.totalAttendance > 0
+  ? ((summary.presentCount / summary.totalAttendance) * 100).toFixed(1)
+  : 0
                     }%
                   </h2>
 
@@ -536,7 +538,7 @@ function AdminAttendance() {
                                   >
 
                                     {
-                                      item.status
+                                      item.attendanceStatus
                                     }
 
                                   </span>
