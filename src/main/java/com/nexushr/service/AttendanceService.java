@@ -70,35 +70,39 @@ public class AttendanceService {
 
         Employee employee =
                 employeeRepository.findById(employeeId)
-                        .orElseThrow(
-                                () -> new RuntimeException(
-                                        "Employee Not Found"));
+                        .orElseThrow(() ->
+                                new RuntimeException("Employee Not Found"));
 
-        Attendance attendance =
-                new Attendance();
+        List<Attendance> todayAttendance =
+                attendanceRepository.findByEmployeeId(employeeId)
+                        .stream()
+                        .filter(a ->
+                                LocalDate.now().equals(
+                                        a.getAttendanceDate()))
+                        .toList();
+
+        if (!todayAttendance.isEmpty()) {
+            throw new RuntimeException(
+                    "Already checked in today");
+        }
+
+        Attendance attendance = new Attendance();
 
         attendance.setEmployeeId(employee.getId());
-
         attendance.setEmployeeName(
-                employee.getFirstName() + " "
-                        + employee.getLastName());
-
+                employee.getFirstName() + " " +
+                employee.getLastName());
         attendance.setDepartment(
                 employee.getDepartment());
-
         attendance.setAttendanceDate(
                 LocalDate.now());
-
         attendance.setCheckInTime(
                 LocalDateTime.now());
-
         attendance.setAttendanceStatus(
                 "PRESENT");
 
-        return attendanceRepository.save(
-                attendance);
+        return attendanceRepository.save(attendance);
     }
-
     public Attendance checkOut(Long employeeId) {
 
         Attendance attendance =
