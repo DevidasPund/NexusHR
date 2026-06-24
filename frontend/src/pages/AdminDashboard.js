@@ -1,9 +1,12 @@
+
 import React, { useEffect, useState } from "react";
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
+
 import { Bar } from "react-chartjs-2";
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -25,41 +28,68 @@ ChartJS.register(
 
 function AdminDashboard() {
 
-  const [dashboard, setDashboard] = useState({});
-  const [employees, setEmployees] = useState([]);
+  const [dashboard, setDashboard] =
+    useState({});
+
+  const [employees, setEmployees] =
+    useState([]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
+
     loadDashboard();
     loadEmployees();
 
-    const interval = setInterval(() => {
-      loadDashboard();
-      loadEmployees();
-    }, 10000);
+    const interval =
+      setInterval(() => {
 
-    return () => clearInterval(interval);
+        loadDashboard();
+        loadEmployees();
+
+      }, 10000);
+
+    return () =>
+      clearInterval(interval);
+
   }, []);
 
   const loadDashboard = async () => {
+
     try {
-      const res = await API.get("/dashboard");
-      setDashboard(res.data);
-    } catch (err) {
-      console.error(err);
+
+      const response =
+        await API.get("/dashboard");
+
+      setDashboard(response.data);
+
+    } catch (error) {
+
+      console.error(error);
+
     }
+
   };
 
   const loadEmployees = async () => {
+
     try {
-      const res = await API.get("/employees");
-      setEmployees(res.data);
-    } catch (err) {
-      console.error(err);
+
+      const response =
+        await API.get("/employees");
+
+      setEmployees(response.data);
+
+    } catch (error) {
+
+      console.error(error);
+
     }
+
   };
 
   const chartData = {
+
     labels: [
       "Employees",
       "Attendance",
@@ -67,16 +97,22 @@ function AdminDashboard() {
       "Approved Leaves",
       "Departments"
     ],
+
     datasets: [
+
       {
         label: "HR Analytics",
+
         data: [
+
           dashboard.totalEmployees || 0,
           dashboard.totalAttendance || 0,
           dashboard.pendingLeaves || 0,
           dashboard.approvedLeaves || 0,
           dashboard.totalDepartments || 0
+
         ],
+
         backgroundColor: [
           "#2563eb",
           "#16a34a",
@@ -84,11 +120,25 @@ function AdminDashboard() {
           "#14b8a6",
           "#dc2626"
         ]
+
       }
+
     ]
+
   };
 
+  const averageSalary =
+    dashboard.totalEmployees > 0
+
+      ? Math.round(
+          (dashboard.totalSalary || 0) /
+          dashboard.totalEmployees
+        )
+
+      : 0;
+
   return (
+
     <div className="d-flex">
 
       <Sidebar />
@@ -96,9 +146,9 @@ function AdminDashboard() {
       <div
         className="flex-grow-1"
         style={{
+          marginLeft: "280px",
           background: "#f4f7fe",
-          minHeight: "100vh",
-          marginLeft: "280px"
+          minHeight: "100vh"
         }}
       >
 
@@ -116,13 +166,24 @@ function AdminDashboard() {
               borderRadius: "20px"
             }}
           >
+
             <div className="card-body text-white">
-              <h2>Welcome Back Admin 👋</h2>
+
+              <h2>
+                Welcome Back Admin 👋
+              </h2>
+
               <p>
-                Manage Employees, Attendance,
-                Payroll and Reports in Real Time
+                Manage Employees,
+                Attendance,
+                Payroll,
+                Performance
+                and Reports
+                in Real Time
               </p>
+
             </div>
+
           </div>
 
           {/* KPI Cards */}
@@ -130,47 +191,145 @@ function AdminDashboard() {
           <div className="row g-4">
 
             <div className="col-md-3">
+
               <div className="card shadow border-0">
-                <div className="card-body">
-                  <h6>Total Employees</h6>
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Total Employees
+                  </h6>
+
                   <h2 className="text-primary">
+
                     {dashboard.totalEmployees || 0}
+
                   </h2>
+
                 </div>
+
               </div>
+
             </div>
 
             <div className="col-md-3">
+
               <div className="card shadow border-0">
-                <div className="card-body">
-                  <h6>Active Employees</h6>
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Active Employees
+                  </h6>
+
                   <h2 className="text-success">
+
                     {dashboard.activeEmployees || 0}
+
                   </h2>
+
                 </div>
+
               </div>
+
             </div>
 
             <div className="col-md-3">
+
               <div className="card shadow border-0">
-                <div className="card-body">
-                  <h6>Pending Leaves</h6>
-                  <h2 className="text-warning">
-                    {dashboard.pendingLeaves || 0}
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Present Today
+                  </h6>
+
+                  <h2 className="text-info">
+
+                    {dashboard.presentToday || 0}
+
                   </h2>
+
                 </div>
+
               </div>
+
             </div>
 
             <div className="col-md-3">
+
               <div className="card shadow border-0">
-                <div className="card-body">
-                  <h6>Total Payroll</h6>
+
+                <div className="card-body text-center">
+
+                  <h6>
+                    Average Salary
+                  </h6>
+
                   <h2 className="text-danger">
-                    ₹{dashboard.totalSalary || 0}
+
+                    ₹{averageSalary}
+
                   </h2>
+
                 </div>
+
               </div>
+
+            </div>
+
+          </div>
+
+          {/* Quick Actions */}
+
+          <div className="card shadow border-0 mt-4">
+
+            <div className="card-body">
+
+              <h4>
+                ⚡ Quick Actions
+              </h4>
+
+              <div className="d-flex flex-wrap gap-3 mt-3">
+
+                <button
+                  className="btn btn-primary"
+                  onClick={() =>
+                    navigate("/add-employee")
+                  }
+                >
+                  ➕ Add Employee
+                </button>
+
+                <button
+                  className="btn btn-success"
+                  onClick={() =>
+                    navigate("/admin-attendance")
+                  }
+                >
+                  ⏰ Attendance
+                </button>
+
+                <button
+                  className="btn btn-warning"
+                  onClick={() =>
+                    navigate("/leave-management")
+                  }
+                >
+                  🌴 Leave Approval
+                </button>
+
+                <button
+                  className="btn btn-info"
+                  onClick={() =>
+                    navigate("/reports")
+                  }
+                >
+                  📊 Reports
+                </button>
+
+              </div>
+
             </div>
 
           </div>
@@ -178,10 +337,77 @@ function AdminDashboard() {
           {/* Analytics Chart */}
 
           <div className="card shadow border-0 mt-4">
+
             <div className="card-body">
-              <h4>📊 HR Analytics Overview</h4>
+
+              <h4>
+                📊 HR Analytics Overview
+              </h4>
+
               <Bar data={chartData} />
+
             </div>
+
+          </div>
+
+          {/* Performance Overview */}
+
+          <div className="card shadow border-0 mt-4">
+
+            <div className="card-body">
+
+              <h4>
+                ⭐ Performance Overview
+              </h4>
+
+              <div className="row text-center">
+
+                <div className="col-md-4">
+
+                  <h2 className="text-success">
+
+                    {dashboard.topPerformers || 0}
+
+                  </h2>
+
+                  <p>
+                    Top Performers
+                  </p>
+
+                </div>
+
+                <div className="col-md-4">
+
+                  <h2 className="text-warning">
+
+                    {dashboard.averagePerformers || 0}
+
+                  </h2>
+
+                  <p>
+                    Average Performers
+                  </p>
+
+                </div>
+
+                <div className="col-md-4">
+
+                  <h2 className="text-danger">
+
+                    {dashboard.lowPerformers || 0}
+
+                  </h2>
+
+                  <p>
+                    Low Performers
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
           </div>
 
           {/* Recent Employees */}
@@ -192,7 +418,9 @@ function AdminDashboard() {
 
               <div className="d-flex justify-content-between mb-3">
 
-                <h4>Recent Employees</h4>
+                <h4>
+                  Recent Employees
+                </h4>
 
                 <button
                   className="btn btn-primary"
@@ -210,7 +438,9 @@ function AdminDashboard() {
                 <table className="table table-hover">
 
                   <thead className="table-dark">
+
                     <tr>
+
                       <th>Photo</th>
                       <th>Name</th>
                       <th>Department</th>
@@ -218,22 +448,28 @@ function AdminDashboard() {
                       <th>Status</th>
                       <th>Attendance %</th>
                       <th>Attrition Risk</th>
+                      <th>Actions</th>
+
                     </tr>
+
                   </thead>
 
                   <tbody>
 
                     {employees
                       .slice(0, 5)
-                      .map(emp => (
+                      .map((emp) => (
 
                         <tr key={emp.id}>
 
                           <td>
+
                             <img
                               src={
                                 emp.profileImage
+
                                   ? `https://nexushr-production-612e.up.railway.app/uploads/${emp.profileImage}`
+
                                   : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                               }
                               alt=""
@@ -243,6 +479,7 @@ function AdminDashboard() {
                                 borderRadius: "50%"
                               }}
                             />
+
                           </td>
 
                           <td>
@@ -260,7 +497,19 @@ function AdminDashboard() {
                           </td>
 
                           <td>
-                            {emp.status}
+
+                            <span
+                              className={
+                                emp.status === "ACTIVE"
+
+                                  ? "badge bg-success"
+
+                                  : "badge bg-danger"
+                              }
+                            >
+                              {emp.status}
+                            </span>
+
                           </td>
 
                           <td>
@@ -268,7 +517,49 @@ function AdminDashboard() {
                           </td>
 
                           <td>
-                            {emp.attritionRisk || "Low"}
+
+                            <span
+                              className={
+                                emp.attritionRisk === "HIGH"
+
+                                  ? "badge bg-danger"
+
+                                  : emp.attritionRisk === "MEDIUM"
+
+                                  ? "badge bg-warning text-dark"
+
+                                  : "badge bg-success"
+                              }
+                            >
+                              {emp.attritionRisk || "LOW"}
+                            </span>
+
+                          </td>
+
+                          <td>
+
+                            <span
+                              style={{
+                                cursor: "pointer",
+                                color: "#2563eb",
+                                fontSize: "18px"
+                              }}
+                            >
+                              ✏️
+                            </span>
+
+                            &nbsp;&nbsp;
+
+                            <span
+                              style={{
+                                cursor: "pointer",
+                                color: "red",
+                                fontSize: "18px"
+                              }}
+                            >
+                              🗑️
+                            </span>
+
                           </td>
 
                         </tr>
@@ -291,44 +582,108 @@ function AdminDashboard() {
 
             <div className="card-body">
 
-              <h3>🤖 AI Workforce Insights</h3>
+              <h3>
+                🤖 AI Workforce Insights
+              </h3>
 
               <div className="row g-4 mt-2">
 
                 <div className="col-md-4">
+
                   <div className="card bg-danger text-white">
+
                     <div className="card-body text-center">
-                      <h5>High Risk</h5>
+
+                      <h5>
+                        High Risk
+                      </h5>
+
                       <h2>
                         {dashboard.highRiskEmployees || 0}
                       </h2>
+
                     </div>
+
                   </div>
+
                 </div>
 
                 <div className="col-md-4">
+
                   <div className="card bg-warning">
+
                     <div className="card-body text-center">
-                      <h5>Medium Risk</h5>
+
+                      <h5>
+                        Medium Risk
+                      </h5>
+
                       <h2>
                         {dashboard.mediumRiskEmployees || 0}
                       </h2>
+
                     </div>
+
                   </div>
+
                 </div>
 
                 <div className="col-md-4">
+
                   <div className="card bg-success text-white">
+
                     <div className="card-body text-center">
-                      <h5>Low Risk</h5>
+
+                      <h5>
+                        Low Risk
+                      </h5>
+
                       <h2>
                         {dashboard.lowRiskEmployees || 0}
                       </h2>
+
                     </div>
+
                   </div>
+
                 </div>
 
               </div>
+
+            </div>
+
+          </div>
+
+          {/* Skill Gap Analysis */}
+
+          <div className="card shadow border-0 mt-4">
+
+            <div className="card-body">
+
+              <h4>
+                🧠 Skill Gap Analysis
+              </h4>
+
+              <h5>
+
+                Average Performance :
+                {" "}
+                {dashboard.averagePerformance || 0}
+
+              </h5>
+
+              <p className="mt-3">
+
+                <strong>
+                  Top Skill Gaps:
+                </strong>
+
+                {" "}
+
+                {dashboard.topSkillGaps ||
+                  "No Skill Gaps Found"}
+
+              </p>
 
             </div>
 
@@ -339,7 +694,10 @@ function AdminDashboard() {
       </div>
 
     </div>
+
   );
+
 }
 
 export default AdminDashboard;
+
