@@ -30,7 +30,18 @@ function Sidebar() {
       ? activeStyle
       : {})
   });
-
+<div
+  style={{
+    width: "280px",
+    minWidth: "280px",
+    minHeight: "100vh",
+    background: "#0f172a",
+    display: "flex",
+    flexDirection: "column",
+    position: "sticky",
+    top: 0
+  }}
+></div>
   return (
     <div
       style={{

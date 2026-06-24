@@ -141,12 +141,13 @@ function EmployeeDashboard() {
       <Sidebar />
 
       <div
-        className="flex-grow-1"
-       style={{
-  background: "#f4f7fe",
-  minHeight: "100vh"
-}}
-      >
+  className="flex-grow-1"
+  style={{
+    background: "#f4f7fe",
+    minHeight: "100vh",
+    width: "100%"
+  }}
+>
 
         <Navbar />
 
