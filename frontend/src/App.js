@@ -73,7 +73,7 @@ import NotificationManagement from "./pages/NotificationManagement";
 import EmployeeNotification from "./pages/EmployeeNotification";
 
 /* Profile */
-import Profile from "./pages/Profile";
+import Profile from "./pages/Profiles";
 import ManagerProfile from "./pages/ManagerProfile";
 import Settings from "./pages/Settings";
 import ChangePassword from "./pages/ChangePassword";

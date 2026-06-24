@@ -154,31 +154,28 @@ public class AttendanceService {
 
     public AttendanceSummary getSummary() {
 
-        AttendanceSummary summary =
-                new AttendanceSummary();
+        AttendanceSummary summary = new AttendanceSummary();
 
-        long total =
-                attendanceRepository.count();
+        LocalDate today = LocalDate.now();
+
+        long totalEmployees = employeeRepository.count();
 
         long present =
                 attendanceRepository
-                        .countByAttendanceStatus(
+                        .countByAttendanceDateAndAttendanceStatus(
+                                today,
                                 "PRESENT");
 
         long absent =
                 attendanceRepository
-                        .countByAttendanceStatus(
+                        .countByAttendanceDateAndAttendanceStatus(
+                                today,
                                 "ABSENT");
 
-        long leave =
-                attendanceRepository
-                        .countByAttendanceStatus(
-                                "LEAVE");
-
-        summary.setTotalAttendance(total);
+        summary.setTotalAttendance(totalEmployees);
         summary.setPresentCount(present);
         summary.setAbsentCount(absent);
-        summary.setLeaveCount(leave);
+        summary.setLeaveCount(0);
 
         return summary;
     }
