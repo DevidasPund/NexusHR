@@ -351,7 +351,7 @@ function Sidebar() {
       >
         <Link
           to="/profile"
-          style={getMenuStyle("/profile")}
+          style={getMenuStyle("/employee-profile")}
         >
           👤 Profile
         </Link>
