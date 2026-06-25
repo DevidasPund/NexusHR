@@ -2,112 +2,92 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 
 function Sidebar() {
+
   const role = localStorage.getItem("role");
   const username = localStorage.getItem("username");
 
   const location = useLocation();
-
-  const activeStyle = {
-    background: "linear-gradient(90deg,#2563eb,#7c3aed)",
-    color: "#fff",
-    fontWeight: "600",
-    borderRadius: "12px"
-  };
 
   const menuStyle = {
     color: "#d1d5db",
     textDecoration: "none",
     padding: "12px 18px",
     display: "block",
-    borderRadius: "12px",
-    marginBottom: "6px",
-    transition: "all 0.3s ease"
+    borderRadius: "10px",
+    marginBottom: "6px"
   };
 
-  const getMenuStyle = (path) => ({
+  const activeStyle = {
+    background: "#2563eb",
+    color: "#fff",
+    fontWeight: "bold"
+  };
+
+  const getStyle = (path) => ({
     ...menuStyle,
-    ...(location.pathname === path
-      ? activeStyle
-      : {})
+    ...(location.pathname === path ? activeStyle : {})
   });
-<div
-  style={{
-    width: "280px",
-    minWidth: "280px",
-    minHeight: "100vh",
-    background: "#0f172a",
-    display: "flex",
-    flexDirection: "column",
-    position: "sticky",
-    top: 0
-  }}
-></div>
+
   return (
+
     <div
       style={{
         width: "280px",
-        minHeight: "100vh",
+        minWidth: "280px",
+        height: "100vh",
         background: "#0f172a",
+        color: "#fff",
         display: "flex",
-        flexDirection: "column",
-        position: "sticky",
-        top: 0
+        flexDirection: "column"
       }}
     >
+
       {/* Logo */}
 
-      <div
-        className="text-center p-4"
-        style={{
-          borderBottom: "1px solid #1e293b"
-        }}
-      >
-        <h1
-          style={{
-            color: "#fff",
-            fontWeight: "800"
-          }}
-        >
-          NexusHR
-        </h1>
+      <div className="text-center py-4 border-bottom">
 
-        <small style={{ color: "#38bdf8" }}>
+        <h2 className="fw-bold text-white">
+          NexusHR
+        </h2>
+
+        <small className="text-info">
           Enterprise HRMS
         </small>
+
       </div>
 
-      {/* Profile */}
+      {/* User */}
 
       <div className="text-center py-4">
+
         <img
           src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-          alt=""
-          width="90"
-          height="90"
-          style={{
-            borderRadius: "50%",
-            border: "4px solid #3b82f6"
-          }}
+          alt="Profile"
+          width="80"
+          height="80"
+          className="rounded-circle border border-3 border-primary"
         />
 
-        <h5 className="mt-3 text-white">
+        <h5 className="mt-3">
           {username}
         </h5>
 
-        <span className="badge bg-primary px-3 py-2">
+        <span className="badge bg-primary">
           {role}
         </span>
+
       </div>
 
       {/* Menu */}
 
       <div
+        className="px-3"
         style={{
           overflowY: "auto",
-          flex: 1,
-          padding: "10px"
+          flex: 1
         }}
       >
+
         <Link
           to={
             role === "ADMIN"
@@ -116,297 +96,193 @@ function Sidebar() {
               ? "/manager/dashboard"
               : "/employee/dashboard"
           }
-          style={{
-            ...menuStyle,
-            ...(location.pathname.includes("dashboard")
-              ? activeStyle
-              : {})
-          }}
+          style={getStyle("/employee/dashboard")}
         >
           📊 Dashboard
         </Link>
 
-        {/* ADMIN */}
-
         {role === "ADMIN" && (
           <>
-            <div className="text-info mt-3 mb-2 fw-bold">
-              WORKFORCE
-            </div>
 
             <Link
               to="/employees"
-              style={getMenuStyle("/employees")}
+              style={getStyle("/employees")}
             >
               👨‍💼 Employees
             </Link>
 
             <Link
               to="/add-employee"
-              style={getMenuStyle("/add-employee")}
+              style={getStyle("/add-employee")}
             >
               ➕ Add Employee
             </Link>
 
             <Link
-              to="/departments"
-              style={getMenuStyle("/departments")}
-            >
-              🏢 Departments
-            </Link>
-
-            <Link
-              to="/teams"
-              style={getMenuStyle("/teams")}
-            >
-              👥 Teams
-            </Link>
-
-            <div className="text-warning mt-4 mb-2 fw-bold">
-              OPERATIONS
-            </div>
-
-            <Link
               to="/admin-attendance"
-              style={getMenuStyle("/admin-attendance")}
+              style={getStyle("/admin-attendance")}
             >
               ⏰ Attendance
             </Link>
 
             <Link
               to="/leave-management"
-              style={getMenuStyle("/leave-management")}
+              style={getStyle("/leave-management")}
             >
-              🌴 Leave Approval
+              🌴 Leave
             </Link>
 
             <Link
               to="/salary-management"
-              style={getMenuStyle("/salary-management")}
+              style={getStyle("/salary-management")}
             >
               💰 Payroll
             </Link>
 
-            <div className="text-success mt-4 mb-2 fw-bold">
-              PROJECTS
-            </div>
-
             <Link
               to="/projects"
-              style={getMenuStyle("/projects")}
+              style={getStyle("/projects")}
             >
               📁 Projects
             </Link>
 
             <Link
               to="/tasks"
-              style={getMenuStyle("/tasks")}
+              style={getStyle("/tasks")}
             >
               ✅ Tasks
             </Link>
 
-            <div className="text-danger mt-4 mb-2 fw-bold">
-              REPORTS
-            </div>
-
             <Link
               to="/reports"
-              style={getMenuStyle("/reports")}
+              style={getStyle("/reports")}
             >
               📊 Reports
             </Link>
 
             <Link
               to="/notification-management"
-              style={getMenuStyle("/notification-management")}
+              style={getStyle("/notification-management")}
             >
               🔔 Notifications
             </Link>
+
           </>
         )}
 
-        {/* MANAGER */}
-
         {role === "MANAGER" && (
           <>
-            <div className="text-info mt-3 mb-2 fw-bold">
-              TEAM MANAGEMENT
-            </div>
 
             <Link
               to="/teams"
-              style={getMenuStyle("/teams")}
+              style={getStyle("/teams")}
             >
-              👥 Team Members
+              👥 Team
             </Link>
 
             <Link
               to="/tasks"
-              style={getMenuStyle("/tasks")}
+              style={getStyle("/tasks")}
             >
-              ✅ Team Tasks
+              ✅ Tasks
             </Link>
-
-            <Link
-              to="/leave-management"
-              style={getMenuStyle("/leave-management")}
-            >
-              🌴 Leave Approval
-            </Link>
-
-            <div className="text-success mt-4 mb-2 fw-bold">
-              PROJECTS
-            </div>
 
             <Link
               to="/projects"
-              style={getMenuStyle("/projects")}
+              style={getStyle("/projects")}
             >
               📁 Projects
             </Link>
 
             <Link
-              to="/milestones"
-              style={getMenuStyle("/milestones")}
+              to="/leave-management"
+              style={getStyle("/leave-management")}
             >
-              📌 Milestones
-            </Link>
-
-            <div className="text-warning mt-4 mb-2 fw-bold">
-              PERFORMANCE
-            </div>
-
-            <Link
-              to="/performance"
-              style={getMenuStyle("/performance")}
-            >
-              ⭐ Performance
+              🌴 Leave Approval
             </Link>
 
             <Link
               to="/reports"
-              style={getMenuStyle("/reports")}
+              style={getStyle("/reports")}
             >
               📊 Reports
             </Link>
 
             <Link
               to="/notification-management"
-              style={getMenuStyle("/notification-management")}
+              style={getStyle("/notification-management")}
             >
               🔔 Notifications
             </Link>
+
           </>
         )}
 
-        {/* EMPLOYEE */}
-
         {role === "EMPLOYEE" && (
           <>
-            <div className="text-info mt-3 mb-2 fw-bold">
-              MY WORKSPACE
-            </div>
 
             <Link
               to="/employee-attendance"
-              style={getMenuStyle("/employee-attendance")}
+              style={getStyle("/employee-attendance")}
             >
-              ⏰ My Attendance
+              ⏰ Attendance
             </Link>
 
             <Link
               to="/my-tasks"
-              style={getMenuStyle("/my-tasks")}
+              style={getStyle("/my-tasks")}
             >
               ✅ My Tasks
             </Link>
 
             <Link
               to="/leave"
-              style={getMenuStyle("/leave")}
+              style={getStyle("/leave")}
             >
-              🌴 My Leave
+              🌴 Leave
             </Link>
 
             <Link
               to="/salary"
-              style={getMenuStyle("/salary")}
+              style={getStyle("/salary")}
             >
               💰 Salary
             </Link>
 
             <Link
               to="/employee-notification"
-              style={getMenuStyle("/employee-notification")}
+              style={getStyle("/employee-notification")}
             >
               🔔 Notifications
             </Link>
 
-           
           </>
         )}
+
       </div>
 
-      {/* Bottom Section */}
+      {/* Bottom */}
 
       <div
+        className="text-center p-3 border-top"
         style={{
-          borderTop: "1px solid #1e293b",
-          padding: "15px"
+          color: "#94a3b8",
+          fontSize: "12px"
         }}
       >
-     
 
-       
+        NexusHR Enterprise Suite
 
-        <Link
-          to="/change-password"
-          style={getMenuStyle("/change-password")}
-        >
-          🔒 Change Password
-        </Link>
+        <br />
 
-   
+        Version 2.0
 
-        <div
-          className="mt-3 p-3 text-center"
-          style={{
-            borderRadius: "12px",
-            background:
-              "linear-gradient(135deg,#2563eb,#7c3aed)"
-          }}
-        >
-          <h6 className="text-white fw-bold">
-            🤖 AI Workforce
-          </h6>
-
-          <div className="text-light small">
-            • Attrition Prediction
-          </div>
-
-          <div className="text-light small">
-            • Skill Gap Analysis
-          </div>
-
-          <div className="text-light small">
-            • Performance Insights
-          </div>
-        </div>
-
-        <div
-          className="text-center mt-3"
-          style={{
-            color: "#94a3b8",
-            fontSize: "12px"
-          }}
-        >
-          NexusHR Enterprise Suite
-          <br />
-          Version 2.0
-        </div>
       </div>
+
     </div>
+
   );
+
 }
 
 export default Sidebar;
