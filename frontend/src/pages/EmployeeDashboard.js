@@ -140,12 +140,12 @@ function EmployeeDashboard() {
 
       <Sidebar />
 
-      <div
-  className="flex-grow-1"
+     <div
   style={{
-    background: "#f4f7fe",
+    marginLeft: "280px",
+    width: "calc(100% - 280px)",
     minHeight: "100vh",
-    width: "100%"
+    background: "#f4f7fe"
   }}
 >
 

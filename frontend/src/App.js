@@ -439,10 +439,6 @@ function App() {
     </ProtectedRoute>
   }
 />
-        <Route
-  path="/employee-profile"
-  element={<EmployeeProfile />}
-/>
 
         <Route
           path="/manager-profile"
