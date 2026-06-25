@@ -5,7 +5,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.nexushr.entity.Employee;
 import com.nexushr.entity.Task;
+import com.nexushr.repository.EmployeeRepository;
 import com.nexushr.repository.TaskRepository;
 
 @Service
@@ -14,6 +16,9 @@ public class TaskService {
     @Autowired
     private TaskRepository repository;
 
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
     public List<Task> getAllTasks() {
         return repository.findAll();
     }
@@ -21,7 +26,7 @@ public class TaskService {
     public Task save(Task task) {
 
         if (task.getStatus() == null ||
-            task.getStatus().isEmpty()) {
+                task.getStatus().isEmpty()) {
 
             task.setStatus("PENDING");
         }
@@ -29,22 +34,28 @@ public class TaskService {
         return repository.save(task);
     }
 
-    public List<Task> getEmployeeTasks(
-            String employeeName) {
+    // Employee Tasks
+    public List<Task> getEmployeeTasks(String username) {
 
-        return repository.findEmployeeTasks(
-                employeeName);
+        Employee employee = employeeRepository
+                .findByUsername(username)
+                .orElseThrow(() ->
+                        new RuntimeException("Employee Not Found"));
+
+        String fullName =
+                employee.getFirstName() + " " +
+                employee.getLastName();
+
+        return repository.findEmployeeTasks(fullName);
     }
 
     public Task updateStatus(
             Long id,
             String status) {
 
-        Task task =
-                repository.findById(id)
+        Task task = repository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException(
-                                "Task Not Found"));
+                        new RuntimeException("Task Not Found"));
 
         task.setStatus(status);
 

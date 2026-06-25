@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import com.nexushr.entity.Employee;
+import com.nexushr.repository.EmployeeRepository;
 
 import com.nexushr.entity.Task;
 import com.nexushr.repository.TaskRepository;
@@ -12,7 +14,8 @@ import com.nexushr.repository.TaskRepository;
 @RequestMapping("/tasks")
 @CrossOrigin(origins = "http://localhost:3000")
 public class TaskController {
-
+	@Autowired
+	private EmployeeRepository employeeRepository;
     @Autowired
     private TaskRepository taskRepository;
 
@@ -36,14 +39,23 @@ public class TaskController {
     }
 
     // Employee tasks
-    @GetMapping("/employee/{employeeName}")
+    @GetMapping("/employee/{username}")
     public List<Task> getEmployeeTasks(
-            @PathVariable String employeeName) {
+            @PathVariable String username) {
 
-        System.out.println("Searching: [" + employeeName + "]");
+        Employee employee = employeeRepository
+                .findByUsername(username)
+                .orElseThrow(() ->
+                        new RuntimeException("Employee Not Found"));
+
+        String fullName =
+                employee.getFirstName() + " " +
+                employee.getLastName();
+
+        System.out.println("Searching: " + fullName);
 
         List<Task> tasks =
-                taskRepository.findEmployeeTasks(employeeName);
+                taskRepository.findEmployeeTasks(fullName);
 
         System.out.println("Found: " + tasks.size());
 
