@@ -87,7 +87,9 @@ function Sidebar() {
           flex: 1
         }}
       >
-
+<h2 style={{ color: "red" }}>
+  TEST SIDEBAR
+</h2>
         <Link
           to={
             role === "ADMIN"
