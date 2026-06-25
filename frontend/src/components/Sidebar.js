@@ -355,19 +355,9 @@ function Sidebar() {
           padding: "15px"
         }}
       >
-        <Link
-  to="/employee-profile"
-  style={getMenuStyle("/employee-profile")}
->
-  👤 Profile
-</Link>
+     
 
-        <Link
-          to="/settings"
-          style={getMenuStyle("/settings")}
-        >
-          ⚙️ Settings
-        </Link>
+       
 
         <Link
           to="/change-password"
@@ -376,15 +366,7 @@ function Sidebar() {
           🔒 Change Password
         </Link>
 
-        <button
-          className="btn btn-danger w-100 mt-3"
-          onClick={() => {
-            localStorage.clear();
-            window.location.href = "/";
-          }}
-        >
-          Logout
-        </button>
+   
 
         <div
           className="mt-3 p-3 text-center"
