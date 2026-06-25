@@ -46,9 +46,9 @@ function Sidebar() {
 
       <div className="text-center py-4 border-bottom">
 
-        <h2 className="fw-bold text-white">
-          NexusHR
-        </h2>
+        <h2 style={{ color: "red" }}>
+  TEST SIDEBAR
+</h2>
 
         <small className="text-info">
           Enterprise HRMS
@@ -87,9 +87,7 @@ function Sidebar() {
           flex: 1
         }}
       >
-<h2 style={{ color: "red" }}>
-  TEST SIDEBAR
-</h2>
+
         <Link
           to={
             role === "ADMIN"
