@@ -18,10 +18,9 @@ function Navbar() {
       className="navbar navbar-expand-lg bg-white shadow-sm px-4"
       style={{ height: "70px" }}
     >
-      <h4 className="fw-bold text-primary m-0">
-        NexusHR
-      </h4>
-
+      <h1 style={{ color: "red", fontSize: "40px" }}>
+  TEST NAVBAR
+</h1>
       <div className="ms-auto d-flex align-items-center">
 
         <span className="me-3 fw-semibold">
