@@ -136,20 +136,16 @@ function EmployeeDashboard() {
 
   return (
 
-    <div className="d-flex">
+   <div className="app-container">
 
-      <Sidebar />
+  <Sidebar />
 
-     <div
-  style={{
-    marginLeft: "280px",
-    width: "calc(100% - 280px)",
-    minHeight: "100vh",
-    background: "#f4f7fe"
-  }}
->
+  <div className="main-content">
 
-        <Navbar />
+    <Navbar />
+
+    
+  
 
         <div className="container-fluid p-4">
 

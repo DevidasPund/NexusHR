@@ -141,17 +141,17 @@ function AdminDashboard() {
 
     <div className="d-flex">
 
-      <Sidebar />
+     <div className="app-container">
 
-     <div
-  className="flex-grow-1"
-  style={{
-    background: "#f4f7fe",
-    minHeight: "100vh"
-  }}
->
+  <Sidebar />
 
-        <Navbar />
+  <div className="main-content">
+
+    <Navbar />
+
+    </div>
+    </div>
+ 
 
         <div className="container-fluid p-4">
 
@@ -692,7 +692,8 @@ function AdminDashboard() {
 
       </div>
 
-    </div>
+  
+    
 
   );
 

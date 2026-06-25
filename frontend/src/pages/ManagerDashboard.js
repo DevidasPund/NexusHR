@@ -51,17 +51,16 @@ function ManagerDashboard() {
   };
 
   return (
-    <div className="d-flex">
-      <Sidebar />
+   <div className="app-container">
 
-      <div
-        className="flex-grow-1"
-        style={{
-          background: "#f4f7fe",
-          minHeight: "100vh"
-        }}
-      >
-        <Navbar />
+  <Sidebar />
+
+  <div className="main-content">
+
+    <Navbar />
+
+    ...
+ 
 
         <div className="container-fluid p-4">
 
