@@ -84,7 +84,7 @@ function Profile() {
               <img
                 src={
                   profile.profileImage
-                    ? `http://localhost:8080/uploads/${profile.profileImage}`
+                    ? `https://nexushr-production-612e.up.railway.app/uploads/${profile.profileImage}`
                     : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                 }
                 alt="Profile"
