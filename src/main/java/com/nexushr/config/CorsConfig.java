@@ -1,6 +1,7 @@
 package com.nexushr.config;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,31 +12,26 @@ import org.springframework.web.filter.CorsFilter;
 @Configuration
 public class CorsConfig {
 
-    @Bean
-    public CorsFilter corsFilter() {
+	@Bean
+	public CorsFilter corsFilter() {
 
-        CorsConfiguration config = new CorsConfiguration();
+	    CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowCredentials(false);
+	    config.setAllowCredentials(true);
 
-        config.setAllowedOriginPatterns(Arrays.asList("*"));
+	    config.setAllowedOriginPatterns(List.of(
+	            "https://nexus-hr-85yz.vercel.app",
+	            "https://nexushr-hrms.netlify.app",
+	            "http://localhost:3000"));
 
-        config.setAllowedMethods(Arrays.asList(
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE",
-                "OPTIONS"));
+	    config.addAllowedHeader("*");
+	    config.addAllowedMethod("*");
 
-        config.setAllowedHeaders(Arrays.asList("*"));
+	    UrlBasedCorsConfigurationSource source =
+	            new UrlBasedCorsConfigurationSource();
 
-        config.setExposedHeaders(Arrays.asList("*"));
+	    source.registerCorsConfiguration("/**", config);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
-        source.registerCorsConfiguration("/**", config);
-
-        return new CorsFilter(source);
-    }
+	    return new CorsFilter(source);
+	}
 }
