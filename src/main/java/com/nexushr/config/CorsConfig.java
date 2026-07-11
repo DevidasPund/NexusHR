@@ -1,5 +1,7 @@
 package com.nexushr.config;
 
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -12,23 +14,27 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter() {
 
-        CorsConfiguration config =
-                new CorsConfiguration();
+        CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(false);
 
-        config.addAllowedOrigin(
-                "https://nexushr-hrms.netlify.app");
+        config.setAllowedOriginPatterns(Arrays.asList("*"));
 
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
+        config.setAllowedMethods(Arrays.asList(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"));
+
+        config.setAllowedHeaders(Arrays.asList("*"));
+
+        config.setExposedHeaders(Arrays.asList("*"));
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration(
-                "/**",
-                config);
+        source.registerCorsConfiguration("/**", config);
 
         return new CorsFilter(source);
     }
