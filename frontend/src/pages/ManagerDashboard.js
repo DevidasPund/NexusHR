@@ -4,246 +4,149 @@ import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function ManagerDashboard() {
-  const [dashboard, setDashboard] = useState({});
+
+  const [dashboard, setDashboard] = useState({
+    totalEmployees: 0,
+    pendingTasks: 0,
+    pendingLeaves: 0,
+    totalProjects: 0,
+    highRiskEmployees: 0,
+    mediumRiskEmployees: 0,
+    lowRiskEmployees: 0
+  });
+
   const [tasks, setTasks] = useState([]);
   const [leaves, setLeaves] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
-
-    const interval = setInterval(() => {
-      loadData();
-    }, 10000);
-
-    return () => clearInterval(interval);
+    loadDashboard();
   }, []);
 
-  const loadData = async () => {
-    try {
-      const dashboardRes = await API.get("/dashboard");
-      const taskRes = await API.get("/tasks");
-      const leaveRes = await API.get("/leave");
+  const loadDashboard = async () => {
 
-      setDashboard(dashboardRes.data || {});
+    setLoading(true);
+
+    try {
+
+      const dashboardReq = API.get("/dashboard").catch(() => ({ data: {} }));
+      const tasksReq = API.get("/tasks").catch(() => ({ data: [] }));
+      const leaveReq = API.get("/leave").catch(() => ({ data: [] }));
+
+      const [dashboardRes, taskRes, leaveRes] =
+        await Promise.all([
+          dashboardReq,
+          tasksReq,
+          leaveReq
+        ]);
+
+      setDashboard({
+        totalEmployees: dashboardRes.data.totalEmployees || 0,
+        pendingTasks: dashboardRes.data.pendingTasks || 0,
+        pendingLeaves: dashboardRes.data.pendingLeaves || 0,
+        totalProjects: dashboardRes.data.totalProjects || 0,
+        highRiskEmployees: dashboardRes.data.highRiskEmployees || 0,
+        mediumRiskEmployees: dashboardRes.data.mediumRiskEmployees || 0,
+        lowRiskEmployees: dashboardRes.data.lowRiskEmployees || 0
+      });
+
       setTasks(taskRes.data || []);
       setLeaves(leaveRes.data || []);
-    } catch (error) {
-      console.error(error);
+
+    } catch (e) {
+      console.error(e);
     }
+
+    setLoading(false);
   };
 
   const approveLeave = async (id) => {
-    try {
-      await API.put(`/leave/manager-approve/${id}`);
-      loadData();
-    } catch (error) {
-      console.error(error);
-    }
+    await API.put(`/leave/manager-approve/${id}`);
+    loadDashboard();
   };
 
   const rejectLeave = async (id) => {
-    try {
-      await API.put(`/leave/manager-reject/${id}`);
-      loadData();
-    } catch (error) {
-      console.error(error);
-    }
+    await API.put(`/leave/manager-reject/${id}`);
+    loadDashboard();
   };
 
+  if (loading) {
+    return (
+      <>
+        <Sidebar />
+        <div className="main-content">
+          <Navbar />
+          <div className="container p-5 text-center">
+            <h3>Loading Dashboard...</h3>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
-   <div className="app-container">
 
-  <Sidebar />
+    <div className="app-container">
 
-  <div className="main-content">
+      <Sidebar />
 
-    <Navbar />
+      <div className="main-content">
 
-    ...
- 
+        <Navbar />
 
         <div className="container-fluid p-4">
-
-          {/* Hero Section */}
-
-          <div
-            className="card border-0 shadow-lg mb-4"
-            style={{
-              background:
-                "linear-gradient(135deg,#2563eb,#7c3aed)",
-              borderRadius: "20px"
-            }}
-          >
-            <div className="card-body text-white">
-              <h2 className="fw-bold">
-                Welcome Back Manager 👋
-              </h2>
-
-              <p className="mb-0">
-                Monitor team productivity,
-                projects, attendance and leave
-                approvals in real time.
-              </p>
-            </div>
-          </div>
-
-          {/* KPI Cards */}
 
           <div className="row g-4 mb-4">
 
             <div className="col-md-3">
-              <div className="card border-0 shadow text-center">
+              <div className="card shadow text-center">
                 <div className="card-body">
-                  <h6>👥 Team Members</h6>
-                  <h2 className="text-primary">
-                    {dashboard.totalEmployees || 0}
-                  </h2>
+                  <h6>Employees</h6>
+                  <h2>{dashboard.totalEmployees}</h2>
                 </div>
               </div>
             </div>
 
             <div className="col-md-3">
-              <div className="card border-0 shadow text-center">
+              <div className="card shadow text-center">
                 <div className="card-body">
-                  <h6>📋 Pending Tasks</h6>
-                  <h2 className="text-warning">
-                    {dashboard.pendingTasks || 0}
-                  </h2>
+                  <h6>Pending Tasks</h6>
+                  <h2>{dashboard.pendingTasks}</h2>
                 </div>
               </div>
             </div>
 
             <div className="col-md-3">
-              <div className="card border-0 shadow text-center">
+              <div className="card shadow text-center">
                 <div className="card-body">
-                  <h6>🌴 Pending Leaves</h6>
-                  <h2 className="text-danger">
-                    {dashboard.pendingLeaves || 0}
-                  </h2>
+                  <h6>Pending Leaves</h6>
+                  <h2>{dashboard.pendingLeaves}</h2>
                 </div>
               </div>
             </div>
 
             <div className="col-md-3">
-              <div className="card border-0 shadow text-center">
+              <div className="card shadow text-center">
                 <div className="card-body">
-                  <h6>📁 Projects</h6>
-                  <h2 className="text-success">
-                    {dashboard.totalProjects || 0}
-                  </h2>
+                  <h6>Projects</h6>
+                  <h2>{dashboard.totalProjects}</h2>
                 </div>
               </div>
             </div>
 
           </div>
 
-          {/* AI Workforce Insights */}
+          <div className="card shadow mb-4">
 
-          <div className="card shadow border-0 mb-4">
+            <div className="card-header">
+              <h4>Tasks</h4>
+            </div>
+
             <div className="card-body">
 
-              <h4 className="mb-4">
-                🤖 AI Workforce Insights
-              </h4>
+              <table className="table">
 
-              <div className="row">
-
-                <div className="col-md-4">
-                  <div className="alert alert-danger">
-                    <h6>High Risk Employees</h6>
-                    <h2>
-                      {dashboard.highRiskEmployees || 0}
-                    </h2>
-                  </div>
-                </div>
-
-                <div className="col-md-4">
-                  <div className="alert alert-warning">
-                    <h6>Medium Risk Employees</h6>
-                    <h2>
-                      {dashboard.mediumRiskEmployees || 0}
-                    </h2>
-                  </div>
-                </div>
-
-                <div className="col-md-4">
-                  <div className="alert alert-success">
-                    <h6>Low Risk Employees</h6>
-                    <h2>
-                      {dashboard.lowRiskEmployees || 0}
-                    </h2>
-                  </div>
-                </div>
-
-              </div>
-
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-
-          <div className="row mb-4">
-
-            <div className="col-md-3">
-              <a
-                href="/tasks"
-                className="text-decoration-none"
-              >
-                <div className="card shadow border-0 text-center p-4">
-                  <h1>📋</h1>
-                  <h5>Assign Tasks</h5>
-                </div>
-              </a>
-            </div>
-
-            <div className="col-md-3">
-              <a
-                href="/projects"
-                className="text-decoration-none"
-              >
-                <div className="card shadow border-0 text-center p-4">
-                  <h1>📁</h1>
-                  <h5>Projects</h5>
-                </div>
-              </a>
-            </div>
-
-            <div className="col-md-3">
-              <a
-                href="/leave-management"
-                className="text-decoration-none"
-              >
-                <div className="card shadow border-0 text-center p-4">
-                  <h1>🌴</h1>
-                  <h5>Leave Approval</h5>
-                </div>
-              </a>
-            </div>
-
-            <div className="col-md-3">
-              <a
-                href="/reports"
-                className="text-decoration-none"
-              >
-                <div className="card shadow border-0 text-center p-4">
-                  <h1>📊</h1>
-                  <h5>Reports</h5>
-                </div>
-              </a>
-            </div>
-
-          </div>
-
-          {/* Team Tasks */}
-
-          <div className="card shadow border-0 mb-4">
-            <div className="card-body">
-
-              <h4>📋 Team Tasks</h4>
-
-              <table className="table table-hover mt-3">
-
-                <thead className="table-dark">
+                <thead>
                   <tr>
                     <th>ID</th>
                     <th>Task</th>
@@ -254,23 +157,15 @@ function ManagerDashboard() {
 
                 <tbody>
 
-                  {tasks.map((task) => (
+                  {tasks.map(task => (
+
                     <tr key={task.id}>
                       <td>{task.id}</td>
                       <td>{task.taskName}</td>
                       <td>{task.employeeName}</td>
-                      <td>
-                        <span
-                          className={
-                            task.status === "COMPLETED"
-                              ? "badge bg-success"
-                              : "badge bg-warning"
-                          }
-                        >
-                          {task.status}
-                        </span>
-                      </td>
+                      <td>{task.status}</td>
                     </tr>
+
                   ))}
 
                 </tbody>
@@ -278,59 +173,62 @@ function ManagerDashboard() {
               </table>
 
             </div>
+
           </div>
 
-          {/* Leave Approval */}
+          <div className="card shadow">
 
-          <div className="card shadow border-0 mb-4">
+            <div className="card-header">
+              <h4>Leave Requests</h4>
+            </div>
+
             <div className="card-body">
 
-              <h4>🌴 Leave Requests</h4>
+              <table className="table">
 
-              <table className="table table-hover mt-3">
+                <thead>
 
-                <thead className="table-dark">
                   <tr>
                     <th>Employee</th>
                     <th>Reason</th>
                     <th>Status</th>
                     <th>Action</th>
                   </tr>
+
                 </thead>
 
                 <tbody>
 
                   {leaves
-                    .filter(
-                      (leave) =>
-                        leave.status === "PENDING"
-                    )
-                    .map((leave) => (
-                      <tr key={leave.id}>
-                        <td>{leave.employeeId}</td>
-                        <td>{leave.reason}</td>
-                        <td>{leave.status}</td>
+                    .filter(l => l.status === "PENDING")
+                    .map(l => (
+
+                      <tr key={l.id}>
+
+                        <td>{l.employeeId}</td>
+                        <td>{l.reason}</td>
+                        <td>{l.status}</td>
 
                         <td>
+
                           <button
                             className="btn btn-success btn-sm me-2"
-                            onClick={() =>
-                              approveLeave(leave.id)
-                            }
+                            onClick={() => approveLeave(l.id)}
                           >
                             Approve
                           </button>
 
                           <button
                             className="btn btn-danger btn-sm"
-                            onClick={() =>
-                              rejectLeave(leave.id)
-                            }
+                            onClick={() => rejectLeave(l.id)}
                           >
                             Reject
                           </button>
+
                         </td>
+
                       </tr>
+
                     ))}
 
                 </tbody>
@@ -338,42 +236,17 @@ function ManagerDashboard() {
               </table>
 
             </div>
-          </div>
 
-          {/* Recent Activity */}
-
-          <div className="card shadow border-0">
-            <div className="card-body">
-
-              <h4>🔔 Recent Activities</h4>
-
-              <ul className="list-group mt-3">
-
-                <li className="list-group-item">
-                  New Employee Joined
-                </li>
-
-                <li className="list-group-item">
-                  Project Assigned
-                </li>
-
-                <li className="list-group-item">
-                  Leave Request Submitted
-                </li>
-
-                <li className="list-group-item">
-                  Attendance Updated
-                </li>
-
-              </ul>
-
-            </div>
           </div>
 
         </div>
+
       </div>
+
     </div>
+
   );
+
 }
 
 export default ManagerDashboard;

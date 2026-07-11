@@ -26,55 +26,80 @@ public class DashboardService {
 
     public DashboardResponse getDashboard() {
 
-        DashboardResponse response =
-                new DashboardResponse();
+        DashboardResponse response = new DashboardResponse();
 
-        response.setTotalEmployees(
-                employeeRepository.count());
+        try {
+            response.setTotalEmployees(employeeRepository.count());
+        } catch (Exception e) {
+            response.setTotalEmployees(0);
+        }
 
-        response.setTotalDepartments(
-                departmentRepository.count());
+        try {
+            response.setTotalDepartments(departmentRepository.count());
+        } catch (Exception e) {
+            response.setTotalDepartments(0);
+        }
 
-        response.setTotalAttendance(
-                attendanceRepository.count());
+        try {
+            response.setTotalAttendance(attendanceRepository.count());
+        } catch (Exception e) {
+            response.setTotalAttendance(0);
+        }
 
-        response.setPendingLeaves(
-                leaveRepository.countByStatus(
-                        "PENDING"));
+        try {
+            response.setPendingLeaves(
+                    leaveRepository.countByStatus("PENDING"));
+        } catch (Exception e) {
+            response.setPendingLeaves(0);
+        }
 
-        response.setApprovedLeaves(
-                leaveRepository.countByStatus(
-                        "APPROVED"));
+        try {
+            response.setApprovedLeaves(
+                    leaveRepository.countByStatus("APPROVED"));
+        } catch (Exception e) {
+            response.setApprovedLeaves(0);
+        }
 
-        response.setActiveEmployees(
-                employeeRepository.countByStatus(
-                        "ACTIVE"));
+        try {
+            response.setActiveEmployees(
+                    employeeRepository.countByStatus("ACTIVE"));
+        } catch (Exception e) {
+            response.setActiveEmployees(0);
+        }
 
-        response.setTotalSalary(
-                employeeRepository.getTotalSalary());
+        try {
+            Double salary = employeeRepository.getTotalSalary();
 
-        response.setPresentToday(
-                attendanceRepository.countByAttendanceStatus(
-                        "PRESENT"));
+            response.setTotalSalary(
+                    salary == null ? 0.0 : salary);
 
-        response.setAbsentToday(
-                attendanceRepository.countByAttendanceStatus(
-                        "ABSENT"));
+        } catch (Exception e) {
+            response.setTotalSalary(0.0);
+        }
 
-        long totalEmployees =
-                employeeRepository.count();
+        try {
+            response.setPresentToday(
+                    attendanceRepository.countByAttendanceStatus("PRESENT"));
+        } catch (Exception e) {
+            response.setPresentToday(0);
+        }
 
-        long present =
-                attendanceRepository.countByAttendanceStatus(
-                        "PRESENT");
+        try {
+            response.setAbsentToday(
+                    attendanceRepository.countByAttendanceStatus("ABSENT"));
+        } catch (Exception e) {
+            response.setAbsentToday(0);
+        }
 
-        double percentage =
-                totalEmployees > 0
-                        ? ((double) present / totalEmployees) * 100
-                        : 0;
+        long total = response.getTotalEmployees();
+        long present = response.getPresentToday();
 
-        response.setAttendancePercentage(
-                percentage);
+        if (total > 0) {
+            response.setAttendancePercentage(
+                    (double) present * 100 / total);
+        } else {
+            response.setAttendancePercentage(0);
+        }
 
         return response;
     }
