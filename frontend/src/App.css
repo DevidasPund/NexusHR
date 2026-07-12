@@ -76,9 +76,20 @@ a {
     display: none;
   }
 
-  .main-content {
-    margin-left: 0;
-    width: 100%;
-  }
+ .main-content{
+
+    flex:1;
+
+    margin-left:280px;
+
+    padding:25px;
+
+    min-height:100vh;
+
+    background:#f4f7fe;
+
+    overflow-x:hidden;
+
+}
 
 }

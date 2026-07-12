@@ -8,18 +8,26 @@ function Sidebar() {
 
   const location = useLocation();
 
+  const dashboardPath =
+    role === "ADMIN"
+      ? "/admin/dashboard"
+      : role === "MANAGER"
+      ? "/manager/dashboard"
+      : "/employee/dashboard";
+
   const menuStyle = {
     color: "#d1d5db",
     textDecoration: "none",
     padding: "12px 18px",
     display: "block",
     borderRadius: "10px",
-    marginBottom: "6px"
+    marginBottom: "6px",
+    transition: "0.3s"
   };
 
   const activeStyle = {
     background: "#2563eb",
-    color: "#fff",
+    color: "#ffffff",
     fontWeight: "bold"
   };
 
@@ -30,27 +38,26 @@ function Sidebar() {
 
   return (
 
-    <div
-      style={{
-        width: "280px",
-        minWidth: "280px",
-        height: "100vh",
-        background: "#0f172a",
-        color: "#fff",
-        display: "flex",
-        flexDirection: "column"
-      }}
-    >
+    <div className="sidebar">
 
       {/* Logo */}
 
-      <div className="text-center py-4 border-bottom">
+      <div
+        className="text-center py-4 border-bottom"
+        style={{
+          borderColor: "#1e293b"
+        }}
+      >
 
-        <h2 style={{ color: "red" }}>
-  TEST SIDEBAR
-</h2>
+        <h2 className="fw-bold text-white">
+          NexusHR
+        </h2>
 
-        <small className="text-info">
+        <small
+          style={{
+            color: "#94a3b8"
+          }}
+        >
           Enterprise HRMS
         </small>
 
@@ -63,12 +70,12 @@ function Sidebar() {
         <img
           src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
           alt="Profile"
-          width="80"
-          height="80"
+          width="90"
+          height="90"
           className="rounded-circle border border-3 border-primary"
         />
 
-        <h5 className="mt-3">
+        <h5 className="mt-3 text-white">
           {username}
         </h5>
 
@@ -83,20 +90,14 @@ function Sidebar() {
       <div
         className="px-3"
         style={{
-          overflowY: "auto",
-          flex: 1
+          flex: 1,
+          overflowY: "auto"
         }}
       >
 
         <Link
-          to={
-            role === "ADMIN"
-              ? "/admin/dashboard"
-              : role === "MANAGER"
-              ? "/manager/dashboard"
-              : "/employee/dashboard"
-          }
-          style={getStyle("/employee/dashboard")}
+          to={dashboardPath}
+          style={getStyle(dashboardPath)}
         >
           📊 Dashboard
         </Link>
@@ -119,17 +120,24 @@ function Sidebar() {
             </Link>
 
             <Link
+              to="/departments"
+              style={getStyle("/departments")}
+            >
+              🏢 Departments
+            </Link>
+
+            <Link
               to="/admin-attendance"
               style={getStyle("/admin-attendance")}
             >
-              ⏰ Attendance
+              📅 Attendance
             </Link>
 
             <Link
               to="/leave-management"
               style={getStyle("/leave-management")}
             >
-              🌴 Leave
+              🌴 Leave Management
             </Link>
 
             <Link
@@ -167,6 +175,13 @@ function Sidebar() {
               🔔 Notifications
             </Link>
 
+            <Link
+              to="/settings"
+              style={getStyle("/settings")}
+            >
+              ⚙ Settings
+            </Link>
+
           </>
         )}
 
@@ -181,17 +196,17 @@ function Sidebar() {
             </Link>
 
             <Link
-              to="/tasks"
-              style={getStyle("/tasks")}
-            >
-              ✅ Tasks
-            </Link>
-
-            <Link
               to="/projects"
               style={getStyle("/projects")}
             >
               📁 Projects
+            </Link>
+
+            <Link
+              to="/tasks"
+              style={getStyle("/tasks")}
+            >
+              ✅ Tasks
             </Link>
 
             <Link
@@ -215,6 +230,20 @@ function Sidebar() {
               🔔 Notifications
             </Link>
 
+            <Link
+              to="/manager-profile"
+              style={getStyle("/manager-profile")}
+            >
+              👤 My Profile
+            </Link>
+
+            <Link
+              to="/settings"
+              style={getStyle("/settings")}
+            >
+              ⚙ Settings
+            </Link>
+
           </>
         )}
 
@@ -225,7 +254,7 @@ function Sidebar() {
               to="/employee-attendance"
               style={getStyle("/employee-attendance")}
             >
-              ⏰ Attendance
+              📅 Attendance
             </Link>
 
             <Link
@@ -239,7 +268,7 @@ function Sidebar() {
               to="/leave"
               style={getStyle("/leave")}
             >
-              🌴 Leave
+              🌴 My Leave
             </Link>
 
             <Link
@@ -250,10 +279,24 @@ function Sidebar() {
             </Link>
 
             <Link
+              to="/employee-profile"
+              style={getStyle("/employee-profile")}
+            >
+              👤 My Profile
+            </Link>
+
+            <Link
               to="/employee-notification"
               style={getStyle("/employee-notification")}
             >
               🔔 Notifications
+            </Link>
+
+            <Link
+              to="/settings"
+              style={getStyle("/settings")}
+            >
+              ⚙ Settings
             </Link>
 
           </>
@@ -261,17 +304,18 @@ function Sidebar() {
 
       </div>
 
-      {/* Bottom */}
+      {/* Footer */}
 
       <div
-        className="text-center p-3 border-top"
+        className="text-center py-3"
         style={{
+          borderTop: "1px solid #1e293b",
           color: "#94a3b8",
           fontSize: "12px"
         }}
       >
 
-        NexusHR Enterprise Suite
+        <strong>NexusHR Enterprise</strong>
 
         <br />
 

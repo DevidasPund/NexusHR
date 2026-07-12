@@ -5,54 +5,86 @@ import { toast } from "react-toastify";
 
 function NotificationListener() {
 
-  useEffect(() => {
+    useEffect(() => {
 
-    const client = new Client({
+        let client;
 
-      webSocketFactory: () =>
-        new SockJS(
-          "https://nexushr-production-612e.up.railway.app/ws"
-        ),
+        try {
 
-      reconnectDelay: 5000,
+            client = new Client({
 
-      onConnect: () => {
+                webSocketFactory: () =>
+                    new SockJS(
+                        "https://nexushr-production-612e.up.railway.app/ws"
+                    ),
 
-        console.log(
-          "WebSocket Connected"
-        );
+                reconnectDelay: 0,
 
-        client.subscribe(
-          "/topic/notifications",
-          (message) => {
+                debug: () => {},
 
-            const data =
-              JSON.parse(
-                message.body
-              );
+                onConnect: () => {
 
-            toast.success(
-              `${data.title} - ${data.message}`
-            );
+                    console.log("WebSocket Connected");
 
-          }
-        );
+                    client.subscribe(
+                        "/topic/notifications",
+                        (message) => {
 
-      }
+                            try {
 
-    });
+                                const data = JSON.parse(message.body);
 
-    client.activate();
+                                toast.success(
+                                    `${data.title} - ${data.message}`
+                                );
 
-    return () => {
+                            } catch (e) {
 
-      client.deactivate();
+                                console.log(e);
 
-    };
+                            }
 
-  }, []);
+                        }
+                    );
 
-  return null;
+                },
+
+                onStompError: (frame) => {
+
+                    console.log("STOMP Error", frame);
+
+                },
+
+                onWebSocketError: (event) => {
+
+                    console.log("WebSocket Error", event);
+
+                }
+
+            });
+
+            client.activate();
+
+        } catch (e) {
+
+            console.log(e);
+
+        }
+
+        return () => {
+
+            if (client) {
+
+                client.deactivate();
+
+            }
+
+        };
+
+    }, []);
+
+    return null;
+
 }
 
 export default NotificationListener;
