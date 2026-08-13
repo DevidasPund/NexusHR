@@ -1,68 +1,59 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
+import "./AdminDashboard.css";
 
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+  BarElement,
   PointElement,
   LineElement,
-  BarElement,
   ArcElement,
   Tooltip,
   Legend,
-  Filler,
 } from "chart.js";
 
-import { Line, Doughnut } from "react-chartjs-2";
+import { Bar, Line, Doughnut } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
+  BarElement,
   PointElement,
   LineElement,
-  BarElement,
   ArcElement,
   Tooltip,
-  Legend,
-  Filler
+  Legend
 );
 
 function AdminDashboard() {
   const [dashboard, setDashboard] = useState({});
   const [employees, setEmployees] = useState([]);
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [loading, setLoading] = useState(true);
 
-  // =========================
-  // REAL-TIME DATA
-  // =========================
+  const API_URL =
+    "https://nexushr-production-bdec.up.railway.app";
 
   useEffect(() => {
     loadData();
 
-    const dataInterval = setInterval(() => {
+    const interval = setInterval(() => {
       loadData();
     }, 10000);
 
-    const clockInterval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => {
-      clearInterval(dataInterval);
-      clearInterval(clockInterval);
-    };
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
     try {
-      const [dashboardResponse, employeeResponse] = await Promise.all([
-        API.get("/dashboard"),
-        API.get("/employees"),
-      ]);
+      const [dashboardResponse, employeeResponse] =
+        await Promise.all([
+          API.get("/dashboard"),
+          API.get("/employees"),
+        ]);
 
       setDashboard(dashboardResponse.data || {});
       setEmployees(employeeResponse.data || []);
@@ -73,107 +64,120 @@ function AdminDashboard() {
     }
   };
 
-  // =========================
-  // DATE / TIME
-  // =========================
-
-  const dateText = currentTime.toLocaleDateString("en-IN", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
-  const timeText = currentTime.toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  const hour = currentTime.getHours();
-
-  let greeting = "Good Morning";
-
-  if (hour >= 12 && hour < 17) {
-    greeting = "Good Afternoon";
-  } else if (hour >= 17) {
-    greeting = "Good Evening";
-  }
-
-  // =========================
-  // EMPLOYEE VALUES
-  // =========================
-
   const totalEmployees =
-    dashboard.totalEmployees ?? employees.length ?? 0;
+    dashboard.totalEmployees || employees.length || 0;
 
   const activeEmployees =
-    dashboard.activeEmployees ??
-    employees.filter((e) => e.status === "ACTIVE").length;
+    dashboard.activeEmployees ||
+    employees.filter((e) => e.status === "ACTIVE").length ||
+    0;
 
-  const pendingLeaves = dashboard.pendingLeaves ?? 0;
+  const pendingLeaves =
+    dashboard.pendingLeaves || 0;
 
-  const totalPayroll =
-    dashboard.totalSalary ??
-    employees.reduce((sum, employee) => {
-      return sum + Number(employee.salary || 0);
-    }, 0);
+  const approvedLeaves =
+    dashboard.approvedLeaves || 0;
 
-  const presentToday = dashboard.presentToday ?? 0;
-  const absentToday = dashboard.absentToday ?? 0;
-  const attendancePercentage = dashboard.attendancePercentage ?? 0;
-  const approvedLeaves = dashboard.approvedLeaves ?? 0;
+  const totalDepartments =
+    dashboard.totalDepartments || 0;
 
-  // =========================
-  // DEPARTMENT DISTRIBUTION
-  // =========================
+  const totalSalary =
+    dashboard.totalSalary || 0;
 
-  const departmentData = useMemo(() => {
-    const result = {};
+  const attendancePercentage =
+    dashboard.attendancePercentage || 0;
 
-    employees.forEach((employee) => {
-      const department = employee.department || "Other";
+  const presentToday =
+    dashboard.presentToday || 0;
 
-      result[department] = (result[department] || 0) + 1;
-    });
+  const absentToday =
+    dashboard.absentToday || 0;
 
-    return result;
-  }, [employees]);
+  const highRisk =
+    dashboard.highRiskEmployees || 0;
 
-  const departmentLabels = Object.keys(departmentData);
+  const mediumRisk =
+    dashboard.mediumRiskEmployees || 0;
 
-  const departmentValues = Object.values(departmentData);
+  const lowRisk =
+    dashboard.lowRiskEmployees || 0;
 
-  const departmentChart = {
-    labels: departmentLabels.length
-      ? departmentLabels
-      : ["No Data"],
+  const topPerformers =
+    dashboard.topPerformers || 0;
+
+  const averagePerformance =
+    dashboard.averagePerformance ||
+    dashboard.averagePerformers ||
+    0;
+
+  const recentEmployees = employees.slice(0, 6);
+
+  /* ---------------- BAR CHART ---------------- */
+
+  const barData = {
+    labels: [
+      "Employees",
+      "Attendance",
+      "Pending Leaves",
+      "Approved Leaves",
+      "Departments",
+    ],
 
     datasets: [
       {
-        data: departmentValues.length
-          ? departmentValues
-          : [1],
+        label: "HR Analytics",
 
-        backgroundColor: [
-          "#6366f1",
-          "#22c55e",
-          "#f59e0b",
-          "#ef4444",
-          "#06b6d4",
-          "#8b5cf6",
-          "#ec4899",
+        data: [
+          totalEmployees,
+          dashboard.totalAttendance || 0,
+          pendingLeaves,
+          approvedLeaves,
+          totalDepartments,
         ],
 
-        borderWidth: 0,
+        backgroundColor: [
+          "#4f46e5",
+          "#10b981",
+          "#f59e0b",
+          "#06b6d4",
+          "#ef4444",
+        ],
+
+        borderRadius: 8,
+        borderSkipped: false,
       },
     ],
   };
 
-  // =========================
-  // ATTENDANCE CHART
-  // =========================
+  const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
 
-  const attendanceChart = {
+    plugins: {
+      legend: {
+        display: false,
+      },
+    },
+
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: "#eef2f7",
+        },
+      },
+
+      x: {
+        grid: {
+          display: false,
+        },
+      },
+    },
+  };
+
+  /* ---------------- LINE CHART ---------------- */
+
+  const lineData = {
     labels: [
       "Mon",
       "Tue",
@@ -186,82 +190,47 @@ function AdminDashboard() {
 
     datasets: [
       {
-        label: "Present",
+        label: "Attendance",
 
         data: [
-          presentToday,
-          Math.max(presentToday - 1, 0),
-          presentToday + 1,
-          presentToday,
-          presentToday + 2,
-          presentToday,
-          presentToday,
+          72,
+          81,
+          76,
+          88,
+          92,
+          85,
+          attendancePercentage || 90,
         ],
 
-        borderColor: "#6366f1",
+        borderColor: "#4f46e5",
+        backgroundColor: "rgba(79,70,229,0.08)",
 
-        backgroundColor: "rgba(99,102,241,0.10)",
-
+        tension: 0.4,
         fill: true,
 
-        tension: 0.45,
-
         pointRadius: 4,
-
-        pointBackgroundColor: "#6366f1",
-      },
-
-      {
-        label: "Absent",
-
-        data: [
-          absentToday,
-          absentToday + 1,
-          absentToday,
-          Math.max(absentToday - 1, 0),
-          absentToday + 1,
-          absentToday,
-          absentToday,
-        ],
-
-        borderColor: "#ef4444",
-
-        backgroundColor: "rgba(239,68,68,0.04)",
-
-        fill: true,
-
-        tension: 0.45,
-
-        pointRadius: 4,
-
-        pointBackgroundColor: "#ef4444",
+        pointHoverRadius: 6,
       },
     ],
   };
 
-  const attendanceOptions = {
+  const lineOptions = {
     responsive: true,
-
     maintainAspectRatio: false,
 
     plugins: {
       legend: {
-        position: "top",
-
-        labels: {
-          usePointStyle: true,
-
-          padding: 20,
-        },
+        display: false,
       },
     },
 
     scales: {
       y: {
-        beginAtZero: true,
+        min: 0,
+        max: 100,
 
         grid: {
-          color: "#eef0f6",
+          color: "#eef2f7",
         },
       },
 
@@ -273,266 +242,273 @@ function AdminDashboard() {
     },
   };
 
-  // =========================
-  // RECENT EMPLOYEES
-  // =========================
+  /* ---------------- DOUGHNUT ---------------- */
 
-  const recentEmployees = employees.slice(0, 5);
+  const leaveData = {
+    labels: [
+      "Pending",
+      "Approved",
+    ],
 
-  // =========================
-  // RENDER
-  // =========================
+    datasets: [
+      {
+        data: [
+          pendingLeaves,
+          approvedLeaves,
+        ],
+
+        backgroundColor: [
+          "#f59e0b",
+          "#10b981",
+        ],
+
+        borderWidth: 0,
+      },
+    ],
+  };
+
+  const leaveOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+
+    cutout: "70%",
+
+    plugins: {
+      legend: {
+        position: "bottom",
+      },
+    },
+  };
+
+  /* ---------------- PROFILE IMAGE ---------------- */
+
+  const getProfileImage = (employee) => {
+    if (employee.profileImage) {
+      return `${API_URL}/uploads/${employee.profileImage}`;
+    }
+
+    return "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+  };
+
+  /* ---------------- RISK ---------------- */
+
+  const getRiskClass = (risk) => {
+    if (!risk) return "risk-low";
+
+    const value = String(risk).toLowerCase();
+
+    if (value.includes("high")) {
+      return "risk-high";
+    }
+
+    if (value.includes("medium")) {
+      return "risk-medium";
+    }
+
+    return "risk-low";
+  };
+
+  if (loading) {
+    return (
+      <div className="dashboard-loading">
+        <div className="spinner-border text-primary"></div>
+        <p>Loading NexusHR Dashboard...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="nexus-dashboard">
 
-      {/* EXISTING SIDEBAR */}
+      {/* SIDEBAR */}
+
       <Sidebar />
 
-      <div className="nexus-main">
+      <div className="dashboard-main">
 
-        {/* EXISTING NAVBAR */}
+        {/* NAVBAR */}
+
         <Navbar />
-
-        {/* TOP HEADER */}
-        <div className="nexus-top-header">
-
-          <div>
-            <h1>NexusHR Dashboard</h1>
-
-            <p>
-              Enterprise Workforce Management System
-            </p>
-          </div>
-
-          <div className="header-right">
-
-            <div className="realtime-status">
-              <span></span>
-              Real-time
-            </div>
-
-            <div className="header-date">
-              {dateText}
-            </div>
-
-            <div className="admin-user">
-              <div className="admin-avatar">
-                A
-              </div>
-
-              <div>
-                <strong>Admin</strong>
-                <small>System Administrator</small>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
 
         <main className="dashboard-content">
 
-          {/* =========================
-              WELCOME SECTION
-          ========================= */}
+          {/* ================= WELCOME ================= */}
 
-          <section className="welcome-section">
+          <section className="welcome-banner">
 
-            <div>
+            <div className="welcome-content">
 
-              <h2>
-                {greeting}, Admin! 👋
-              </h2>
+              <span className="welcome-small">
+                NEXUSHR ENTERPRISE HRMS
+              </span>
+
+              <h1>
+                Good Morning, Admin
+                <span> 👋</span>
+              </h1>
 
               <p>
-                Here's what's happening with your
-                workforce today.
+                Manage your workforce, monitor performance
+                and make smarter HR decisions in real time.
               </p>
 
-              <div className="welcome-info">
+              <div className="welcome-actions">
 
-                <span>
-                  📅 {dateText}
-                </span>
+                <button
+                  className="primary-action"
+                  onClick={() =>
+                    window.location.href = "/employees"
+                  }
+                >
+                  + Add Employee
+                </button>
 
-                <span>
-                  🕐 {timeText}
-                </span>
-
-                <span>
-                  🟢 Live Data
-                </span>
+                <button
+                  className="secondary-action"
+                  onClick={() =>
+                    window.location.href = "/reports"
+                  }
+                >
+                  View Reports
+                </button>
 
               </div>
 
             </div>
 
-            <div className="welcome-illustration">
-              👨‍💼
+            <div className="welcome-decoration">
+
+              <div className="decoration-circle circle-one"></div>
+              <div className="decoration-circle circle-two"></div>
+              <div className="decoration-circle circle-three"></div>
+
+              <div className="dashboard-icon">
+                📊
+              </div>
+
             </div>
 
           </section>
 
-          {/* =========================
-              KPI CARDS
-          ========================= */}
+          {/* ================= KPI ================= */}
 
           <section className="kpi-grid">
 
-            {/* TOTAL EMPLOYEES */}
+            {/* Employees */}
 
-            <div className="kpi-card purple">
+            <div className="kpi-card">
 
               <div className="kpi-top">
 
-                <div className="kpi-icon">
+                <div className="kpi-icon blue">
                   👥
                 </div>
 
-                <span className="trend positive">
-                  ↑ 12.5%
+                <span className="kpi-trend positive">
+                  +12%
                 </span>
 
               </div>
 
-              <h3>
-                {loading ? "..." : totalEmployees}
-              </h3>
+              <h2>{totalEmployees}</h2>
 
               <p>Total Employees</p>
 
-              <div className="mini-chart">
-                ╱╲╱╲━━╱╲╱
+              <div className="mini-line blue-line">
+                ━╱╲╱╲━━╱╲╱
               </div>
 
             </div>
 
-            {/* ACTIVE EMPLOYEES */}
+            {/* Active */}
 
-            <div className="kpi-card green">
+            <div className="kpi-card">
 
               <div className="kpi-top">
 
-                <div className="kpi-icon">
-                  🟢
+                <div className="kpi-icon green">
+                  ✓
                 </div>
 
-                <span className="trend positive">
-                  ↑ 8.2%
+                <span className="kpi-trend positive">
+                  +8%
                 </span>
 
               </div>
 
-              <h3>
-                {loading ? "..." : activeEmployees}
-              </h3>
+              <h2>{activeEmployees}</h2>
 
               <p>Active Employees</p>
 
-              <div className="mini-chart green-chart">
-                ━╱╲━━╱╲╱╲
+              <div className="mini-line green-line">
+                ━╱╲━━╱╲╱╲━
               </div>
 
             </div>
 
-            {/* PENDING LEAVES */}
+            {/* Leaves */}
 
-            <div className="kpi-card orange">
+            <div className="kpi-card">
 
               <div className="kpi-top">
 
-                <div className="kpi-icon">
-                  🌴
+                <div className="kpi-icon orange">
+                  📋
                 </div>
 
-                <span className="trend warning">
+                <span className="kpi-trend warning">
                   Pending
                 </span>
 
               </div>
 
-              <h3>
-                {loading ? "..." : pendingLeaves}
-              </h3>
+              <h2>{pendingLeaves}</h2>
 
               <p>Pending Leaves</p>
 
-              <div className="mini-chart orange-chart">
-                ━╲╱╲━━╲╱
+              <div className="mini-line orange-line">
+                ━╲╱╲━━╲╱╲━
               </div>
 
             </div>
 
-            {/* PAYROLL */}
+            {/* Payroll */}
 
-            <div className="kpi-card pink">
+            <div className="kpi-card">
 
               <div className="kpi-top">
 
-                <div className="kpi-icon">
-                  💰
+                <div className="kpi-icon purple">
+                  ₹
                 </div>
 
-                <span className="trend positive">
-                  Monthly
+                <span className="kpi-trend positive">
+                  +15%
                 </span>
 
               </div>
 
-              <h3>
-                ₹
-                {Number(totalPayroll).toLocaleString(
-                  "en-IN"
-                )}
-              </h3>
+              <h2>
+                ₹{Number(totalSalary).toLocaleString("en-IN")}
+              </h2>
 
               <p>Total Payroll</p>
 
-              <div className="mini-chart pink-chart">
-                ━╱╲╱╲━━╱╲
-              </div>
-
-            </div>
-
-            {/* ATTENDANCE */}
-
-            <div className="kpi-card blue">
-
-              <div className="kpi-top">
-
-                <div className="kpi-icon">
-                  📊
-                </div>
-
-                <span className="trend positive">
-                  ↑ 4.6%
-                </span>
-
-              </div>
-
-              <h3>
-                {attendancePercentage}%
-              </h3>
-
-              <p>Attendance Today</p>
-
-              <div className="mini-chart blue-chart">
-                ╱╲━━╱╲╱╲
+              <div className="mini-line purple-line">
+                ━╱╲━━╱╲╱╲━
               </div>
 
             </div>
 
           </section>
 
-          {/* =========================
-              SMALL SUMMARY CARDS
-          ========================= */}
+          {/* ================= QUICK STATS ================= */}
 
-          <section className="small-kpi-grid">
+          <section className="quick-stats">
 
-            <div className="small-kpi">
-              <div className="small-icon success">
+            <div className="quick-stat">
+
+              <div className="quick-icon green">
                 ✓
               </div>
 
@@ -540,10 +516,12 @@ function AdminDashboard() {
                 <strong>{presentToday}</strong>
                 <span>Present Today</span>
               </div>
+
             </div>
 
-            <div className="small-kpi">
-              <div className="small-icon danger">
+            <div className="quick-stat">
+
+              <div className="quick-icon red">
                 !
               </div>
 
@@ -551,10 +529,12 @@ function AdminDashboard() {
                 <strong>{absentToday}</strong>
                 <span>Absent Today</span>
               </div>
+
             </div>
 
-            <div className="small-kpi">
-              <div className="small-icon info">
+            <div className="quick-stat">
+
+              <div className="quick-icon blue">
                 %
               </div>
 
@@ -562,103 +542,74 @@ function AdminDashboard() {
                 <strong>{attendancePercentage}%</strong>
                 <span>Attendance</span>
               </div>
+
             </div>
 
-            <div className="small-kpi">
-              <div className="small-icon purple-icon">
-                ✓
+            <div className="quick-stat">
+
+              <div className="quick-icon purple">
+                🏢
               </div>
 
               <div>
-                <strong>{approvedLeaves}</strong>
-                <span>Approved Leaves</span>
+                <strong>{totalDepartments}</strong>
+                <span>Departments</span>
               </div>
+
             </div>
 
           </section>
 
-          {/* =========================
-              ANALYTICS
-          ========================= */}
+          {/* ================= ANALYTICS ================= */}
 
           <section className="analytics-grid">
 
-            {/* ATTENDANCE */}
+            <div className="dashboard-card large-chart">
 
-            <div className="dashboard-card attendance-card">
-
-              <div className="card-header">
+              <div className="card-heading">
 
                 <div>
-                  <h3>Attendance Overview</h3>
-
-                  <p>
-                    Employee attendance analytics
-                  </p>
+                  <h3>HR Analytics</h3>
+                  <span>Workforce overview</span>
                 </div>
 
-                <select>
-                  <option>This Week</option>
-                  <option>This Month</option>
-                  <option>This Year</option>
-                </select>
+                <button className="chart-filter">
+                  This Week ▾
+                </button>
 
               </div>
 
               <div className="chart-container">
-                <Line
-                  data={attendanceChart}
-                  options={attendanceOptions}
+                <Bar
+                  data={barData}
+                  options={barOptions}
                 />
               </div>
 
             </div>
 
-            {/* DEPARTMENT */}
+            <div className="dashboard-card">
 
-            <div className="dashboard-card department-card">
-
-              <div className="card-header">
+              <div className="card-heading">
 
                 <div>
-                  <h3>
-                    Department Distribution
-                  </h3>
-
-                  <p>
-                    Current workforce distribution
-                  </p>
+                  <h3>Leave Summary</h3>
+                  <span>Current leave status</span>
                 </div>
 
               </div>
 
-              <div className="donut-wrapper">
+              <div className="donut-container">
 
                 <Doughnut
-                  data={departmentChart}
-                  options={{
-                    responsive: true,
-
-                    maintainAspectRatio: false,
-
-                    cutout: "72%",
-
-                    plugins: {
-                      legend: {
-                        position: "bottom",
-
-                        labels: {
-                          usePointStyle: true,
-
-                          padding: 15,
-                        },
-                      },
-                    },
-                  }}
+                  data={leaveData}
+                  options={leaveOptions}
                 />
 
                 <div className="donut-center">
-                  <strong>{totalEmployees}</strong>
+                  <strong>
+                    {pendingLeaves + approvedLeaves}
+                  </strong>
                   <span>Total</span>
                 </div>
 
@@ -668,405 +619,342 @@ function AdminDashboard() {
 
           </section>
 
-          {/* =========================
-              LOWER SECTION
-          ========================= */}
+          {/* ================= ATTENDANCE ================= */}
 
-          <section className="lower-grid">
+          <section className="dashboard-card attendance-chart">
 
-            {/* RECENT EMPLOYEES */}
+            <div className="card-heading">
 
-            <div className="dashboard-card employees-card">
-
-              <div className="card-header">
-
-                <div>
-                  <h3>Recent Employees</h3>
-
-                  <p>
-                    Latest workforce members
-                  </p>
-                </div>
-
-                <button>
-                  View All →
-                </button>
-
+              <div>
+                <h3>Attendance Overview</h3>
+                <span>Weekly attendance performance</span>
               </div>
 
-              <div className="employee-table-wrapper">
-
-                <table className="employee-table">
-
-                  <thead>
-                    <tr>
-                      <th>EMPLOYEE</th>
-                      <th>DEPARTMENT</th>
-                      <th>DESIGNATION</th>
-                      <th>STATUS</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-
-                    {recentEmployees.length === 0 ? (
-
-                      <tr>
-                        <td
-                          colSpan="4"
-                          className="empty-row"
-                        >
-                          No employees found
-                        </td>
-                      </tr>
-
-                    ) : (
-
-                      recentEmployees.map((employee) => (
-
-                        <tr key={employee.id}>
-
-                          <td>
-
-                            <div className="employee-info">
-
-                              <img
-                                src={
-                                  employee.profileImage
-                                    ? `https://nexushr-production-bdec.up.railway.app/uploads/${employee.profileImage}`
-                                    : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                                }
-                                alt=""
-                              />
-
-                              <div>
-
-                                <strong>
-                                  {employee.firstName}{" "}
-                                  {employee.lastName}
-                                </strong>
-
-                                <small>
-                                  {employee.email}
-                                </small>
-
-                              </div>
-
-                            </div>
-
-                          </td>
-
-                          <td>
-                            {employee.department ||
-                              "—"}
-                          </td>
-
-                          <td>
-                            {employee.designation ||
-                              "—"}
-                          </td>
-
-                          <td>
-
-                            <span
-                              className={
-                                employee.status ===
-                                "ACTIVE"
-                                  ? "status active"
-                                  : "status inactive"
-                              }
-                            >
-                              {employee.status ||
-                                "UNKNOWN"}
-                            </span>
-
-                          </td>
-
-                        </tr>
-
-                      ))
-
-                    )}
-
-                  </tbody>
-
-                </table>
-
+              <div className="attendance-value">
+                {attendancePercentage}%
+                <small>Average</small>
               </div>
 
             </div>
 
-            {/* AI INSIGHTS */}
+            <div className="line-chart-container">
 
-            <div className="dashboard-card ai-card">
+              <Line
+                data={lineData}
+                options={lineOptions}
+              />
 
-              <div className="card-header">
+            </div>
 
-                <div>
-                  <h3>AI Insights</h3>
+          </section>
 
-                  <p>
-                    Workforce intelligence
-                  </p>
-                </div>
+          {/* ================= EMPLOYEES ================= */}
 
-                <span className="ai-badge">
-                  ✨ Powered by AI
+          <section className="dashboard-card employees-card">
+
+            <div className="card-heading">
+
+              <div>
+                <h3>Recent Employees</h3>
+                <span>
+                  Latest workforce records
                 </span>
-
               </div>
 
-              <div className="ai-list">
-
-                <div className="ai-item green-ai">
-
-                  <div className="ai-icon">
-                    ↗
-                  </div>
-
-                  <div>
-                    <strong>
-                      High Performance
-                    </strong>
-
-                    <p>
-                      {dashboard.topPerformers ??
-                        0} employees are
-                      performing above expectations
-                    </p>
-                  </div>
-
-                </div>
-
-                <div className="ai-item red-ai">
-
-                  <div className="ai-icon">
-                    ⚠
-                  </div>
-
-                  <div>
-                    <strong>
-                      Retention Risk
-                    </strong>
-
-                    <p>
-                      {dashboard.highRiskEmployees ??
-                        0} employees may be at
-                      risk of leaving
-                    </p>
-                  </div>
-
-                </div>
-
-                <div className="ai-item blue-ai">
-
-                  <div className="ai-icon">
-                    💡
-                  </div>
-
-                  <div>
-                    <strong>
-                      Skill Gap
-                    </strong>
-
-                    <p>
-                      {dashboard.topSkillGaps ||
-                        "No major skill gaps detected"}
-                    </p>
-                  </div>
-
-                </div>
-
-              </div>
-
-              <button className="ai-button">
-                View AI Insights →
+              <button
+                className="view-all-btn"
+                onClick={() =>
+                  window.location.href = "/employees"
+                }
+              >
+                View All →
               </button>
 
             </div>
 
+            <div className="employee-table-wrapper">
+
+              <table className="employee-table">
+
+                <thead>
+
+                  <tr>
+                    <th>EMPLOYEE</th>
+                    <th>DEPARTMENT</th>
+                    <th>DESIGNATION</th>
+                    <th>STATUS</th>
+                    <th>ATTENDANCE</th>
+                    <th>RISK</th>
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  {recentEmployees.length === 0 ? (
+
+                    <tr>
+                      <td
+                        colSpan="6"
+                        className="empty-table"
+                      >
+                        No employees found
+                      </td>
+                    </tr>
+
+                  ) : (
+
+                    recentEmployees.map((employee) => (
+
+                      <tr key={employee.id}>
+
+                        <td>
+
+                          <div className="employee-info">
+
+                            <img
+                              src={getProfileImage(employee)}
+                              alt="Employee"
+                            />
+
+                            <div>
+
+                              <strong>
+                                {employee.firstName}{" "}
+                                {employee.lastName}
+                              </strong>
+
+                              <span>
+                                {employee.email}
+                              </span>
+
+                            </div>
+
+                          </div>
+
+                        </td>
+
+                        <td>
+                          <span className="department">
+                            {employee.department || "N/A"}
+                          </span>
+                        </td>
+
+                        <td>
+                          {employee.designation || "N/A"}
+                        </td>
+
+                        <td>
+
+                          <span
+                            className={
+                              employee.status === "ACTIVE"
+                                ? "status active"
+                                : "status inactive"
+                            }
+                          >
+                            ●{" "}
+                            {employee.status || "UNKNOWN"}
+                          </span>
+
+                        </td>
+
+                        <td>
+
+                          <div className="attendance-cell">
+
+                            <div className="progress">
+
+                              <div
+                                className="progress-bar"
+                                style={{
+                                  width: `${Math.min(
+                                    employee.attendancePercentage ||
+                                      0,
+                                    100
+                                  )}%`,
+                                }}
+                              ></div>
+
+                            </div>
+
+                            <span>
+                              {employee.attendancePercentage ||
+                                0}
+                              %
+                            </span>
+
+                          </div>
+
+                        </td>
+
+                        <td>
+
+                          <span
+                            className={`risk-badge ${getRiskClass(
+                              employee.attritionRisk
+                            )}`}
+                          >
+                            {employee.attritionRisk ||
+                              "LOW"}
+                          </span>
+
+                        </td>
+
+                      </tr>
+
+                    ))
+
+                  )}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
           </section>
 
-          {/* =========================
-              LEAVE + EVENTS
-          ========================= */}
+          {/* ================= AI INSIGHTS ================= */}
 
-          <section className="bottom-grid">
+          <section className="ai-section">
 
-            {/* LEAVE SUMMARY */}
+            <div className="section-title">
 
-            <div className="dashboard-card leave-card">
+              <div>
+                <h2>
+                  🤖 AI Workforce Insights
+                </h2>
 
-              <div className="card-header">
+                <p>
+                  Intelligent workforce analytics
+                </p>
+              </div>
+
+              <span className="ai-live">
+                ● LIVE
+              </span>
+
+            </div>
+
+            <div className="ai-grid">
+
+              <div className="ai-card high">
+
+                <span className="ai-card-icon">
+                  ⚠
+                </span>
 
                 <div>
-                  <h3>Leave Summary</h3>
-
-                  <p>
-                    Employee leave overview
-                  </p>
+                  <strong>{highRisk}</strong>
+                  <span>High Risk Employees</span>
                 </div>
 
               </div>
 
-              <div className="leave-content">
+              <div className="ai-card medium">
 
-                <div className="leave-circle">
+                <span className="ai-card-icon">
+                  !
+                </span>
 
-                  <div>
-                    <strong>
-                      {pendingLeaves +
-                        approvedLeaves}
-                    </strong>
-
-                    <span>
-                      Total Leaves
-                    </span>
-                  </div>
-
+                <div>
+                  <strong>{mediumRisk}</strong>
+                  <span>Medium Risk Employees</span>
                 </div>
 
-                <div className="leave-stats">
+              </div>
 
-                  <div>
-                    <strong>
-                      {pendingLeaves}
-                    </strong>
+              <div className="ai-card low">
 
-                    <span>Pending</span>
-                  </div>
+                <span className="ai-card-icon">
+                  ✓
+                </span>
 
-                  <div>
-                    <strong>
-                      {approvedLeaves}
-                    </strong>
+                <div>
+                  <strong>{lowRisk}</strong>
+                  <span>Low Risk Employees</span>
+                </div>
 
-                    <span>Approved</span>
-                  </div>
+              </div>
 
-                  <div>
-                    <strong>
-                      {dashboard.rejectedLeaves ??
-                        0}
-                    </strong>
+              <div className="ai-card performance">
 
-                    <span>Rejected</span>
-                  </div>
+                <span className="ai-card-icon">
+                  ⭐
+                </span>
 
+                <div>
+                  <strong>{topPerformers}</strong>
+                  <span>Top Performers</span>
                 </div>
 
               </div>
 
             </div>
 
-            {/* UPCOMING EVENTS */}
+            <div className="ai-summary">
 
-            <div className="dashboard-card events-card">
+              <div>
+                <span>
+                  Average Performance
+                </span>
 
-              <div className="card-header">
-
-                <div>
-                  <h3>Upcoming Events</h3>
-
-                  <p>
-                    Important HR activities
-                  </p>
-                </div>
-
-                <button>
-                  View Calendar
-                </button>
-
+                <strong>
+                  {averagePerformance}%
+                </strong>
               </div>
 
-              <div className="events-list">
+              <div>
+                <span>
+                  Top Skill Gaps
+                </span>
 
-                <div className="event">
-
-                  <div className="event-date">
-                    <strong>15</strong>
-                    <span>AUG</span>
-                  </div>
-
-                  <div>
-                    <strong>
-                      Independence Day
-                    </strong>
-
-                    <p>Office Holiday</p>
-                  </div>
-
-                </div>
-
-                <div className="event">
-
-                  <div className="event-date">
-                    <strong>20</strong>
-                    <span>AUG</span>
-                  </div>
-
-                  <div>
-                    <strong>
-                      Team Performance Review
-                    </strong>
-
-                    <p>Review Meeting</p>
-                  </div>
-
-                </div>
-
-                <div className="event">
-
-                  <div className="event-date">
-                    <strong>25</strong>
-                    <span>AUG</span>
-                  </div>
-
-                  <div>
-                    <strong>
-                      Payroll Processing
-                    </strong>
-
-                    <p>Monthly Payroll</p>
-                  </div>
-
-                </div>
-
+                <strong>
+                  {dashboard.topSkillGaps ||
+                    "No major gaps"}
+                </strong>
               </div>
 
             </div>
 
           </section>
 
-          {/* =========================
-              LIVE STATUS
-          ========================= */}
+          {/* ================= SYSTEM STATUS ================= */}
 
-          <div className="live-footer">
+          <section className="system-status">
 
-            <span className="live-dot"></span>
+            <div>
 
-            <strong>
-              NexusHR Live System
-            </strong>
+              <span className="live-dot"></span>
 
-            <span>
-              Database Connected
-            </span>
+              <strong>
+                System Operational
+              </strong>
 
-            <span>
-              API Connected
-            </span>
+              <span>
+                All NexusHR services are running normally
+              </span>
 
-            <span>
-              Auto-refresh: 10 seconds
-            </span>
+            </div>
 
-          </div>
+            <div className="websocket-status">
+              <span></span>
+              WebSocket Connected
+            </div>
+
+          </section>
+
+          <footer className="dashboard-footer">
+            © 2026 NexusHR Enterprise HRMS
+            <span>•</span>
+            Real-Time Workforce Management
+          </footer>
 
         </main>
 
       </div>
+
     </div>
   );
 }
