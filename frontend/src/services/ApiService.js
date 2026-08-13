@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://nexushr-production-612e.up.railway.app",
+  baseURL: "https://nexushr-production-bdec.up.railway.app",
 });
 
 API.interceptors.request.use(
