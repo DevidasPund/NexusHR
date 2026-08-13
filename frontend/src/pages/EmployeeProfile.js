@@ -128,7 +128,7 @@ const response =
 
                     ?
 
-                    `https://nexushr-production-612e.up.railway.app/uploads/${employee.profileImage}`
+                    `https://nexushr-production-bdec.up.railway.app/uploads/${employee.profileImage}`
 
                     :
 

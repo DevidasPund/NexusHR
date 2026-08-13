@@ -59,7 +59,7 @@ function Reports() {
   const exportPdf = () => {
 
     window.open(
-      "https://nexushr-production-612e.up.railway.app/reports/pdf",
+      "https://nexushr-production-bdec.up.railway.app/reports/pdf",
       "_blank"
     );
 
@@ -68,7 +68,7 @@ function Reports() {
   const exportExcel = () => {
 
     window.open(
-      "https://nexushr-production-612e.up.railway.app/reports/excel",
+      "https://nexushr-production-bdec.up.railway.app/reports/excel",
       "_blank"
     );
 

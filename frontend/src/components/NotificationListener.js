@@ -15,7 +15,7 @@ function NotificationListener() {
 
                 webSocketFactory: () =>
                     new SockJS(
-                        "https://nexushr-production-612e.up.railway.app/ws"
+                        "https://nexushr-production-bdec.up.railway.app/ws"
                     ),
 
                 reconnectDelay: 0,

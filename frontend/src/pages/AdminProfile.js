@@ -118,7 +118,7 @@ function AdminProfile() {
                     src={
                       user.profileImage
                         ?
-                        `https://nexushr-production-612e.up.railway.app/uploads/${user.profileImage}`
+                        `https://nexushr-production-bdec.up.railway.app/uploads/${user.profileImage}`
                         :
                         "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                     }

@@ -157,7 +157,7 @@ function ManagerProfile() {
                 src={
                   manager.profileImage
                     ?
-                    `https://nexushr-production-612e.up.railway.app/uploads/${manager.profileImage}`
+                    `https://nexushr-production-bdec.up.railway.app/uploads/${manager.profileImage}`
                     :
                     "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                 }
