@@ -1,15 +1,12 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./Sidebar.css";
+
 function Sidebar() {
+  const role = localStorage.getItem("role") || "EMPLOYEE";
+  const username = localStorage.getItem("username") || "User";
+
   const location = useLocation();
-
-  const role = (
-    localStorage.getItem("role") || "EMPLOYEE"
-  ).toUpperCase();
-
-  const username =
-    localStorage.getItem("username") || "User";
 
   const dashboardPath =
     role === "ADMIN"
@@ -19,46 +16,40 @@ function Sidebar() {
       : "/employee/dashboard";
 
   const isActive = (path) => {
-    if (path === dashboardPath) {
-      return location.pathname === path;
-    }
-
-    return location.pathname === path;
+    return location.pathname === path ? "active-menu" : "";
   };
 
-  const menuClass = (path) =>
-    `sidebar-menu-item ${
-      isActive(path) ? "active" : ""
-    }`;
+  const menuItem = (path, icon, label) => (
+    <Link
+      to={path}
+      className={`sidebar-menu-item ${isActive(path)}`}
+    >
+      <span className="sidebar-icon">{icon}</span>
+      <span>{label}</span>
+    </Link>
+  );
 
   return (
     <aside className="nexushr-sidebar">
 
-      {/* =====================================================
-          LOGO
-      ====================================================== */}
+      {/* ================= LOGO ================= */}
 
       <div className="sidebar-logo">
-
-        <div className="logo-icon">
+        <div className="logo-box">
           HR.
         </div>
 
         <div className="logo-text">
           <strong>NexusHR</strong>
-          <span>HRMS</span>
+          <small>HRMS</small>
         </div>
-
       </div>
 
-      {/* =====================================================
-          USER PROFILE
-      ====================================================== */}
+      {/* ================= PROFILE ================= */}
 
       <div className="sidebar-profile">
 
         <div className="profile-image-wrapper">
-
           <img
             src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
             alt="Profile"
@@ -66,44 +57,29 @@ function Sidebar() {
           />
 
           <span className="online-dot"></span>
-
         </div>
 
-        <div className="sidebar-user-name">
-          {username}
-        </div>
+        <h5>{username}</h5>
 
-        <span className="sidebar-role">
+        <span className="role-badge">
           {role}
         </span>
 
       </div>
 
-      {/* =====================================================
-          MAIN NAVIGATION
-      ====================================================== */}
+      {/* ================= NAVIGATION ================= */}
 
       <nav className="sidebar-navigation">
 
-        {/* DASHBOARD */}
+        {/* Dashboard */}
 
-        <Link
-          to={dashboardPath}
-          className={menuClass(dashboardPath)}
-        >
-          <span className="menu-icon">
-            ▦
-          </span>
+        {menuItem(
+          dashboardPath,
+          "▦",
+          "Dashboard"
+        )}
 
-          <span>
-            Dashboard
-          </span>
-        </Link>
-
-
-        {/* =================================================
-            ADMIN MENU
-        ================================================== */}
+        {/* ================= ADMIN ================= */}
 
         {role === "ADMIN" && (
           <>
@@ -111,131 +87,93 @@ function Sidebar() {
               WORKFORCE
             </div>
 
-            <Link
-              to="/employees"
-              className={menuClass("/employees")}
-            >
-              <span className="menu-icon">♟</span>
-              <span>Employees</span>
-            </Link>
+            {menuItem(
+              "/employees",
+              "♟",
+              "Employees"
+            )}
 
-            <Link
-              to="/add-employee"
-              className={menuClass("/add-employee")}
-            >
-              <span className="menu-icon">＋</span>
-              <span>Add Employee</span>
-            </Link>
+            {menuItem(
+              "/add-employee",
+              "+",
+              "Add Employee"
+            )}
 
-            <Link
-              to="/departments"
-              className={menuClass("/departments")}
-            >
-              <span className="menu-icon">▦</span>
-              <span>Departments</span>
-            </Link>
+            {menuItem(
+              "/departments",
+              "▦",
+              "Departments"
+            )}
 
-            <Link
-              to="/teams"
-              className={menuClass("/teams")}
-            >
-              <span className="menu-icon">♟</span>
-              <span>Teams</span>
-            </Link>
-
+            {menuItem(
+              "/teams",
+              "♟",
+              "Teams"
+            )}
 
             <div className="sidebar-section-title">
               OPERATIONS
             </div>
 
-            <Link
-              to="/admin-attendance"
-              className={menuClass(
-                "/admin-attendance"
-              )}
-            >
-              <span className="menu-icon">◷</span>
-              <span>Attendance</span>
-            </Link>
+            {menuItem(
+              "/admin-attendance",
+              "◷",
+              "Attendance"
+            )}
 
-            <Link
-              to="/leave-management"
-              className={menuClass(
-                "/leave-management"
-              )}
-            >
-              <span className="menu-icon">▣</span>
-              <span>Leave Management</span>
-            </Link>
+            {menuItem(
+              "/leave-management",
+              "▣",
+              "Leave Management"
+            )}
 
-            <Link
-              to="/salary-management"
-              className={menuClass(
-                "/salary-management"
-              )}
-            >
-              <span className="menu-icon">₹</span>
-              <span>Payroll</span>
-            </Link>
-
+            {menuItem(
+              "/salary-management",
+              "₹",
+              "Payroll"
+            )}
 
             <div className="sidebar-section-title">
               PROJECTS
             </div>
 
-            <Link
-              to="/projects"
-              className={menuClass("/projects")}
-            >
-              <span className="menu-icon">▣</span>
-              <span>Projects</span>
-            </Link>
+            {menuItem(
+              "/projects",
+              "▰",
+              "Projects"
+            )}
 
-            <Link
-              to="/tasks"
-              className={menuClass("/tasks")}
-            >
-              <span className="menu-icon">✓</span>
-              <span>Tasks</span>
-            </Link>
-
+            {menuItem(
+              "/tasks",
+              "✓",
+              "Tasks"
+            )}
 
             <div className="sidebar-section-title">
               AI & REPORTS
             </div>
 
-            <Link
-              to="/audit-logs"
-              className={menuClass("/audit-logs")}
-            >
-              <span className="menu-icon">▤</span>
-              <span>Audit Logs</span>
-            </Link>
+            {menuItem(
+              "/audit-logs",
+              "▤",
+              "Audit Logs"
+            )}
 
-            <Link
-              to="/reports"
-              className={menuClass("/reports")}
-            >
-              <span className="menu-icon">▥</span>
-              <span>Reports</span>
-            </Link>
+            {menuItem(
+              "/reports",
+              "▥",
+              "Reports"
+            )}
 
-            <Link
-              to="/notification-management"
-              className={menuClass(
-                "/notification-management"
-              )}
-            >
-              <span className="menu-icon">♢</span>
-              <span>Notifications</span>
-            </Link>
+            {menuItem(
+              "/notification-management",
+              "♧",
+              "Notifications"
+            )}
           </>
         )}
 
-
-        {/* =================================================
-            MANAGER MENU
-        ================================================== */}
+        {/* ================= MANAGER ================= */}
 
         {role === "MANAGER" && (
           <>
@@ -243,125 +181,87 @@ function Sidebar() {
               TEAM MANAGEMENT
             </div>
 
-            <Link
-              to="/teams"
-              className={menuClass("/teams")}
-            >
-              <span className="menu-icon">♟</span>
-              <span>Team Members</span>
-            </Link>
+            {menuItem(
+              "/teams",
+              "♟",
+              "Team Members"
+            )}
 
-            <Link
-              to="/leave-management"
-              className={menuClass(
-                "/leave-management"
-              )}
-            >
-              <span className="menu-icon">▣</span>
-              <span>Leave Management</span>
-            </Link>
-
+            {menuItem(
+              "/leave-management",
+              "▣",
+              "Leave Management"
+            )}
 
             <div className="sidebar-section-title">
               PROJECTS
             </div>
 
-            <Link
-              to="/projects"
-              className={menuClass("/projects")}
-            >
-              <span className="menu-icon">▣</span>
-              <span>Projects</span>
-            </Link>
+            {menuItem(
+              "/projects",
+              "▰",
+              "Projects"
+            )}
 
-            <Link
-              to="/tasks"
-              className={menuClass("/tasks")}
-            >
-              <span className="menu-icon">✓</span>
-              <span>Tasks</span>
-            </Link>
+            {menuItem(
+              "/tasks",
+              "✓",
+              "Tasks"
+            )}
 
-            <Link
-              to="/milestones"
-              className={menuClass("/milestones")}
-            >
-              <span className="menu-icon">◆</span>
-              <span>Milestones</span>
-            </Link>
-
+            {menuItem(
+              "/milestones",
+              "◆",
+              "Milestones"
+            )}
 
             <div className="sidebar-section-title">
               PERFORMANCE
             </div>
 
-            <Link
-              to="/performance"
-              className={menuClass("/performance")}
-            >
-              <span className="menu-icon">★</span>
-              <span>Performance</span>
-            </Link>
-
+            {menuItem(
+              "/performance",
+              "★",
+              "Performance"
+            )}
 
             <div className="sidebar-section-title">
               AI INSIGHTS
             </div>
 
-            <Link
-              to="/ai-insights"
-              className={menuClass(
-                "/ai-insights"
-              )}
-            >
-              <span className="menu-icon">✦</span>
-              <span>AI Insights</span>
-            </Link>
+            {menuItem(
+              "/ai-insights",
+              "✦",
+              "AI Insights"
+            )}
 
-            <Link
-              to="/attrition-risk"
-              className={menuClass(
-                "/attrition-risk"
-              )}
-            >
-              <span className="menu-icon">!</span>
-              <span>Attrition Risk</span>
-            </Link>
+            {menuItem(
+              "/attrition-risk",
+              "!",
+              "Attrition Risk"
+            )}
 
-            <Link
-              to="/skill-gap-analysis"
-              className={menuClass(
-                "/skill-gap-analysis"
-              )}
-            >
-              <span className="menu-icon">◇</span>
-              <span>Skill Gap Analysis</span>
-            </Link>
+            {menuItem(
+              "/skill-gap-analysis",
+              "◇",
+              "Skill Gap Analysis"
+            )}
 
-            <Link
-              to="/reports"
-              className={menuClass("/reports")}
-            >
-              <span className="menu-icon">▥</span>
-              <span>Reports</span>
-            </Link>
+            {menuItem(
+              "/reports",
+              "▥",
+              "Reports"
+            )}
 
-            <Link
-              to="/notification-management"
-              className={menuClass(
-                "/notification-management"
-              )}
-            >
-              <span className="menu-icon">♢</span>
-              <span>Notifications</span>
-            </Link>
+            {menuItem(
+              "/notification-management",
+              "♧",
+              "Notifications"
+            )}
           </>
         )}
 
-
-        {/* =================================================
-            EMPLOYEE MENU
-        ================================================== */}
+        {/* ================= EMPLOYEE ================= */}
 
         {role === "EMPLOYEE" && (
           <>
@@ -369,133 +269,95 @@ function Sidebar() {
               MY WORK
             </div>
 
-            <Link
-              to="/employee-attendance"
-              className={menuClass(
-                "/employee-attendance"
-              )}
-            >
-              <span className="menu-icon">◷</span>
-              <span>My Attendance</span>
-            </Link>
+            {menuItem(
+              "/employee-attendance",
+              "◷",
+              "My Attendance"
+            )}
 
-            <Link
-              to="/face-attendance"
-              className={menuClass(
-                "/face-attendance"
-              )}
-            >
-              <span className="menu-icon">▣</span>
-              <span>Face Attendance</span>
-            </Link>
+            {menuItem(
+              "/face-attendance",
+              "▣",
+              "Face Attendance"
+            )}
 
-            <Link
-              to="/my-tasks"
-              className={menuClass("/my-tasks")}
-            >
-              <span className="menu-icon">✓</span>
-              <span>My Tasks</span>
-            </Link>
+            {menuItem(
+              "/my-tasks",
+              "✓",
+              "My Tasks"
+            )}
 
-            <Link
-              to="/leave"
-              className={menuClass("/leave")}
-            >
-              <span className="menu-icon">▣</span>
-              <span>My Leaves</span>
-            </Link>
+            {menuItem(
+              "/leave",
+              "▣",
+              "My Leaves"
+            )}
 
-            <Link
-              to="/salary"
-              className={menuClass("/salary")}
-            >
-              <span className="menu-icon">₹</span>
-              <span>My Salary</span>
-            </Link>
+            {menuItem(
+              "/salary",
+              "₹",
+              "My Salary"
+            )}
 
-            <Link
-              to="/employee-Notification"
-              className={menuClass(
-                "/employee-Notification"
-              )}
-            >
-              <span className="menu-icon">♢</span>
-              <span>Notifications</span>
-            </Link>
+            {menuItem(
+              "/employee-Notification",
+              "♧",
+              "Notifications"
+            )}
           </>
         )}
 
       </nav>
 
+      {/* ================= COMMON MENU ================= */}
 
-      {/* =====================================================
-          COMMON MENU
-      ====================================================== */}
+      <div className="sidebar-divider"></div>
 
       <div className="sidebar-common">
 
-        <Link
-          to="/profile"
-          className={menuClass("/profile")}
-        >
-          <span className="menu-icon">♙</span>
-          <span>Profile</span>
-        </Link>
+        {menuItem(
+          "/profile",
+          "♟",
+          "Profile"
+        )}
 
-        <Link
-          to="/settings"
-          className={menuClass("/settings")}
-        >
-          <span className="menu-icon">⚙</span>
-          <span>Settings</span>
-        </Link>
+        {menuItem(
+          "/settings",
+          "⚙",
+          "Settings"
+        )}
 
-        <Link
-          to="/change-password"
-          className={menuClass(
-            "/change-password"
-          )}
-        >
-          <span className="menu-icon">▣</span>
-          <span>Change Password</span>
-        </Link>
+        {menuItem(
+          "/change-password",
+          "▣",
+          "Change Password"
+        )}
 
       </div>
 
+      {/* ================= AI WIDGET ================= */}
 
-      {/* =====================================================
-          AI CARD
-      ====================================================== */}
+      <div className="ai-sidebar-card">
 
-      {(role === "ADMIN" ||
-        role === "MANAGER") && (
-
-        <div className="sidebar-ai-card">
-
-          <div className="ai-icon">
-            ✦
-          </div>
-
-          <div className="ai-title">
-            AI Workforce
-          </div>
-
-          <div className="ai-text">
-            Smart workforce insights
-          </div>
-
-          <div className="ai-status">
-            <span></span>
-            Real-time monitoring
-          </div>
-
+        <div className="ai-icon">
+          ✦
         </div>
-      )}
 
+        <h6>
+          AI Workforce
+        </h6>
 
-      {/* =====================================================
-          FOOTER
-      ====================================================== */}
+        <p>
+          Smart workforce insights
+        </p>
+
+        <span>
+          ● Real-time monitoring
+        </span>
+
+      </div>
+
+      {/* ================= FOOTER ================= */}
 
       <div className="sidebar-footer">
 
