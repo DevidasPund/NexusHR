@@ -30,118 +30,141 @@ function ManagerDashboard() {
   const [dashboard, setDashboard] = useState({});
   const [tasks, setTasks] = useState([]);
   const [leaves, setLeaves] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [employees, setEmployees] = useState([]);
+  const [time, setTime] = useState(new Date());
 
   /*
-   * =========================================================
-   * LOAD DATA
-   * =========================================================
-   */
+  ==========================================================
+  REAL-TIME CLOCK
+  ==========================================================
+  */
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  /*
+  ==========================================================
+  LOAD MANAGER DATA
+  ==========================================================
+  */
 
   useEffect(() => {
     loadData();
 
-    const dataInterval = setInterval(() => {
+    const refresh = setInterval(() => {
       loadData();
     }, 10000);
 
-    const clockInterval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => {
-      clearInterval(dataInterval);
-      clearInterval(clockInterval);
-    };
+    return () => clearInterval(refresh);
   }, []);
 
   const loadData = async () => {
     try {
       const [
-        dashboardRes,
-        taskRes,
-        leaveRes,
-      ] = await Promise.all([
+        dashboardResponse,
+        taskResponse,
+        leaveResponse,
+        employeeResponse,
+      ] = await Promise.allSettled([
         API.get("/dashboard"),
         API.get("/tasks"),
         API.get("/leave"),
+        API.get("/employees"),
       ]);
 
-      setDashboard(dashboardRes.data || {});
-      setTasks(
-        Array.isArray(taskRes.data)
-          ? taskRes.data
-          : []
-      );
-      setLeaves(
-        Array.isArray(leaveRes.data)
-          ? leaveRes.data
-          : []
-      );
+      if (
+        dashboardResponse.status === "fulfilled"
+      ) {
+        setDashboard(
+          dashboardResponse.value.data || {}
+        );
+      }
+
+      if (taskResponse.status === "fulfilled") {
+        setTasks(
+          Array.isArray(taskResponse.value.data)
+            ? taskResponse.value.data
+            : []
+        );
+      }
+
+      if (leaveResponse.status === "fulfilled") {
+        setLeaves(
+          Array.isArray(leaveResponse.value.data)
+            ? leaveResponse.value.data
+            : []
+        );
+      }
+
+      if (employeeResponse.status === "fulfilled") {
+        setEmployees(
+          Array.isArray(employeeResponse.value.data)
+            ? employeeResponse.value.data
+            : []
+        );
+      }
     } catch (error) {
       console.error(
-        "Manager dashboard loading error:",
+        "Manager dashboard error:",
         error
       );
-    } finally {
-      setLoading(false);
     }
   };
 
   /*
-   * =========================================================
-   * LEAVE APPROVAL
-   * =========================================================
-   */
+  ==========================================================
+  LEAVE APPROVAL
+  ==========================================================
+  */
 
   const approveLeave = async (id) => {
     try {
-      setActionLoading(id);
-
       await API.put(
         `/leave/manager-approve/${id}`
       );
 
-      await loadData();
+      loadData();
     } catch (error) {
-      console.error(
-        "Leave approval error:",
-        error
-      );
-    } finally {
-      setActionLoading(null);
+      console.error(error);
     }
   };
 
   const rejectLeave = async (id) => {
     try {
-      setActionLoading(id);
-
       await API.put(
         `/leave/manager-reject/${id}`
       );
 
-      await loadData();
+      loadData();
     } catch (error) {
-      console.error(
-        "Leave rejection error:",
-        error
-      );
-    } finally {
-      setActionLoading(null);
+      console.error(error);
     }
   };
 
   /*
-   * =========================================================
-   * REAL-TIME VALUES
-   * =========================================================
-   */
+  ==========================================================
+  COUNTS
+  ==========================================================
+  */
 
   const teamMembers =
-    Number(dashboard.totalEmployees) || 0;
+    Number(dashboard.totalEmployees) ||
+    employees.length ||
+    0;
+
+  const activeEmployees =
+    Number(dashboard.activeEmployees) ||
+    employees.filter(
+      (employee) =>
+        String(employee.status || "")
+          .toUpperCase() === "ACTIVE"
+    ).length ||
+    0;
 
   const pendingTasks =
     Number(dashboard.pendingTasks) ||
@@ -149,6 +172,15 @@ function ManagerDashboard() {
       (task) =>
         String(task.status || "")
           .toUpperCase() === "PENDING"
+    ).length ||
+    0;
+
+  const completedTasks =
+    Number(dashboard.completedTasks) ||
+    tasks.filter(
+      (task) =>
+        String(task.status || "")
+          .toUpperCase() === "COMPLETED"
     ).length ||
     0;
 
@@ -160,48 +192,6 @@ function ManagerDashboard() {
           .toUpperCase() === "PENDING"
     ).length ||
     0;
-
-  const totalProjects =
-    Number(dashboard.totalProjects) || 0;
-
-  const completedTasks =
-    Number(dashboard.completedTasks) ||
-    tasks.filter(
-      (task) =>
-        String(task.status || "")
-          .toUpperCase() === "COMPLETED"
-    ).length ||
-    0;
-
-  const totalTasks = tasks.length;
-
-  const taskCompletion =
-    totalTasks > 0
-      ? Math.round(
-          (completedTasks / totalTasks) * 100
-        )
-      : 0;
-
-  /*
-   * =========================================================
-   * AI RISK
-   * =========================================================
-   */
-
-  const highRiskEmployees =
-    Number(dashboard.highRiskEmployees) || 0;
-
-  const mediumRiskEmployees =
-    Number(dashboard.mediumRiskEmployees) || 0;
-
-  const lowRiskEmployees =
-    Number(dashboard.lowRiskEmployees) || 0;
-
-  /*
-   * =========================================================
-   * LEAVE DATA
-   * =========================================================
-   */
 
   const approvedLeaves =
     Number(dashboard.approvedLeaves) ||
@@ -221,81 +211,168 @@ function ManagerDashboard() {
     ).length ||
     0;
 
-  /*
-   * =========================================================
-   * RECENT TASKS
-   * =========================================================
-   */
-
-  const recentTasks = useMemo(() => {
-    return tasks.slice(0, 6);
-  }, [tasks]);
+  const projects =
+    Number(dashboard.totalProjects) || 0;
 
   /*
-   * =========================================================
-   * PENDING LEAVES
-   * =========================================================
-   */
+  ==========================================================
+  ATTENDANCE
+  ==========================================================
+  */
 
-  const pendingLeaveRequests = useMemo(() => {
-    return leaves
-      .filter(
-        (leave) =>
-          String(leave.status || "")
-            .toUpperCase() === "PENDING"
-      )
-      .slice(0, 5);
-  }, [leaves]);
+  const presentToday =
+    Number(dashboard.presentToday) || 0;
+
+  const absentToday =
+    Number(dashboard.absentToday) || 0;
+
+  const attendancePercentage =
+    Number(dashboard.attendancePercentage) ||
+    (
+      teamMembers > 0
+        ? (presentToday / teamMembers) * 100
+        : 0
+    );
 
   /*
-   * =========================================================
-   * BAR CHART
-   * =========================================================
-   */
+  ==========================================================
+  TASK COMPLETION
+  ==========================================================
+  */
 
-  const taskChartData = {
+  const taskCompletion =
+    tasks.length > 0
+      ? Math.round(
+          (completedTasks / tasks.length) * 100
+        )
+      : 0;
+
+  /*
+  ==========================================================
+  TEAM STATUS CHART
+  ==========================================================
+  */
+
+  const teamStatusData = {
     labels: [
-      "Pending",
-      "Completed",
-      "Approved",
-      "Rejected",
+      "Active",
+      "Inactive",
+      "On Leave",
     ],
 
     datasets: [
       {
-        label: "Team Activity",
-
         data: [
-          pendingTasks,
-          completedTasks,
-          approvedLeaves,
-          rejectedLeaves,
+          activeEmployees,
+          Math.max(
+            teamMembers - activeEmployees,
+            0
+          ),
+          pendingLeaves,
         ],
 
         backgroundColor: [
-          "#f59e0b",
           "#173b24",
-          "#22c55e",
-          "#ef4444",
+          "#d7ded9",
+          "#f47b20",
         ],
 
-        borderRadius: 7,
+        borderWidth: 0,
 
-        borderSkipped: false,
-
-        barThickness: 32,
+        hoverOffset: 5,
       },
     ],
   };
 
-  const taskChartOptions = {
+  const teamStatusOptions = {
+    responsive: true,
+
+    maintainAspectRatio: false,
+
+    cutout: "68%",
+
+    plugins: {
+      legend: {
+        position: "bottom",
+
+        labels: {
+          usePointStyle: true,
+
+          pointStyle: "circle",
+
+          padding: 16,
+
+          color: "#6e796f",
+
+          font: {
+            size: 10,
+          },
+        },
+      },
+    },
+  };
+
+  /*
+  ==========================================================
+  ATTENDANCE CHART
+  ==========================================================
+  */
+
+  const attendanceData = {
+    labels: [
+      "Present",
+      "Absent",
+      "Pending",
+      "Completed",
+    ],
+
+    datasets: [
+      {
+        label: "Team Overview",
+
+        data: [
+          presentToday,
+          absentToday,
+          pendingTasks,
+          completedTasks,
+        ],
+
+        backgroundColor: [
+          "#173b24",
+          "#eb5757",
+          "#f47b20",
+          "#45bd8a",
+        ],
+
+        borderRadius: 6,
+
+        borderSkipped: false,
+      },
+    ],
+  };
+
+  const attendanceOptions = {
     responsive: true,
 
     maintainAspectRatio: false,
 
     plugins: {
       legend: {
-        display: false,
+        position: "top",
+
+        align: "start",
+
+        labels: {
+          usePointStyle: true,
+
+          padding: 12,
+
+          color: "#7a847d",
+
+          font: {
+            size: 10,
+          },
+        },
       },
 
       tooltip: {
@@ -312,11 +389,15 @@ function ManagerDashboard() {
         beginAtZero: true,
 
         grid: {
-          color: "#edf0eb",
+          color: "#edf0ed",
         },
 
         ticks: {
-          color: "#87938b",
+          color: "#9aa39d",
+
+          font: {
+            size: 9,
+          },
         },
       },
 
@@ -326,66 +407,10 @@ function ManagerDashboard() {
         },
 
         ticks: {
-          color: "#657168",
-        },
-      },
-    },
-  };
-
-  /*
-   * =========================================================
-   * LEAVE DOUGHNUT
-   * =========================================================
-   */
-
-  const leaveChartData = {
-    labels: [
-      "Pending",
-      "Approved",
-      "Rejected",
-    ],
-
-    datasets: [
-      {
-        data: [
-          pendingLeaves,
-          approvedLeaves,
-          rejectedLeaves,
-        ],
-
-        backgroundColor: [
-          "#f59e0b",
-          "#173b24",
-          "#ef4444",
-        ],
-
-        borderWidth: 0,
-
-        hoverOffset: 5,
-      },
-    ],
-  };
-
-  const leaveChartOptions = {
-    responsive: true,
-
-    maintainAspectRatio: false,
-
-    cutout: "68%",
-
-    plugins: {
-      legend: {
-        position: "bottom",
-
-        labels: {
-          usePointStyle: true,
-
-          padding: 15,
-
-          color: "#657168",
+          color: "#879189",
 
           font: {
-            size: 10,
+            size: 9,
           },
         },
       },
@@ -393,448 +418,423 @@ function ManagerDashboard() {
   };
 
   /*
-   * =========================================================
-   * DATE / TIME
-   * =========================================================
-   */
+  ==========================================================
+  TOP EMPLOYEES
+  ==========================================================
+  */
 
-  const formattedDate =
-    currentTime.toLocaleDateString(
-      "en-IN",
-      {
-        weekday: "long",
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      }
-    );
-
-  const formattedTime =
-    currentTime.toLocaleTimeString(
-      "en-IN",
-      {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      }
-    );
+  const topEmployees = useMemo(() => {
+    return [...employees]
+      .sort(
+        (a, b) =>
+          Number(
+            b.performanceScore || 0
+          ) -
+          Number(
+            a.performanceScore || 0
+          )
+      )
+      .slice(0, 8);
+  }, [employees]);
 
   /*
-   * =========================================================
-   * TASK STATUS COLOR
-   * =========================================================
-   */
+  ==========================================================
+  PENDING LEAVES
+  ==========================================================
+  */
 
-  const getTaskStatusClass = (status) => {
-    const value = String(
-      status || ""
-    ).toUpperCase();
+  const pendingLeaveRequests =
+    leaves
+      .filter(
+        (leave) =>
+          String(leave.status || "")
+            .toUpperCase() === "PENDING"
+      )
+      .slice(0, 4);
 
-    if (value === "COMPLETED") {
-      return "status-completed";
+  /*
+  ==========================================================
+  DATE / TIME
+  ==========================================================
+  */
+
+  const dateText =
+    time.toLocaleDateString("en-IN", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+
+  const timeText =
+    time.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+  /*
+  ==========================================================
+  IMAGE
+  ==========================================================
+  */
+
+  const getEmployeeImage = (employee) => {
+    if (employee?.profileImage) {
+      return `https://nexushr-production-bdec.up.railway.app/uploads/${employee.profileImage}`;
     }
 
-    if (value === "IN_PROGRESS") {
-      return "status-progress";
-    }
-
-    if (value === "PENDING") {
-      return "status-pending";
-    }
-
-    return "status-default";
+    return "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
   };
 
   /*
-   * =========================================================
-   * LOADING
-   * =========================================================
-   */
-
-  if (loading) {
-    return (
-      <div className="manager-loading">
-
-        <div className="manager-loader"></div>
-
-        <h4>
-          Loading Manager Dashboard...
-        </h4>
-
-        <p>
-          Connecting to NexusHR real-time services
-        </p>
-
-      </div>
-    );
-  }
-
-  /*
-   * =========================================================
-   * DASHBOARD
-   * =========================================================
-   */
+  ==========================================================
+  DASHBOARD UI
+  ==========================================================
+  */
 
   return (
     <div className="manager-dashboard">
-
-      {/* =====================================================
-          SIDEBAR
-      ===================================================== */}
 
       <Sidebar />
 
       <div className="manager-main">
 
-        {/* ===================================================
-            NAVBAR
-        =================================================== */}
-
         <Navbar />
 
-        <main className="manager-content">
+        <div className="manager-content">
 
-          {/* =================================================
-              HEADER
+          {/* ================================================
+              TOP HEADER
           ================================================= */}
 
-          <div className="manager-header">
+          <div className="manager-top-header">
 
-            <div>
+            <div className="manager-greeting">
 
-              <div className="manager-title-row">
+              <div className="manager-profile-circle">
+                👨‍💼
+              </div>
 
-                <div className="manager-avatar">
-                  👨‍💼
-                </div>
+              <div>
 
-                <div>
+                <h2>
+                  Good Morning, Manager
+                </h2>
 
-                  <h1>
-                    Good Morning, Manager
-                    <span>👋</span>
-                  </h1>
-
-                  <p>
-                    Manage your team,
-                    tasks and workforce in one place.
-                  </p>
-
-                </div>
+                <p>
+                  Let's manage your team in one place.
+                </p>
 
               </div>
 
             </div>
 
-            <div className="manager-date">
+            <div className="manager-date-box">
+
+              📅
 
               <span>
-                📅
+                {dateText}
               </span>
 
-              <div>
+            </div>
+
+          </div>
+
+          {/* ================================================
+              TOP KPI + ATTENDANCE
+          ================================================= */}
+
+          <div className="manager-top-grid">
+
+            <div className="manager-kpi-column">
+
+              {/* TEAM MEMBERS */}
+
+              <div className="manager-kpi-card">
+
+                <div className="kpi-icon">
+                  👥
+                </div>
+
+                <div className="kpi-mini-chart green">
+                  ╱╲╱╲━━╱╲╱
+                </div>
+
+                <h3>
+                  {teamMembers.toLocaleString()}
+                </h3>
+
+                <p>
+                  Team Members
+                </p>
+
+                <span className="kpi-percent green-text">
+                  {activeEmployees} Active
+                </span>
+
+              </div>
+
+              {/* PENDING TASKS */}
+
+              <div className="manager-kpi-card">
+
+                <div className="kpi-icon">
+                  📋
+                </div>
+
+                <div className="kpi-mini-chart red">
+                  ━╱╲╱╲━━╱╲
+                </div>
+
+                <h3>
+                  {pendingTasks}
+                </h3>
+
+                <p>
+                  Pending Tasks
+                </p>
+
+                <span className="kpi-percent red-text">
+                  Need attention
+                </span>
+
+              </div>
+
+              {/* LEAVES */}
+
+              <div className="manager-kpi-card">
+
+                <div className="kpi-icon">
+                  🌴
+                </div>
+
+                <div className="kpi-mini-chart orange">
+                  ╱╲━━╱╲╱╲
+                </div>
+
+                <h3>
+                  {pendingLeaves}
+                </h3>
+
+                <p>
+                  Pending Leaves
+                </p>
+
+                <span className="kpi-percent orange-text">
+                  Awaiting approval
+                </span>
+
+              </div>
+
+              {/* PROJECTS */}
+
+              <div className="manager-kpi-card">
+
+                <div className="kpi-icon">
+                  📁
+                </div>
+
+                <div className="kpi-mini-chart green">
+                  ━╱╲╱╲━━╱╲
+                </div>
+
+                <h3>
+                  {projects}
+                </h3>
+
+                <p>
+                  Projects
+                </p>
+
+                <span className="kpi-percent green-text">
+                  Active projects
+                </span>
+
+              </div>
+
+            </div>
+
+            {/* ATTENDANCE CARD */}
+
+            <div className="manager-attendance-card">
+
+              <div className="attendance-card-header">
+
                 <strong>
-                  {formattedDate}
+                  Your Team Attendance
                 </strong>
 
-                <small>
-                  {formattedTime}
-                </small>
+                <span>
+                  •••
+                </span>
+
+              </div>
+
+              <div className="attendance-time">
+                {timeText}
+              </div>
+
+              <div className="attendance-details">
+
+                <div>
+
+                  <span>
+                    Attendance
+                  </span>
+
+                  <strong>
+                    {attendancePercentage.toFixed(1)}%
+                  </strong>
+
+                </div>
+
+                <div>
+
+                  <span>
+                    Present Today
+                  </span>
+
+                  <strong>
+                    {presentToday}
+                  </strong>
+
+                </div>
+
+                <div>
+
+                  <span>
+                    Absent Today
+                  </span>
+
+                  <strong>
+                    {absentToday}
+                  </strong>
+
+                </div>
+
+              </div>
+
+              <div className="attendance-progress">
+
+                <div
+                  style={{
+                    width: `${Math.min(
+                      attendancePercentage,
+                      100
+                    )}%`,
+                  }}
+                />
+
+              </div>
+
+              <div className="attendance-buttons">
+
+                <button className="break-button">
+                  🌴 Team Leave
+                </button>
+
+                <button className="clock-button">
+                  ✓ Attendance
+                </button>
+
               </div>
 
             </div>
 
           </div>
 
-          {/* =================================================
-              KPI GRID
+          {/* ================================================
+              CHART SECTION
           ================================================= */}
 
-          <section className="manager-kpi-grid">
+          <div className="manager-chart-grid">
 
-            {/* TEAM MEMBERS */}
-
-            <div className="manager-kpi-card">
-
-              <div className="manager-kpi-top">
-
-                <div className="manager-kpi-icon purple">
-                  👥
-                </div>
-
-                <span className="kpi-growth positive">
-                  +12% ↑
-                </span>
-
-              </div>
-
-              <h2>
-                {teamMembers.toLocaleString()}
-              </h2>
-
-              <p>
-                Team Members
-              </p>
-
-              <div className="kpi-spark green">
-                ╱╲╱╲━━╱╲╱╲
-              </div>
-
-            </div>
-
-            {/* TASKS */}
-
-            <div className="manager-kpi-card">
-
-              <div className="manager-kpi-top">
-
-                <div className="manager-kpi-icon orange">
-                  📋
-                </div>
-
-                <span className="kpi-growth warning">
-                  Pending
-                </span>
-
-              </div>
-
-              <h2>
-                {pendingTasks}
-              </h2>
-
-              <p>
-                Pending Tasks
-              </p>
-
-              <div className="kpi-spark orange">
-                ━╱╲╱╲━━╱╲
-              </div>
-
-            </div>
-
-            {/* LEAVES */}
-
-            <div className="manager-kpi-card">
-
-              <div className="manager-kpi-top">
-
-                <div className="manager-kpi-icon green">
-                  🌴
-                </div>
-
-                <span className="kpi-growth warning">
-                  Review
-                </span>
-
-              </div>
-
-              <h2>
-                {pendingLeaves}
-              </h2>
-
-              <p>
-                Pending Leaves
-              </p>
-
-              <div className="kpi-spark red">
-                ╱╲━━╱╲╱╲
-              </div>
-
-            </div>
-
-            {/* PROJECTS */}
-
-            <div className="manager-kpi-card">
-
-              <div className="manager-kpi-top">
-
-                <div className="manager-kpi-icon blue">
-                  📁
-                </div>
-
-                <span className="kpi-growth positive">
-                  Active
-                </span>
-
-              </div>
-
-              <h2>
-                {totalProjects}
-              </h2>
-
-              <p>
-                Total Projects
-              </p>
-
-              <div className="kpi-spark blue">
-                ╱╲╱╲━━╱╲╱
-              </div>
-
-            </div>
-
-          </section>
-
-          {/* =================================================
-              QUICK SUMMARY
-          ================================================= */}
-
-          <section className="manager-summary-grid">
-
-            <div className="manager-small-card">
-
-              <div className="small-card-icon green">
-                ✓
-              </div>
-
-              <div>
-                <strong>
-                  {completedTasks}
-                </strong>
-
-                <span>
-                  Completed Tasks
-                </span>
-              </div>
-
-            </div>
-
-            <div className="manager-small-card">
-
-              <div className="small-card-icon orange">
-                ⏳
-              </div>
-
-              <div>
-                <strong>
-                  {taskCompletion}%
-                </strong>
-
-                <span>
-                  Task Completion
-                </span>
-              </div>
-
-            </div>
-
-            <div className="manager-small-card">
-
-              <div className="small-card-icon blue">
-                ✓
-              </div>
-
-              <div>
-                <strong>
-                  {approvedLeaves}
-                </strong>
-
-                <span>
-                  Approved Leaves
-                </span>
-              </div>
-
-            </div>
-
-            <div className="manager-small-card">
-
-              <div className="small-card-icon red">
-                !
-              </div>
-
-              <div>
-                <strong>
-                  {rejectedLeaves}
-                </strong>
-
-                <span>
-                  Rejected Leaves
-                </span>
-              </div>
-
-            </div>
-
-          </section>
-
-          {/* =================================================
-              CHARTS
-          ================================================= */}
-
-          <section className="manager-charts-grid">
-
-            {/* TEAM ACTIVITY */}
+            {/* ATTENDANCE */}
 
             <div className="manager-panel">
 
-              <div className="manager-panel-header">
+              <div className="panel-header">
 
                 <div>
 
                   <h3>
-                    Team Activity
+                    Attendance Overview
                   </h3>
 
                   <p>
-                    Current team workload overview
+                    Team attendance analytics
                   </p>
 
                 </div>
 
-                <span className="live-badge">
-                  ● Live
-                </span>
+                <select>
+                  <option>
+                    Today
+                  </option>
+
+                  <option>
+                    This Week
+                  </option>
+
+                  <option>
+                    This Month
+                  </option>
+                </select>
 
               </div>
 
-              <div className="manager-chart">
+              <div className="manager-bar-chart">
+
                 <Bar
-                  data={taskChartData}
-                  options={taskChartOptions}
+                  data={attendanceData}
+                  options={attendanceOptions}
                 />
+
               </div>
 
             </div>
 
-            {/* LEAVE SUMMARY */}
+            {/* TEAM STATUS */}
 
             <div className="manager-panel">
 
-              <div className="manager-panel-header">
+              <div className="panel-header">
 
                 <div>
 
                   <h3>
-                    Leave Summary
+                    Team Status
                   </h3>
 
                   <p>
-                    Current leave requests
+                    Current team workforce
                   </p>
 
                 </div>
 
-                <span className="three-dot">
+                <span>
                   •••
                 </span>
 
               </div>
 
-              <div className="leave-chart">
+              <div className="team-doughnut">
 
                 <Doughnut
-                  data={leaveChartData}
-                  options={leaveChartOptions}
+                  data={teamStatusData}
+                  options={teamStatusOptions}
                 />
 
-                <div className="leave-chart-center">
+                <div className="doughnut-center">
 
                   <strong>
-                    {pendingLeaves +
-                      approvedLeaves +
-                      rejectedLeaves}
+                    {teamMembers}
                   </strong>
 
                   <span>
-                    Total Leaves
+                    Team
                   </span>
 
                 </div>
@@ -843,235 +843,110 @@ function ManagerDashboard() {
 
             </div>
 
-          </section>
+          </div>
 
-          {/* =================================================
-              AI WORKFORCE INSIGHTS
+          {/* ================================================
+              TOP PERFORMANCE
           ================================================= */}
 
-          <section className="manager-panel ai-panel">
+          <div className="manager-panel performance-panel">
 
-            <div className="manager-panel-header">
+            <div className="panel-header">
 
               <div>
 
                 <h3>
-                  🤖 AI Workforce Insights
+                  Top Performance Employees
                 </h3>
 
                 <p>
-                  Workforce risk analysis
+                  Highest performing team members
                 </p>
 
               </div>
 
-              <span className="ai-badge">
-                Powered by AI
+              <span>
+                •••
               </span>
 
             </div>
 
-            <div className="ai-grid">
+            <div className="performance-list">
 
-              <div className="ai-card high">
+              {topEmployees.length === 0 ? (
 
-                <div className="ai-icon">
-                  ⚠
+                <div className="no-performance">
+                  No performance data available
                 </div>
 
-                <div>
+              ) : (
 
-                  <strong>
-                    {highRiskEmployees}
-                  </strong>
+                topEmployees.map(
+                  (employee, index) => {
 
-                  <span>
-                    High Risk Employees
-                  </span>
+                    const score =
+                      Number(
+                        employee.performanceScore
+                      ) || 0;
 
-                  <small>
-                    Requires immediate attention
-                  </small>
+                    return (
+                      <div
+                        className="performance-person"
+                        key={employee.id}
+                      >
 
-                </div>
+                        <div
+                          className={`performance-image ${
+                            index % 3 === 0
+                              ? "border-green"
+                              : index % 3 === 1
+                              ? "border-orange"
+                              : "border-blue"
+                          }`}
+                        >
 
-              </div>
+                          <img
+                            src={getEmployeeImage(
+                              employee
+                            )}
+                            alt=""
+                          />
 
-              <div className="ai-card medium">
+                        </div>
 
-                <div className="ai-icon">
-                  !
-                </div>
+                        <strong>
+                          {employee.firstName}{" "}
+                          {employee.lastName}
+                        </strong>
 
-                <div>
+                        <span>
+                          {score > 0
+                            ? `${score}%`
+                            : "N/A"}
+                        </span>
 
-                  <strong>
-                    {mediumRiskEmployees}
-                  </strong>
+                      </div>
+                    );
+                  }
+                )
 
-                  <span>
-                    Medium Risk Employees
-                  </span>
-
-                  <small>
-                    Monitor workforce trends
-                  </small>
-
-                </div>
-
-              </div>
-
-              <div className="ai-card low">
-
-                <div className="ai-icon">
-                  ✓
-                </div>
-
-                <div>
-
-                  <strong>
-                    {lowRiskEmployees}
-                  </strong>
-
-                  <span>
-                    Low Risk Employees
-                  </span>
-
-                  <small>
-                    Workforce performing well
-                  </small>
-
-                </div>
-
-              </div>
+              )}
 
             </div>
 
-          </section>
+          </div>
 
-          {/* =================================================
-              QUICK ACTIONS
+          {/* ================================================
+              LOWER SECTION
           ================================================= */}
 
-          <section className="manager-panel">
+          <div className="manager-bottom-grid">
 
-            <div className="manager-panel-header">
-
-              <div>
-
-                <h3>
-                  Quick Actions
-                </h3>
-
-                <p>
-                  Manage your team quickly
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="quick-actions">
-
-              <a
-                href="/tasks"
-                className="quick-action purple"
-              >
-
-                <span>
-                  ➕
-                </span>
-
-                <div>
-                  <strong>
-                    Assign Task
-                  </strong>
-
-                  <small>
-                    Create team task
-                  </small>
-                </div>
-
-              </a>
-
-              <a
-                href="/projects"
-                className="quick-action green"
-              >
-
-                <span>
-                  📁
-                </span>
-
-                <div>
-                  <strong>
-                    Projects
-                  </strong>
-
-                  <small>
-                    Manage projects
-                  </small>
-                </div>
-
-              </a>
-
-              <a
-                href="/leave-management"
-                className="quick-action orange"
-              >
-
-                <span>
-                  🌴
-                </span>
-
-                <div>
-                  <strong>
-                    Leave Approval
-                  </strong>
-
-                  <small>
-                    Review requests
-                  </small>
-                </div>
-
-              </a>
-
-              <a
-                href="/reports"
-                className="quick-action blue"
-              >
-
-                <span>
-                  📊
-                </span>
-
-                <div>
-                  <strong>
-                    Reports
-                  </strong>
-
-                  <small>
-                    View analytics
-                  </small>
-                </div>
-
-              </a>
-
-            </div>
-
-          </section>
-
-          {/* =================================================
-              TEAM TASKS + LEAVE REQUESTS
-          ================================================= */}
-
-          <section className="manager-tables-grid">
-
-            {/* TEAM TASKS */}
+            {/* TASKS */}
 
             <div className="manager-panel">
 
-              <div className="manager-panel-header">
+              <div className="panel-header">
 
                 <div>
 
@@ -1080,7 +955,7 @@ function ManagerDashboard() {
                   </h3>
 
                   <p>
-                    Latest assigned tasks
+                    Latest team activities
                   </p>
 
                 </div>
@@ -1091,105 +966,68 @@ function ManagerDashboard() {
 
               </div>
 
-              <div className="modern-table-wrapper">
+              <div className="task-list">
 
-                <table className="modern-table">
+                {tasks.slice(0, 5).map(
+                  (task) => (
 
-                  <thead>
+                    <div
+                      className="task-row"
+                      key={task.id}
+                    >
 
-                    <tr>
+                      <div className="task-icon">
+                        📋
+                      </div>
 
-                      <th>
-                        Task
-                      </th>
+                      <div className="task-info">
 
-                      <th>
-                        Employee
-                      </th>
+                        <strong>
+                          {task.taskName ||
+                            "Team Task"}
+                        </strong>
 
-                      <th>
-                        Status
-                      </th>
+                        <span>
+                          {task.employeeName ||
+                            "Employee"}
+                        </span>
 
-                    </tr>
+                      </div>
 
-                  </thead>
+                      <span
+                        className={`task-status ${
+                          String(
+                            task.status || ""
+                          ).toUpperCase() ===
+                          "COMPLETED"
+                            ? "completed"
+                            : "pending"
+                        }`}
+                      >
+                        {task.status ||
+                          "PENDING"}
+                      </span>
 
-                  <tbody>
+                    </div>
 
-                    {recentTasks.length === 0 ? (
+                  )
+                )}
 
-                      <tr>
-
-                        <td
-                          colSpan="3"
-                          className="empty-table"
-                        >
-                          No tasks available
-                        </td>
-
-                      </tr>
-
-                    ) : (
-
-                      recentTasks.map(
-                        (task) => (
-
-                          <tr key={task.id}>
-
-                            <td>
-
-                              <strong>
-                                {task.taskName ||
-                                  "Untitled Task"}
-                              </strong>
-
-                              {task.projectName && (
-                                <small>
-                                  {task.projectName}
-                                </small>
-                              )}
-
-                            </td>
-
-                            <td>
-                              {task.employeeName ||
-                                "Not Assigned"}
-                            </td>
-
-                            <td>
-
-                              <span
-                                className={`task-status ${getTaskStatusClass(
-                                  task.status
-                                )}`}
-                              >
-                                {task.status ||
-                                  "PENDING"}
-                              </span>
-
-                            </td>
-
-                          </tr>
-
-                        )
-                      )
-
-                    )}
-
-                  </tbody>
-
-                </table>
+                {tasks.length === 0 && (
+                  <div className="empty-state">
+                    No team tasks available
+                  </div>
+                )}
 
               </div>
 
             </div>
 
-            {/* LEAVE REQUESTS */}
+            {/* LEAVE APPROVAL */}
 
             <div className="manager-panel">
 
-              <div className="manager-panel-header">
+              <div className="panel-header">
 
                 <div>
 
@@ -1198,7 +1036,7 @@ function ManagerDashboard() {
                   </h3>
 
                   <p>
-                    Pending approvals
+                    Pending team approvals
                   </p>
 
                 </div>
@@ -1209,24 +1047,13 @@ function ManagerDashboard() {
 
               </div>
 
-              <div className="leave-request-list">
+              <div className="leave-list">
 
-                {pendingLeaveRequests.length === 0 ? (
+                {pendingLeaveRequests.length ===
+                0 ? (
 
-                  <div className="empty-leaves">
-
-                    <span>
-                      ✓
-                    </span>
-
-                    <strong>
-                      No pending leave requests
-                    </strong>
-
-                    <small>
-                      Your team is up to date
-                    </small>
-
+                  <div className="empty-state">
+                    ✓ No pending leave requests
                   </div>
 
                 ) : (
@@ -1235,15 +1062,15 @@ function ManagerDashboard() {
                     (leave) => (
 
                       <div
-                        className="leave-request"
+                        className="leave-row"
                         key={leave.id}
                       >
 
-                        <div className="leave-person-icon">
+                        <div className="leave-avatar">
                           👤
                         </div>
 
-                        <div className="leave-details">
+                        <div className="leave-info">
 
                           <strong>
                             Employee #
@@ -1257,45 +1084,27 @@ function ManagerDashboard() {
 
                         </div>
 
-                        <div className="leave-actions">
-
-                          <button
-                            className="approve-btn"
-                            disabled={
-                              actionLoading ===
+                        <button
+                          className="approve"
+                          onClick={() =>
+                            approveLeave(
                               leave.id
-                            }
-                            onClick={() =>
-                              approveLeave(
-                                leave.id
-                              )
-                            }
-                          >
-                            {actionLoading ===
-                            leave.id
-                              ? "..."
-                              : "✓"}
-                          </button>
+                            )
+                          }
+                        >
+                          ✓
+                        </button>
 
-                          <button
-                            className="reject-btn"
-                            disabled={
-                              actionLoading ===
+                        <button
+                          className="reject"
+                          onClick={() =>
+                            rejectLeave(
                               leave.id
-                            }
-                            onClick={() =>
-                              rejectLeave(
-                                leave.id
-                              )
-                            }
-                          >
-                            {actionLoading ===
-                            leave.id
-                              ? "..."
-                              : "×"}
-                          </button>
-
-                        </div>
+                            )
+                          }
+                        >
+                          ×
+                        </button>
 
                       </div>
 
@@ -1308,52 +1117,28 @@ function ManagerDashboard() {
 
             </div>
 
-          </section>
+          </div>
 
-          {/* =================================================
-              REAL-TIME STATUS
+          {/* ================================================
+              REAL TIME
           ================================================= */}
 
-          <div className="manager-live-status">
+          <div className="manager-realtime">
 
-            <div>
+            <span className="real-dot"></span>
 
-              <span className="live-dot"></span>
+            <strong>
+              Real-time dashboard connected
+            </strong>
 
-              <strong>
-                Real-time monitoring active
-              </strong>
-
-              <span>
-                Dashboard automatically refreshes
-                every 10 seconds
-              </span>
-
-            </div>
-
-            <span className="connected-status">
-              ● Connected
+            <span>
+              Data automatically refreshed every
+              10 seconds
             </span>
 
           </div>
 
-          {/* =================================================
-              FOOTER
-          ================================================= */}
-
-          <footer className="manager-footer">
-
-            <span>
-              © 2026 NexusHR Enterprise HRMS
-            </span>
-
-            <span>
-              Manager Workforce Dashboard
-            </span>
-
-          </footer>
-
-        </main>
+        </div>
 
       </div>
 
