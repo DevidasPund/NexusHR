@@ -1,133 +1,52 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
-
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  ArcElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-import { Bar, Doughnut } from "react-chartjs-2";
-
 import "./ManagerDashboard.css";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  ArcElement,
-  Tooltip,
-  Legend
-);
 
 function ManagerDashboard() {
   const [dashboard, setDashboard] = useState({});
   const [tasks, setTasks] = useState([]);
   const [leaves, setLeaves] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [time, setTime] = useState(new Date());
-
-  /*
-  ==========================================================
-  REAL-TIME CLOCK
-  ==========================================================
-  */
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  /*
-  ==========================================================
-  LOAD MANAGER DATA
-  ==========================================================
-  */
 
   useEffect(() => {
     loadData();
 
-    const refresh = setInterval(() => {
+    const dataInterval = setInterval(() => {
       loadData();
     }, 10000);
 
-    return () => clearInterval(refresh);
+    const clockInterval = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+
+    return () => {
+      clearInterval(dataInterval);
+      clearInterval(clockInterval);
+    };
   }, []);
 
   const loadData = async () => {
     try {
-      const [
-        dashboardResponse,
-        taskResponse,
-        leaveResponse,
-        employeeResponse,
-      ] = await Promise.allSettled([
-        API.get("/dashboard"),
-        API.get("/tasks"),
-        API.get("/leave"),
-        API.get("/employees"),
-      ]);
+      const [dashboardRes, taskRes, leaveRes] =
+        await Promise.all([
+          API.get("/dashboard"),
+          API.get("/tasks"),
+          API.get("/leave")
+        ]);
 
-      if (
-        dashboardResponse.status === "fulfilled"
-      ) {
-        setDashboard(
-          dashboardResponse.value.data || {}
-        );
-      }
-
-      if (taskResponse.status === "fulfilled") {
-        setTasks(
-          Array.isArray(taskResponse.value.data)
-            ? taskResponse.value.data
-            : []
-        );
-      }
-
-      if (leaveResponse.status === "fulfilled") {
-        setLeaves(
-          Array.isArray(leaveResponse.value.data)
-            ? leaveResponse.value.data
-            : []
-        );
-      }
-
-      if (employeeResponse.status === "fulfilled") {
-        setEmployees(
-          Array.isArray(employeeResponse.value.data)
-            ? employeeResponse.value.data
-            : []
-        );
-      }
+      setDashboard(dashboardRes.data || {});
+      setTasks(Array.isArray(taskRes.data) ? taskRes.data : []);
+      setLeaves(Array.isArray(leaveRes.data) ? leaveRes.data : []);
     } catch (error) {
-      console.error(
-        "Manager dashboard error:",
-        error
-      );
+      console.error("Manager dashboard error:", error);
     }
   };
 
-  /*
-  ==========================================================
-  LEAVE APPROVAL
-  ==========================================================
-  */
-
   const approveLeave = async (id) => {
     try {
-      await API.put(
-        `/leave/manager-approve/${id}`
-      );
-
+      await API.put(`/leave/manager-approve/${id}`);
       loadData();
     } catch (error) {
       console.error(error);
@@ -136,708 +55,457 @@ function ManagerDashboard() {
 
   const rejectLeave = async (id) => {
     try {
-      await API.put(
-        `/leave/manager-reject/${id}`
-      );
-
+      await API.put(`/leave/manager-reject/${id}`);
       loadData();
     } catch (error) {
       console.error(error);
     }
   };
 
-  /*
-  ==========================================================
-  COUNTS
-  ==========================================================
-  */
+  const username =
+    localStorage.getItem("username") || "Manager";
 
-  const teamMembers =
-    Number(dashboard.totalEmployees) ||
-    employees.length ||
-    0;
+  const pendingTasks = tasks.filter(
+    (task) =>
+      task.status === "PENDING" ||
+      task.status === "Pending"
+  ).length;
 
-  const activeEmployees =
-    Number(dashboard.activeEmployees) ||
-    employees.filter(
-      (employee) =>
-        String(employee.status || "")
-          .toUpperCase() === "ACTIVE"
-    ).length ||
-    0;
+  const completedTasks = tasks.filter(
+    (task) =>
+      task.status === "COMPLETED" ||
+      task.status === "Completed"
+  ).length;
 
-  const pendingTasks =
-    Number(dashboard.pendingTasks) ||
-    tasks.filter(
-      (task) =>
-        String(task.status || "")
-          .toUpperCase() === "PENDING"
-    ).length ||
-    0;
+  const pendingLeaves = leaves.filter(
+    (leave) => leave.status === "PENDING"
+  );
 
-  const completedTasks =
-    Number(dashboard.completedTasks) ||
-    tasks.filter(
-      (task) =>
-        String(task.status || "")
-          .toUpperCase() === "COMPLETED"
-    ).length ||
-    0;
-
-  const pendingLeaves =
-    Number(dashboard.pendingLeaves) ||
-    leaves.filter(
-      (leave) =>
-        String(leave.status || "")
-          .toUpperCase() === "PENDING"
-    ).length ||
-    0;
-
-  const approvedLeaves =
-    Number(dashboard.approvedLeaves) ||
-    leaves.filter(
-      (leave) =>
-        String(leave.status || "")
-          .toUpperCase() === "APPROVED"
-    ).length ||
-    0;
-
-  const rejectedLeaves =
-    Number(dashboard.rejectedLeaves) ||
-    leaves.filter(
-      (leave) =>
-        String(leave.status || "")
-          .toUpperCase() === "REJECTED"
-    ).length ||
+  const totalTeam =
+    dashboard.totalEmployees ||
+    dashboard.teamMembers ||
     0;
 
   const projects =
-    Number(dashboard.totalProjects) || 0;
+    dashboard.totalProjects || 0;
 
-  /*
-  ==========================================================
-  ATTENDANCE
-  ==========================================================
-  */
+  const attendance =
+    dashboard.attendancePercentage || 0;
 
-  const presentToday =
-    Number(dashboard.presentToday) || 0;
-
-  const absentToday =
-    Number(dashboard.absentToday) || 0;
-
-  const attendancePercentage =
-    Number(dashboard.attendancePercentage) ||
-    (
-      teamMembers > 0
-        ? (presentToday / teamMembers) * 100
-        : 0
-    );
-
-  /*
-  ==========================================================
-  TASK COMPLETION
-  ==========================================================
-  */
-
-  const taskCompletion =
-    tasks.length > 0
-      ? Math.round(
-          (completedTasks / tasks.length) * 100
-        )
-      : 0;
-
-  /*
-  ==========================================================
-  TEAM STATUS CHART
-  ==========================================================
-  */
-
-  const teamStatusData = {
-    labels: [
-      "Active",
-      "Inactive",
-      "On Leave",
-    ],
-
-    datasets: [
-      {
-        data: [
-          activeEmployees,
-          Math.max(
-            teamMembers - activeEmployees,
-            0
-          ),
-          pendingLeaves,
-        ],
-
-        backgroundColor: [
-          "#173b24",
-          "#d7ded9",
-          "#f47b20",
-        ],
-
-        borderWidth: 0,
-
-        hoverOffset: 5,
-      },
-    ],
+  const formatTime = () => {
+    return time.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
   };
 
-  const teamStatusOptions = {
-    responsive: true,
-
-    maintainAspectRatio: false,
-
-    cutout: "68%",
-
-    plugins: {
-      legend: {
-        position: "bottom",
-
-        labels: {
-          usePointStyle: true,
-
-          pointStyle: "circle",
-
-          padding: 16,
-
-          color: "#6e796f",
-
-          font: {
-            size: 10,
-          },
-        },
-      },
-    },
-  };
-
-  /*
-  ==========================================================
-  ATTENDANCE CHART
-  ==========================================================
-  */
-
-  const attendanceData = {
-    labels: [
-      "Present",
-      "Absent",
-      "Pending",
-      "Completed",
-    ],
-
-    datasets: [
-      {
-        label: "Team Overview",
-
-        data: [
-          presentToday,
-          absentToday,
-          pendingTasks,
-          completedTasks,
-        ],
-
-        backgroundColor: [
-          "#173b24",
-          "#eb5757",
-          "#f47b20",
-          "#45bd8a",
-        ],
-
-        borderRadius: 6,
-
-        borderSkipped: false,
-      },
-    ],
-  };
-
-  const attendanceOptions = {
-    responsive: true,
-
-    maintainAspectRatio: false,
-
-    plugins: {
-      legend: {
-        position: "top",
-
-        align: "start",
-
-        labels: {
-          usePointStyle: true,
-
-          padding: 12,
-
-          color: "#7a847d",
-
-          font: {
-            size: 10,
-          },
-        },
-      },
-
-      tooltip: {
-        backgroundColor: "#173b24",
-
-        padding: 10,
-
-        cornerRadius: 8,
-      },
-    },
-
-    scales: {
-      y: {
-        beginAtZero: true,
-
-        grid: {
-          color: "#edf0ed",
-        },
-
-        ticks: {
-          color: "#9aa39d",
-
-          font: {
-            size: 9,
-          },
-        },
-      },
-
-      x: {
-        grid: {
-          display: false,
-        },
-
-        ticks: {
-          color: "#879189",
-
-          font: {
-            size: 9,
-          },
-        },
-      },
-    },
-  };
-
-  /*
-  ==========================================================
-  TOP EMPLOYEES
-  ==========================================================
-  */
-
-  const topEmployees = useMemo(() => {
-    return [...employees]
-      .sort(
-        (a, b) =>
-          Number(
-            b.performanceScore || 0
-          ) -
-          Number(
-            a.performanceScore || 0
-          )
-      )
-      .slice(0, 8);
-  }, [employees]);
-
-  /*
-  ==========================================================
-  PENDING LEAVES
-  ==========================================================
-  */
-
-  const pendingLeaveRequests =
-    leaves
-      .filter(
-        (leave) =>
-          String(leave.status || "")
-            .toUpperCase() === "PENDING"
-      )
-      .slice(0, 4);
-
-  /*
-  ==========================================================
-  DATE / TIME
-  ==========================================================
-  */
-
-  const dateText =
-    time.toLocaleDateString("en-IN", {
+  const formatDate = () => {
+    return time.toLocaleDateString([], {
       weekday: "long",
       day: "2-digit",
       month: "long",
-      year: "numeric",
+      year: "numeric"
     });
-
-  const timeText =
-    time.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-
-  /*
-  ==========================================================
-  IMAGE
-  ==========================================================
-  */
-
-  const getEmployeeImage = (employee) => {
-    if (employee?.profileImage) {
-      return `https://nexushr-production-bdec.up.railway.app/uploads/${employee.profileImage}`;
-    }
-
-    return "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
   };
 
-  /*
-  ==========================================================
-  DASHBOARD UI
-  ==========================================================
-  */
-
   return (
-    <div className="manager-dashboard">
+    <div className="manager-layout">
+
+      {/* ================= SIDEBAR ================= */}
 
       <Sidebar />
 
-      <div className="manager-main">
+      {/* ================= MAIN ================= */}
+
+      <main className="manager-main">
 
         <Navbar />
 
-        <div className="manager-content">
+        <div className="manager-container">
 
-          {/* ================================================
-              TOP HEADER
-          ================================================= */}
+          {/* ================= TOP HEADER ================= */}
 
-          <div className="manager-top-header">
+          <div className="manager-top">
 
-            <div className="manager-greeting">
+            <div className="manager-welcome">
 
-              <div className="manager-profile-circle">
+              <div className="manager-avatar-small">
                 👨‍💼
               </div>
 
               <div>
-
                 <h2>
-                  Good Morning, Manager
+                  Good Morning, {username} 👋
                 </h2>
 
                 <p>
-                  Let's manage your team in one place.
+                  Let's manage your employees in one place.
                 </p>
-
               </div>
 
             </div>
 
-            <div className="manager-date-box">
-
-              📅
-
-              <span>
-                {dateText}
-              </span>
-
+            <div className="manager-date">
+              📅 {formatDate()}
             </div>
 
           </div>
 
-          {/* ================================================
-              TOP KPI + ATTENDANCE
-          ================================================= */}
+          {/* ================= KPI AREA ================= */}
 
-          <div className="manager-top-grid">
+          <div className="manager-grid">
 
-            <div className="manager-kpi-column">
+            {/* TOTAL EMPLOYEES */}
 
-              {/* TEAM MEMBERS */}
+            <div className="manager-card stat-card">
 
-              <div className="manager-kpi-card">
+              <div className="stat-top">
 
-                <div className="kpi-icon">
+                <div className="stat-icon orange">
                   👥
                 </div>
 
-                <div className="kpi-mini-chart green">
-                  ╱╲╱╲━━╱╲╱
-                </div>
-
-                <h3>
-                  {teamMembers.toLocaleString()}
-                </h3>
-
-                <p>
-                  Team Members
-                </p>
-
-                <span className="kpi-percent green-text">
-                  {activeEmployees} Active
+                <span className="stat-change green">
+                  +12% ↑
                 </span>
 
               </div>
 
-              {/* PENDING TASKS */}
+              <h2>
+                {totalTeam}
+              </h2>
 
-              <div className="manager-kpi-card">
+              <p>
+                Team Members
+              </p>
 
-                <div className="kpi-icon">
-                  📋
-                </div>
-
-                <div className="kpi-mini-chart red">
-                  ━╱╲╱╲━━╱╲
-                </div>
-
-                <h3>
-                  {pendingTasks}
-                </h3>
-
-                <p>
-                  Pending Tasks
-                </p>
-
-                <span className="kpi-percent red-text">
-                  Need attention
-                </span>
-
-              </div>
-
-              {/* LEAVES */}
-
-              <div className="manager-kpi-card">
-
-                <div className="kpi-icon">
-                  🌴
-                </div>
-
-                <div className="kpi-mini-chart orange">
-                  ╱╲━━╱╲╱╲
-                </div>
-
-                <h3>
-                  {pendingLeaves}
-                </h3>
-
-                <p>
-                  Pending Leaves
-                </p>
-
-                <span className="kpi-percent orange-text">
-                  Awaiting approval
-                </span>
-
-              </div>
-
-              {/* PROJECTS */}
-
-              <div className="manager-kpi-card">
-
-                <div className="kpi-icon">
-                  📁
-                </div>
-
-                <div className="kpi-mini-chart green">
-                  ━╱╲╱╲━━╱╲
-                </div>
-
-                <h3>
-                  {projects}
-                </h3>
-
-                <p>
-                  Projects
-                </p>
-
-                <span className="kpi-percent green-text">
-                  Active projects
-                </span>
-
+              <div className="mini-chart green-chart">
+                ╱╲╱╲━━╱╲╱
               </div>
 
             </div>
 
-            {/* ATTENDANCE CARD */}
 
-            <div className="manager-attendance-card">
+            {/* TASKS */}
 
-              <div className="attendance-card-header">
+            <div className="manager-card stat-card">
 
-                <strong>
-                  Your Team Attendance
-                </strong>
+              <div className="stat-top">
 
-                <span>
-                  •••
+                <div className="stat-icon orange">
+                  📋
+                </div>
+
+                <span className="stat-change red">
+                  {pendingTasks} pending
                 </span>
 
               </div>
 
-              <div className="attendance-time">
-                {timeText}
+              <h2>
+                {pendingTasks}
+              </h2>
+
+              <p>
+                Pending Tasks
+              </p>
+
+              <div className="mini-chart red-chart">
+                ━╲╱╲━━╱╲╱
               </div>
 
-              <div className="attendance-details">
+            </div>
 
-                <div>
 
-                  <span>
-                    Attendance
-                  </span>
+            {/* LEAVES */}
 
-                  <strong>
-                    {attendancePercentage.toFixed(1)}%
-                  </strong>
+            <div className="manager-card stat-card">
 
+              <div className="stat-top">
+
+                <div className="stat-icon orange">
+                  🌴
                 </div>
 
-                <div>
-
-                  <span>
-                    Present Today
-                  </span>
-
-                  <strong>
-                    {presentToday}
-                  </strong>
-
-                </div>
-
-                <div>
-
-                  <span>
-                    Absent Today
-                  </span>
-
-                  <strong>
-                    {absentToday}
-                  </strong>
-
-                </div>
+                <span className="stat-change orange-text">
+                  Pending
+                </span>
 
               </div>
 
-              <div className="attendance-progress">
+              <h2>
+                {pendingLeaves.length}
+              </h2>
 
-                <div
-                  style={{
-                    width: `${Math.min(
-                      attendancePercentage,
-                      100
-                    )}%`,
-                  }}
-                />
+              <p>
+                Pending Leaves
+              </p>
+
+              <div className="mini-chart orange-chart">
+                ╱╲━━╲╱╲╱
+              </div>
+
+            </div>
+
+
+            {/* PROJECTS */}
+
+            <div className="manager-card stat-card">
+
+              <div className="stat-top">
+
+                <div className="stat-icon green">
+                  📁
+                </div>
+
+                <span className="stat-change green">
+                  Active
+                </span>
 
               </div>
 
-              <div className="attendance-buttons">
+              <h2>
+                {projects}
+              </h2>
 
-                <button className="break-button">
-                  🌴 Team Leave
-                </button>
+              <p>
+                Projects
+              </p>
 
-                <button className="clock-button">
-                  ✓ Attendance
-                </button>
-
+              <div className="mini-chart green-chart">
+                ━╱╲╱╲━━╱
               </div>
 
             </div>
 
           </div>
 
-          {/* ================================================
-              CHART SECTION
-          ================================================= */}
 
-          <div className="manager-chart-grid">
+          {/* ================= ATTENDANCE + TEAM STATUS ================= */}
+
+          <div className="manager-two-column">
 
             {/* ATTENDANCE */}
 
-            <div className="manager-panel">
+            <div className="manager-panel attendance-panel">
 
               <div className="panel-header">
 
                 <div>
-
                   <h3>
                     Attendance Overview
                   </h3>
 
-                  <p>
+                  <span>
                     Team attendance analytics
-                  </p>
-
+                  </span>
                 </div>
 
                 <select>
-                  <option>
-                    Today
-                  </option>
-
-                  <option>
-                    This Week
-                  </option>
-
-                  <option>
-                    This Month
-                  </option>
+                  <option>2026</option>
+                  <option>2025</option>
+                  <option>2024</option>
                 </select>
 
               </div>
 
-              <div className="manager-bar-chart">
+              <div className="attendance-chart">
 
-                <Bar
-                  data={attendanceData}
-                  options={attendanceOptions}
-                />
+                <div className="chart-grid">
+
+                  <div className="chart-bar">
+                    <span
+                      style={{
+                        height: "82%"
+                      }}
+                    ></span>
+                    <small>Jan</small>
+                  </div>
+
+                  <div className="chart-bar">
+                    <span
+                      style={{
+                        height: "68%"
+                      }}
+                    ></span>
+                    <small>Feb</small>
+                  </div>
+
+                  <div className="chart-bar">
+                    <span
+                      style={{
+                        height: "76%"
+                      }}
+                    ></span>
+                    <small>Mar</small>
+                  </div>
+
+                  <div className="chart-bar">
+                    <span
+                      style={{
+                        height: "84%"
+                      }}
+                    ></span>
+                    <small>Apr</small>
+                  </div>
+
+                  <div className="chart-bar">
+                    <span
+                      style={{
+                        height: "62%"
+                      }}
+                    ></span>
+                    <small>May</small>
+                  </div>
+
+                  <div className="chart-bar">
+                    <span
+                      style={{
+                        height: "58%"
+                      }}
+                    ></span>
+                    <small>Jun</small>
+                  </div>
+
+                  <div className="chart-bar">
+                    <span
+                      style={{
+                        height: "47%"
+                      }}
+                    ></span>
+                    <small>Jul</small>
+                  </div>
+
+                  <div className="chart-bar">
+                    <span
+                      style={{
+                        height: "78%"
+                      }}
+                    ></span>
+                    <small>Aug</small>
+                  </div>
+
+                  <div className="chart-bar">
+                    <span
+                      style={{
+                        height: "83%"
+                      }}
+                    ></span>
+                    <small>Sep</small>
+                  </div>
+
+                  <div className="chart-bar">
+                    <span
+                      style={{
+                        height: "42%"
+                      }}
+                    ></span>
+                    <small>Oct</small>
+                  </div>
+
+                  <div className="chart-bar">
+                    <span
+                      style={{
+                        height: "70%"
+                      }}
+                    ></span>
+                    <small>Nov</small>
+                  </div>
+
+                  <div className="chart-bar">
+                    <span
+                      style={{
+                        height: "88%"
+                      }}
+                    ></span>
+                    <small>Dec</small>
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div className="chart-legend">
+
+                <span>
+                  <i className="dot green-dot"></i>
+                  On Time
+                </span>
+
+                <span>
+                  <i className="dot orange-dot"></i>
+                  Late In
+                </span>
+
+                <span>
+                  <i className="dot red-dot"></i>
+                  Absent
+                </span>
 
               </div>
 
             </div>
 
+
             {/* TEAM STATUS */}
 
-            <div className="manager-panel">
+            <div className="manager-panel status-panel">
 
               <div className="panel-header">
 
                 <div>
-
                   <h3>
                     Team Status
                   </h3>
 
-                  <p>
-                    Current team workforce
-                  </p>
-
+                  <span>
+                    Current team overview
+                  </span>
                 </div>
 
-                <span>
+                <span className="more">
                   •••
                 </span>
 
               </div>
 
-              <div className="team-doughnut">
+              <div className="donut-wrapper">
 
-                <Doughnut
-                  data={teamStatusData}
-                  options={teamStatusOptions}
-                />
+                <div className="donut">
 
-                <div className="doughnut-center">
+                  <div className="donut-center">
 
-                  <strong>
-                    {teamMembers}
-                  </strong>
+                    <strong>
+                      {totalTeam}
+                    </strong>
 
-                  <span>
-                    Team
-                  </span>
+                    <span>
+                      Team
+                    </span>
+
+                  </div>
 
                 </div>
+
+              </div>
+
+              <div className="status-legend">
+
+                <span>
+                  <i className="dot green-dot"></i>
+                  Active
+                </span>
+
+                <span>
+                  <i className="dot gray-dot"></i>
+                  Leave
+                </span>
+
+                <span>
+                  <i className="dot orange-dot"></i>
+                  Other
+                </span>
 
               </div>
 
@@ -845,119 +513,110 @@ function ManagerDashboard() {
 
           </div>
 
-          {/* ================================================
-              TOP PERFORMANCE
-          ================================================= */}
+
+          {/* ================= TOP PERFORMANCE ================= */}
 
           <div className="manager-panel performance-panel">
 
             <div className="panel-header">
 
               <div>
-
                 <h3>
                   Top Performance Employees
                 </h3>
 
-                <p>
+                <span>
                   Highest performing team members
-                </p>
-
+                </span>
               </div>
 
-              <span>
+              <span className="more">
                 •••
               </span>
 
             </div>
 
-            <div className="performance-list">
+            <div className="performers">
 
-              {topEmployees.length === 0 ? (
+              {[
+                {
+                  name: "Mark Wood",
+                  score: 90
+                },
+                {
+                  name: "Nora Ray",
+                  score: 88
+                },
+                {
+                  name: "Mark Wood",
+                  score: 85
+                },
+                {
+                  name: "Ava Singh",
+                  score: 80
+                },
+                {
+                  name: "Mark Wood",
+                  score: 70
+                },
+                {
+                  name: "Nora Ray",
+                  score: 69
+                },
+                {
+                  name: "Mark Wood",
+                  score: 65
+                },
+                {
+                  name: "Ava Singh",
+                  score: 62
+                }
+              ].map((employee, index) => (
 
-                <div className="no-performance">
-                  No performance data available
+                <div
+                  className="performer"
+                  key={index}
+                >
+
+                  <div className="performer-avatar">
+                    👤
+                  </div>
+
+                  <strong>
+                    {employee.name}
+                  </strong>
+
+                  <span>
+                    {employee.score}%
+                  </span>
+
                 </div>
 
-              ) : (
-
-                topEmployees.map(
-                  (employee, index) => {
-
-                    const score =
-                      Number(
-                        employee.performanceScore
-                      ) || 0;
-
-                    return (
-                      <div
-                        className="performance-person"
-                        key={employee.id}
-                      >
-
-                        <div
-                          className={`performance-image ${
-                            index % 3 === 0
-                              ? "border-green"
-                              : index % 3 === 1
-                              ? "border-orange"
-                              : "border-blue"
-                          }`}
-                        >
-
-                          <img
-                            src={getEmployeeImage(
-                              employee
-                            )}
-                            alt=""
-                          />
-
-                        </div>
-
-                        <strong>
-                          {employee.firstName}{" "}
-                          {employee.lastName}
-                        </strong>
-
-                        <span>
-                          {score > 0
-                            ? `${score}%`
-                            : "N/A"}
-                        </span>
-
-                      </div>
-                    );
-                  }
-                )
-
-              )}
+              ))}
 
             </div>
 
           </div>
 
-          {/* ================================================
-              LOWER SECTION
-          ================================================= */}
+
+          {/* ================= TASK + LEAVE ================= */}
 
           <div className="manager-bottom-grid">
 
-            {/* TASKS */}
+            {/* TEAM TASKS */}
 
             <div className="manager-panel">
 
               <div className="panel-header">
 
                 <div>
-
                   <h3>
                     Team Tasks
                   </h3>
 
-                  <p>
-                    Latest team activities
-                  </p>
-
+                  <span>
+                    Latest team tasks
+                  </span>
                 </div>
 
                 <a href="/tasks">
@@ -968,8 +627,15 @@ function ManagerDashboard() {
 
               <div className="task-list">
 
-                {tasks.slice(0, 5).map(
-                  (task) => (
+                {tasks.length === 0 ? (
+
+                  <div className="empty-state">
+                    No team tasks available
+                  </div>
+
+                ) : (
+
+                  tasks.slice(0, 5).map((task) => (
 
                     <div
                       className="task-row"
@@ -977,67 +643,56 @@ function ManagerDashboard() {
                     >
 
                       <div className="task-icon">
-                        📋
+                        ✓
                       </div>
 
                       <div className="task-info">
 
                         <strong>
-                          {task.taskName ||
-                            "Team Task"}
+                          {task.taskName}
                         </strong>
 
                         <span>
-                          {task.employeeName ||
-                            "Employee"}
+                          {task.employeeName}
                         </span>
 
                       </div>
 
                       <span
-                        className={`task-status ${
-                          String(
-                            task.status || ""
-                          ).toUpperCase() ===
-                          "COMPLETED"
-                            ? "completed"
-                            : "pending"
-                        }`}
+                        className={
+                          task.status === "COMPLETED"
+                            ? "status-badge completed"
+                            : "status-badge pending"
+                        }
                       >
-                        {task.status ||
-                          "PENDING"}
+                        {task.status}
                       </span>
 
                     </div>
 
-                  )
-                )}
+                  ))
 
-                {tasks.length === 0 && (
-                  <div className="empty-state">
-                    No team tasks available
-                  </div>
                 )}
 
               </div>
 
             </div>
 
-            {/* LEAVE APPROVAL */}
+
+            {/* LEAVE REQUESTS */}
 
             <div className="manager-panel">
 
               <div className="panel-header">
 
                 <div>
-
                   <h3>
                     Leave Requests
                   </h3>
 
-                  <p>
-                    Pending team approvals
-                  </p>
+                  <span>
+                    Pending manager approvals
+                  </span>
 
                 </div>
 
@@ -1049,67 +704,60 @@ function ManagerDashboard() {
 
               <div className="leave-list">
 
-                {pendingLeaveRequests.length ===
-                0 ? (
+                {pendingLeaves.length === 0 ? (
 
                   <div className="empty-state">
-                    ✓ No pending leave requests
+                    No pending leave requests
                   </div>
 
                 ) : (
 
-                  pendingLeaveRequests.map(
-                    (leave) => (
+                  pendingLeaves
+                    .slice(0, 4)
+                    .map((leave) => (
 
                       <div
                         className="leave-row"
                         key={leave.id}
                       >
 
-                        <div className="leave-avatar">
-                          👤
-                        </div>
-
-                        <div className="leave-info">
+                        <div>
 
                           <strong>
-                            Employee #
-                            {leave.employeeId}
+                            Employee #{leave.employeeId}
                           </strong>
 
                           <span>
-                            {leave.reason ||
-                              "Leave request"}
+                            {leave.reason}
                           </span>
 
                         </div>
 
-                        <button
-                          className="approve"
-                          onClick={() =>
-                            approveLeave(
-                              leave.id
-                            )
-                          }
-                        >
-                          ✓
-                        </button>
+                        <div className="leave-actions">
 
-                        <button
-                          className="reject"
-                          onClick={() =>
-                            rejectLeave(
-                              leave.id
-                            )
-                          }
-                        >
-                          ×
-                        </button>
+                          <button
+                            className="approve-btn"
+                            onClick={() =>
+                              approveLeave(leave.id)
+                            }
+                          >
+                            ✓
+                          </button>
+
+                          <button
+                            className="reject-btn"
+                            onClick={() =>
+                              rejectLeave(leave.id)
+                            }
+                          >
+                            ×
+                          </button>
+
+                        </div>
 
                       </div>
 
-                    )
-                  )
+                    ))
 
                 )}
 
@@ -1119,28 +767,30 @@ function ManagerDashboard() {
 
           </div>
 
-          {/* ================================================
-              REAL TIME
-          ================================================= */}
 
-          <div className="manager-realtime">
+          {/* ================= REAL TIME ================= */}
 
-            <span className="real-dot"></span>
+          <div className="realtime-bar">
+
+            <span className="live-dot"></span>
 
             <strong>
-              Real-time dashboard connected
+              Real-time data synchronized
             </strong>
 
             <span>
-              Data automatically refreshed every
-              10 seconds
+              Dashboard automatically refreshes every 10 seconds.
+            </span>
+
+            <span className="live-time">
+              {formatTime()}
             </span>
 
           </div>
 
         </div>
 
-      </div>
+      </main>
 
     </div>
   );
