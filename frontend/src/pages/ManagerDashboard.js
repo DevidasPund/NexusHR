@@ -1,1358 +1,1364 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
-import CountUp from "react-countup";
-import { motion } from "framer-motion";
 import {
-    ResponsiveContainer,
-    PieChart,
-    Pie,
-    Cell,
-    Tooltip,
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Legend
-} from "recharts";
-import {
-    FaUsers,
-    FaUserCheck,
-    FaBuilding,
-    FaMoneyBillWave,
-    FaClipboardCheck,
-    FaTasks,
-    FaProjectDiagram,
-    FaChartLine,
-    FaExclamationTriangle,
-    FaBell
-} from "react-icons/fa";
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
-const DashboardCard = ({
-    title,
-    value,
-    icon,
-    color,
-    subtitle
-}) => {
+import { Bar, Doughnut } from "react-chartjs-2";
 
-    return (
+import "./ManagerDashboard.css";
 
-        <motion.div
-            className="col-xl-3 col-lg-4 col-md-6"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{
-                scale: 1.05
-            }}
-            transition={{
-                duration: .3
-            }}
-        >
-
-            <div className="card border-0 shadow-lg rounded-4 h-100">
-
-                <div className="card-body">
-
-                    <div className="d-flex justify-content-between align-items-center">
-
-                        <div>
-
-                            <small className="text-secondary">
-
-                                {title}
-
-                            </small>
-
-                            <h2
-                                className="fw-bold mt-2"
-                                style={{
-                                    color: color
-                                }}
-                            >
-
-                                <CountUp
-                                    end={Number(value)}
-                                    duration={2}
-                                />
-
-                            </h2>
-
-                            <small className="text-muted">
-
-                                {subtitle}
-
-                            </small>
-
-                        </div>
-
-                        <div
-                            style={{
-                                fontSize: 45,
-                                color: color
-                            }}
-                        >
-
-                            {icon}
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </motion.div>
-
-    );
-
-};
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend
+);
 
 function ManagerDashboard() {
+  const [dashboard, setDashboard] = useState({});
+  const [tasks, setTasks] = useState([]);
+  const [leaves, setLeaves] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-    const [loading, setLoading] = useState(true);
+  /*
+   * =========================================================
+   * LOAD DATA
+   * =========================================================
+   */
 
-    const [dashboard, setDashboard] = useState({
+  useEffect(() => {
+    loadData();
 
-        totalEmployees: 0,
+    const dataInterval = setInterval(() => {
+      loadData();
+    }, 10000);
 
-        activeEmployees: 0,
+    const clockInterval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
 
-        totalDepartments: 0,
-
-        totalAttendance: 0,
-
-        presentToday: 0,
-
-        absentToday: 0,
-
-        attendancePercentage: 0,
-
-        pendingLeaves: 0,
-
-        approvedLeaves: 0,
-
-        totalSalary: 0,
-
-        totalProjects: 0,
-
-        pendingTasks: 0,
-
-        completedTasks: 0,
-
-        highRiskEmployees: 0,
-
-        mediumRiskEmployees: 0,
-
-        lowRiskEmployees: 0,
-
-        averagePerformance: 0
-
-    });
-
-    const [employees, setEmployees] = useState([]);
-
-    const [tasks, setTasks] = useState([]);
-
-    const [leaves, setLeaves] = useState([]);
-
-    useEffect(() => {
-
-        loadDashboard();
-
-    }, []);
-
-    const loadDashboard = async () => {
-
-        try {
-
-            setLoading(true);
-
-            const [
-                dashboardRes,
-                employeeRes,
-                taskRes,
-                leaveRes
-            ] = await Promise.all([
-
-                API.get("/dashboard"),
-
-                API.get("/employees"),
-
-                API.get("/tasks"),
-
-                API.get("/leave")
-
-            ]);
-
-            setDashboard(dashboardRes.data);
-
-            setEmployees(employeeRes.data);
-
-            setTasks(taskRes.data);
-
-            setLeaves(leaveRes.data);
-
-        }
-
-        catch (error) {
-
-            console.log(error);
-
-        }
-
-        finally {
-
-            setLoading(false);
-
-        }
-
+    return () => {
+      clearInterval(dataInterval);
+      clearInterval(clockInterval);
     };
+  }, []);
 
-    if (loading) {
+  const loadData = async () => {
+    try {
+      const [
+        dashboardRes,
+        taskRes,
+        leaveRes,
+      ] = await Promise.all([
+        API.get("/dashboard"),
+        API.get("/tasks"),
+        API.get("/leave"),
+      ]);
 
-        return (
-
-            <div className="app-container">
-
-                <Sidebar />
-
-                <div className="main-content">
-
-                    <Navbar />
-
-                    <div className="container-fluid p-5 text-center">
-
-                        <div className="spinner-border text-primary"></div>
-
-                        <h3 className="mt-4">
-
-                            Loading Manager Dashboard...
-
-                        </h3>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        );
-
+      setDashboard(dashboardRes.data || {});
+      setTasks(
+        Array.isArray(taskRes.data)
+          ? taskRes.data
+          : []
+      );
+      setLeaves(
+        Array.isArray(leaveRes.data)
+          ? leaveRes.data
+          : []
+      );
+    } catch (error) {
+      console.error(
+        "Manager dashboard loading error:",
+        error
+      );
+    } finally {
+      setLoading(false);
     }
-const attendanceData = [
-    {
-        name: "Present",
-        value: dashboard.presentToday
+  };
+
+  /*
+   * =========================================================
+   * LEAVE APPROVAL
+   * =========================================================
+   */
+
+  const approveLeave = async (id) => {
+    try {
+      setActionLoading(id);
+
+      await API.put(
+        `/leave/manager-approve/${id}`
+      );
+
+      await loadData();
+    } catch (error) {
+      console.error(
+        "Leave approval error:",
+        error
+      );
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const rejectLeave = async (id) => {
+    try {
+      setActionLoading(id);
+
+      await API.put(
+        `/leave/manager-reject/${id}`
+      );
+
+      await loadData();
+    } catch (error) {
+      console.error(
+        "Leave rejection error:",
+        error
+      );
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  /*
+   * =========================================================
+   * REAL-TIME VALUES
+   * =========================================================
+   */
+
+  const teamMembers =
+    Number(dashboard.totalEmployees) || 0;
+
+  const pendingTasks =
+    Number(dashboard.pendingTasks) ||
+    tasks.filter(
+      (task) =>
+        String(task.status || "")
+          .toUpperCase() === "PENDING"
+    ).length ||
+    0;
+
+  const pendingLeaves =
+    Number(dashboard.pendingLeaves) ||
+    leaves.filter(
+      (leave) =>
+        String(leave.status || "")
+          .toUpperCase() === "PENDING"
+    ).length ||
+    0;
+
+  const totalProjects =
+    Number(dashboard.totalProjects) || 0;
+
+  const completedTasks =
+    Number(dashboard.completedTasks) ||
+    tasks.filter(
+      (task) =>
+        String(task.status || "")
+          .toUpperCase() === "COMPLETED"
+    ).length ||
+    0;
+
+  const totalTasks = tasks.length;
+
+  const taskCompletion =
+    totalTasks > 0
+      ? Math.round(
+          (completedTasks / totalTasks) * 100
+        )
+      : 0;
+
+  /*
+   * =========================================================
+   * AI RISK
+   * =========================================================
+   */
+
+  const highRiskEmployees =
+    Number(dashboard.highRiskEmployees) || 0;
+
+  const mediumRiskEmployees =
+    Number(dashboard.mediumRiskEmployees) || 0;
+
+  const lowRiskEmployees =
+    Number(dashboard.lowRiskEmployees) || 0;
+
+  /*
+   * =========================================================
+   * LEAVE DATA
+   * =========================================================
+   */
+
+  const approvedLeaves =
+    Number(dashboard.approvedLeaves) ||
+    leaves.filter(
+      (leave) =>
+        String(leave.status || "")
+          .toUpperCase() === "APPROVED"
+    ).length ||
+    0;
+
+  const rejectedLeaves =
+    Number(dashboard.rejectedLeaves) ||
+    leaves.filter(
+      (leave) =>
+        String(leave.status || "")
+          .toUpperCase() === "REJECTED"
+    ).length ||
+    0;
+
+  /*
+   * =========================================================
+   * RECENT TASKS
+   * =========================================================
+   */
+
+  const recentTasks = useMemo(() => {
+    return tasks.slice(0, 6);
+  }, [tasks]);
+
+  /*
+   * =========================================================
+   * PENDING LEAVES
+   * =========================================================
+   */
+
+  const pendingLeaveRequests = useMemo(() => {
+    return leaves
+      .filter(
+        (leave) =>
+          String(leave.status || "")
+            .toUpperCase() === "PENDING"
+      )
+      .slice(0, 5);
+  }, [leaves]);
+
+  /*
+   * =========================================================
+   * BAR CHART
+   * =========================================================
+   */
+
+  const taskChartData = {
+    labels: [
+      "Pending",
+      "Completed",
+      "Approved",
+      "Rejected",
+    ],
+
+    datasets: [
+      {
+        label: "Team Activity",
+
+        data: [
+          pendingTasks,
+          completedTasks,
+          approvedLeaves,
+          rejectedLeaves,
+        ],
+
+        backgroundColor: [
+          "#f59e0b",
+          "#173b24",
+          "#22c55e",
+          "#ef4444",
+        ],
+
+        borderRadius: 7,
+
+        borderSkipped: false,
+
+        barThickness: 32,
+      },
+    ],
+  };
+
+  const taskChartOptions = {
+    responsive: true,
+
+    maintainAspectRatio: false,
+
+    plugins: {
+      legend: {
+        display: false,
+      },
+
+      tooltip: {
+        backgroundColor: "#173b24",
+
+        padding: 10,
+
+        cornerRadius: 8,
+      },
     },
-    {
-        name: "Absent",
-        value: dashboard.absentToday
-    }
-];
 
-const taskData = [
-    {
-        name: "Pending",
-        value: dashboard.pendingTasks
+    scales: {
+      y: {
+        beginAtZero: true,
+
+        grid: {
+          color: "#edf0eb",
+        },
+
+        ticks: {
+          color: "#87938b",
+        },
+      },
+
+      x: {
+        grid: {
+          display: false,
+        },
+
+        ticks: {
+          color: "#657168",
+        },
+      },
     },
-    {
-        name: "Completed",
-        value: dashboard.completedTasks
-    }
-];
+  };
 
-const COLORS = [
-    "#22C55E",
-    "#EF4444"
-];
+  /*
+   * =========================================================
+   * LEAVE DOUGHNUT
+   * =========================================================
+   */
+
+  const leaveChartData = {
+    labels: [
+      "Pending",
+      "Approved",
+      "Rejected",
+    ],
+
+    datasets: [
+      {
+        data: [
+          pendingLeaves,
+          approvedLeaves,
+          rejectedLeaves,
+        ],
+
+        backgroundColor: [
+          "#f59e0b",
+          "#173b24",
+          "#ef4444",
+        ],
+
+        borderWidth: 0,
+
+        hoverOffset: 5,
+      },
+    ],
+  };
+
+  const leaveChartOptions = {
+    responsive: true,
+
+    maintainAspectRatio: false,
+
+    cutout: "68%",
+
+    plugins: {
+      legend: {
+        position: "bottom",
+
+        labels: {
+          usePointStyle: true,
+
+          padding: 15,
+
+          color: "#657168",
+
+          font: {
+            size: 10,
+          },
+        },
+      },
+    },
+  };
+
+  /*
+   * =========================================================
+   * DATE / TIME
+   * =========================================================
+   */
+
+  const formattedDate =
+    currentTime.toLocaleDateString(
+      "en-IN",
+      {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      }
+    );
+
+  const formattedTime =
+    currentTime.toLocaleTimeString(
+      "en-IN",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      }
+    );
+
+  /*
+   * =========================================================
+   * TASK STATUS COLOR
+   * =========================================================
+   */
+
+  const getTaskStatusClass = (status) => {
+    const value = String(
+      status || ""
+    ).toUpperCase();
+
+    if (value === "COMPLETED") {
+      return "status-completed";
+    }
+
+    if (value === "IN_PROGRESS") {
+      return "status-progress";
+    }
+
+    if (value === "PENDING") {
+      return "status-pending";
+    }
+
+    return "status-default";
+  };
+
+  /*
+   * =========================================================
+   * LOADING
+   * =========================================================
+   */
+
+  if (loading) {
     return (
+      <div className="manager-loading">
 
-        <div className="app-container">
+        <div className="manager-loader"></div>
 
-            <Sidebar />
-
-            <div className="main-content">
-
-                <Navbar />
-
-                <div className="container-fluid p-4">
-
-                    <motion.div
-
-                        initial={{
-                            opacity: 0,
-                            y: -20
-                        }}
-
-                        animate={{
-                            opacity: 1,
-                            y: 0
-                        }}
-
-                        className="rounded-4 p-4 mb-4"
-
-                        style={{
-
-                            background:
-                                "linear-gradient(135deg,#2563EB,#7C3AED)",
-
-                            color: "#fff"
-
-                        }}
-
-                    >
-
-                        <h1 className="fw-bold">
-
-                            👨‍💼 Manager Dashboard
-
-                        </h1>
-
-                        <p className="mb-0">
-
-                            Welcome back! Manage employees, projects, tasks,
-                            attendance and AI insights from one place.
-
-                        </p>
-
-                    </motion.div>
-<div className="row g-4">
-
-    <DashboardCard
-        title="Total Employees"
-        value={dashboard.totalEmployees}
-        subtitle="Registered Employees"
-        color="#2563EB"
-        icon={<FaUsers />}
-    />
-
-    <DashboardCard
-        title="Active Employees"
-        value={dashboard.activeEmployees}
-        subtitle="Currently Active"
-        color="#10B981"
-        icon={<FaUserCheck />}
-    />
-
-    <DashboardCard
-        title="Departments"
-        value={dashboard.totalDepartments}
-        subtitle="Organization Units"
-        color="#F59E0B"
-        icon={<FaBuilding />}
-    />
-
-    <DashboardCard
-        title="Present Today"
-        value={dashboard.presentToday}
-        subtitle="Attendance Today"
-        color="#06B6D4"
-        icon={<FaClipboardCheck />}
-    />
-
-    <DashboardCard
-        title="Pending Tasks"
-        value={dashboard.pendingTasks}
-        subtitle="Awaiting Completion"
-        color="#F97316"
-        icon={<FaTasks />}
-    />
-
-    <DashboardCard
-        title="Projects"
-        value={dashboard.totalProjects}
-        subtitle="Running Projects"
-        color="#8B5CF6"
-        icon={<FaProjectDiagram />}
-    />
-
-    <DashboardCard
-        title="Attendance %"
-        value={dashboard.attendancePercentage.toFixed(1)}
-        subtitle="Overall Attendance"
-        color="#0EA5E9"
-        icon={<FaChartLine />}
-    />
-
-    <DashboardCard
-        title="Pending Leaves"
-        value={dashboard.pendingLeaves}
-        subtitle="Approval Required"
-        color="#EF4444"
-        icon={<FaBell />}
-    />
-
-    <DashboardCard
-        title="High Risk"
-        value={dashboard.highRiskEmployees}
-        subtitle="Attrition Risk"
-        color="#DC2626"
-        icon={<FaExclamationTriangle />}
-    />
-
-    <DashboardCard
-        title="Medium Risk"
-        value={dashboard.mediumRiskEmployees}
-        subtitle="Need Attention"
-        color="#F59E0B"
-        icon={<FaExclamationTriangle />}
-    />
-
-    <DashboardCard
-        title="Low Risk"
-        value={dashboard.lowRiskEmployees}
-        subtitle="Healthy Workforce"
-        color="#22C55E"
-        icon={<FaUserCheck />}
-    />
-
-    <DashboardCard
-        title="Total Salary"
-        value={dashboard.totalSalary}
-        subtitle="Monthly Payroll"
-        color="#14B8A6"
-        icon={<FaMoneyBillWave />}
-    />
-
-</div>
-
-
-
-
-<div className="row mt-5">
-
-    {/* Attendance Chart */}
-
-    <div className="col-lg-6 mb-4">
-
-        <div className="card border-0 shadow rounded-4">
-
-            <div className="card-body">
-
-                <h4 className="fw-bold mb-4">
-
-                    Attendance Overview
-
-                </h4>
-
-                <ResponsiveContainer
-                    width="100%"
-                    height={320}
-                >
-
-                    <PieChart>
-
-                        <Pie
-                            data={attendanceData}
-                            dataKey="value"
-                            outerRadius={110}
-                            label
-                        >
-
-                            {attendanceData.map((entry, index) => (
-
-                                <Cell
-                                    key={index}
-                                    fill={COLORS[index]}
-                                />
-
-                            ))}
-
-                        </Pie>
-
-                        <Tooltip />
-
-                        <Legend />
-
-                    </PieChart>
-
-                </ResponsiveContainer>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    {/* Task Chart */}
-
-    <div className="col-lg-6 mb-4">
-
-        <div className="card border-0 shadow rounded-4">
-
-            <div className="card-body">
-
-                <h4 className="fw-bold mb-4">
-
-                    Task Analytics
-
-                </h4>
-
-                <ResponsiveContainer
-                    width="100%"
-                    height={320}
-                >
-
-                    <BarChart
-                        data={taskData}
-                    >
-
-                        <CartesianGrid
-                            strokeDasharray="3 3"
-                        />
-
-                        <XAxis dataKey="name" />
-
-                        <YAxis />
-
-                        <Tooltip />
-
-                        <Legend />
-
-                        <Bar
-                            dataKey="value"
-                            radius={[8,8,0,0]}
-                            fill="#2563EB"
-                        />
-
-                    </BarChart>
-
-                </ResponsiveContainer>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<div className="row mt-4">
-
-    {/* AI Insights */}
-
-    <div className="col-lg-8 mb-4">
-
-        <div className="card border-0 shadow rounded-4">
-
-            <div className="card-body">
-
-                <h3 className="fw-bold mb-4">
-
-                    🤖 AI Workforce Insights
-
-                </h3>
-
-                <div className="row">
-
-                    <div className="col-md-4">
-
-                        <div
-                            className="p-3 rounded-4 text-white"
-                            style={{
-                                background:
-                                    "linear-gradient(135deg,#ef4444,#dc2626)"
-                            }}
-                        >
-
-                            <h5>High Risk</h5>
-
-                            <h2>
-
-                                {dashboard.highRiskEmployees}
-
-                            </h2>
-
-                            <small>
-
-                                Employees likely to resign
-
-                            </small>
-
-                        </div>
-
-                    </div>
-
-                    <div className="col-md-4">
-
-                        <div
-                            className="p-3 rounded-4 text-white"
-                            style={{
-                                background:
-                                    "linear-gradient(135deg,#f59e0b,#d97706)"
-                            }}
-                        >
-
-                            <h5>Medium Risk</h5>
-
-                            <h2>
-
-                                {dashboard.mediumRiskEmployees}
-
-                            </h2>
-
-                            <small>
-
-                                Monitor closely
-
-                            </small>
-
-                        </div>
-
-                    </div>
-
-                    <div className="col-md-4">
-
-                        <div
-                            className="p-3 rounded-4 text-white"
-                            style={{
-                                background:
-                                    "linear-gradient(135deg,#22c55e,#16a34a)"
-                            }}
-                        >
-
-                            <h5>Low Risk</h5>
-
-                            <h2>
-
-                                {dashboard.lowRiskEmployees}
-
-                            </h2>
-
-                            <small>
-
-                                Stable employees
-
-                            </small>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <hr />
-
-                <div className="row mt-3">
-
-                    <div className="col-md-6">
-
-                        <div className="alert alert-success">
-
-                            <h6>
-
-                                Average Performance
-
-                            </h6>
-
-                            <h3>
-
-                                {dashboard.averagePerformance}
-
-                                %
-
-                            </h3>
-
-                        </div>
-
-                    </div>
-
-                    <div className="col-md-6">
-
-                        <div className="alert alert-warning">
-
-                            <h6>
-
-                                Attendance Rate
-
-                            </h6>
-
-                            <h3>
-
-                                {dashboard.attendancePercentage.toFixed(1)}
-
-                                %
-
-                            </h3>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    {/* Manager Summary */}
-
-    <div className="col-lg-4 mb-4">
-
-        <div className="card border-0 shadow rounded-4">
-
-            <div className="card-body">
-
-                <h3 className="fw-bold mb-4">
-
-                    📋 Manager Summary
-
-                </h3>
-
-                <table className="table">
-
-                    <tbody>
-
-                        <tr>
-
-                            <td>Total Employees</td>
-
-                            <td>
-
-                                <strong>
-
-                                    {dashboard.totalEmployees}
-
-                                </strong>
-
-                            </td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Projects</td>
-
-                            <td>
-
-                                <strong>
-
-                                    {dashboard.totalProjects}
-
-                                </strong>
-
-                            </td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Pending Tasks</td>
-
-                            <td>
-
-                                <strong>
-
-                                    {dashboard.pendingTasks}
-
-                                </strong>
-
-                            </td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Pending Leaves</td>
-
-                            <td>
-
-                                <strong>
-
-                                    {dashboard.pendingLeaves}
-
-                                </strong>
-
-                            </td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Monthly Payroll</td>
-
-                            <td>
-
-                                <strong>
-
-                                    ₹
-
-                                    {dashboard.totalSalary.toLocaleString()}
-
-                                </strong>
-
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<div className="row mt-4">
-
-    {/* Recent Tasks */}
-
-    <div className="col-lg-8 mb-4">
-
-        <div className="card border-0 shadow rounded-4">
-
-            <div className="card-header bg-white border-0">
-
-                <h4 className="fw-bold">
-
-                    📋 Recent Tasks
-
-                </h4>
-
-            </div>
-
-            <div className="card-body table-responsive">
-
-                <table className="table table-hover align-middle">
-
-                    <thead className="table-light">
-
-                        <tr>
-
-                            <th>ID</th>
-
-                            <th>Task</th>
-
-                            <th>Employee</th>
-
-                            <th>Project</th>
-
-                            <th>Status</th>
-
-                            <th>Priority</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        {
-
-                            tasks.slice(0,8).map(task=>(
-
-                                <tr key={task.id}>
-
-                                    <td>
-
-                                        {task.id}
-
-                                    </td>
-
-                                    <td>
-
-                                        {task.taskName}
-
-                                    </td>
-
-                                    <td>
-
-                                        {task.employeeName}
-
-                                    </td>
-
-                                    <td>
-
-                                        {task.projectName}
-
-                                    </td>
-
-                                    <td>
-
-                                        <span
-                                            className={`badge ${
-                                                task.status==="COMPLETED"
-                                                ?"bg-success"
-                                                :"bg-warning text-dark"
-                                            }`}
-                                        >
-
-                                            {task.status}
-
-                                        </span>
-
-                                    </td>
-
-                                    <td>
-
-                                        <span
-                                            className={`badge ${
-                                                task.priority==="HIGH"
-                                                ?"bg-danger"
-                                                :task.priority==="MEDIUM"
-                                                ?"bg-warning text-dark"
-                                                :"bg-info"
-                                            }`}
-                                        >
-
-                                            {task.priority}
-
-                                        </span>
-
-                                    </td>
-
-                                </tr>
-
-                            ))
-
-                        }
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    {/* Pending Leaves */}
-
-    <div className="col-lg-4 mb-4">
-
-        <div className="card border-0 shadow rounded-4">
-
-            <div className="card-header bg-white border-0">
-
-                <h4 className="fw-bold">
-
-                    🌴 Leave Requests
-
-                </h4>
-
-            </div>
-
-            <div className="card-body">
-
-                {
-
-                    leaves.length===0?
-
-                    (
-
-                        <div className="text-center text-muted py-5">
-
-                            <h5>
-
-                                No Pending Leaves
-
-                            </h5>
-
-                        </div>
-
-                    )
-
-                    :
-
-                    (
-
-                        leaves.slice(0,5).map(leave=>(
-
-                            <div
-                                key={leave.id}
-                                className="border rounded-3 p-3 mb-3"
-                            >
-
-                                <h6>
-
-                                    Employee ID :
-
-                                    {" "}
-
-                                    {leave.employeeId}
-
-                                </h6>
-
-                                <p className="mb-1">
-
-                                    {leave.reason}
-
-                                </p>
-
-                                <span className="badge bg-warning text-dark">
-
-                                    {leave.status}
-
-                                </span>
-
-                            </div>
-
-                        ))
-
-                    )
-
-                }
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-{/* Top Employees */}
-
-<div className="card border-0 shadow rounded-4 mt-4">
-
-    <div className="card-header bg-white border-0">
-
-        <h4 className="fw-bold">
-
-            ⭐ Top Performing Employees
-
+        <h4>
+          Loading Manager Dashboard...
         </h4>
 
-    </div>
+        <p>
+          Connecting to NexusHR real-time services
+        </p>
 
-    <div className="card-body">
+      </div>
+    );
+  }
 
-        <div className="table-responsive">
+  /*
+   * =========================================================
+   * DASHBOARD
+   * =========================================================
+   */
 
-            <table className="table table-hover">
+  return (
+    <div className="manager-dashboard">
 
-                <thead className="table-light">
+      {/* =====================================================
+          SIDEBAR
+      ===================================================== */}
+
+      <Sidebar />
+
+      <div className="manager-main">
+
+        {/* ===================================================
+            NAVBAR
+        =================================================== */}
+
+        <Navbar />
+
+        <main className="manager-content">
+
+          {/* =================================================
+              HEADER
+          ================================================= */}
+
+          <div className="manager-header">
+
+            <div>
+
+              <div className="manager-title-row">
+
+                <div className="manager-avatar">
+                  👨‍💼
+                </div>
+
+                <div>
+
+                  <h1>
+                    Good Morning, Manager
+                    <span>👋</span>
+                  </h1>
+
+                  <p>
+                    Manage your team,
+                    tasks and workforce in one place.
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="manager-date">
+
+              <span>
+                📅
+              </span>
+
+              <div>
+                <strong>
+                  {formattedDate}
+                </strong>
+
+                <small>
+                  {formattedTime}
+                </small>
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* =================================================
+              KPI GRID
+          ================================================= */}
+
+          <section className="manager-kpi-grid">
+
+            {/* TEAM MEMBERS */}
+
+            <div className="manager-kpi-card">
+
+              <div className="manager-kpi-top">
+
+                <div className="manager-kpi-icon purple">
+                  👥
+                </div>
+
+                <span className="kpi-growth positive">
+                  +12% ↑
+                </span>
+
+              </div>
+
+              <h2>
+                {teamMembers.toLocaleString()}
+              </h2>
+
+              <p>
+                Team Members
+              </p>
+
+              <div className="kpi-spark green">
+                ╱╲╱╲━━╱╲╱╲
+              </div>
+
+            </div>
+
+            {/* TASKS */}
+
+            <div className="manager-kpi-card">
+
+              <div className="manager-kpi-top">
+
+                <div className="manager-kpi-icon orange">
+                  📋
+                </div>
+
+                <span className="kpi-growth warning">
+                  Pending
+                </span>
+
+              </div>
+
+              <h2>
+                {pendingTasks}
+              </h2>
+
+              <p>
+                Pending Tasks
+              </p>
+
+              <div className="kpi-spark orange">
+                ━╱╲╱╲━━╱╲
+              </div>
+
+            </div>
+
+            {/* LEAVES */}
+
+            <div className="manager-kpi-card">
+
+              <div className="manager-kpi-top">
+
+                <div className="manager-kpi-icon green">
+                  🌴
+                </div>
+
+                <span className="kpi-growth warning">
+                  Review
+                </span>
+
+              </div>
+
+              <h2>
+                {pendingLeaves}
+              </h2>
+
+              <p>
+                Pending Leaves
+              </p>
+
+              <div className="kpi-spark red">
+                ╱╲━━╱╲╱╲
+              </div>
+
+            </div>
+
+            {/* PROJECTS */}
+
+            <div className="manager-kpi-card">
+
+              <div className="manager-kpi-top">
+
+                <div className="manager-kpi-icon blue">
+                  📁
+                </div>
+
+                <span className="kpi-growth positive">
+                  Active
+                </span>
+
+              </div>
+
+              <h2>
+                {totalProjects}
+              </h2>
+
+              <p>
+                Total Projects
+              </p>
+
+              <div className="kpi-spark blue">
+                ╱╲╱╲━━╱╲╱
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* =================================================
+              QUICK SUMMARY
+          ================================================= */}
+
+          <section className="manager-summary-grid">
+
+            <div className="manager-small-card">
+
+              <div className="small-card-icon green">
+                ✓
+              </div>
+
+              <div>
+                <strong>
+                  {completedTasks}
+                </strong>
+
+                <span>
+                  Completed Tasks
+                </span>
+              </div>
+
+            </div>
+
+            <div className="manager-small-card">
+
+              <div className="small-card-icon orange">
+                ⏳
+              </div>
+
+              <div>
+                <strong>
+                  {taskCompletion}%
+                </strong>
+
+                <span>
+                  Task Completion
+                </span>
+              </div>
+
+            </div>
+
+            <div className="manager-small-card">
+
+              <div className="small-card-icon blue">
+                ✓
+              </div>
+
+              <div>
+                <strong>
+                  {approvedLeaves}
+                </strong>
+
+                <span>
+                  Approved Leaves
+                </span>
+              </div>
+
+            </div>
+
+            <div className="manager-small-card">
+
+              <div className="small-card-icon red">
+                !
+              </div>
+
+              <div>
+                <strong>
+                  {rejectedLeaves}
+                </strong>
+
+                <span>
+                  Rejected Leaves
+                </span>
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* =================================================
+              CHARTS
+          ================================================= */}
+
+          <section className="manager-charts-grid">
+
+            {/* TEAM ACTIVITY */}
+
+            <div className="manager-panel">
+
+              <div className="manager-panel-header">
+
+                <div>
+
+                  <h3>
+                    Team Activity
+                  </h3>
+
+                  <p>
+                    Current team workload overview
+                  </p>
+
+                </div>
+
+                <span className="live-badge">
+                  ● Live
+                </span>
+
+              </div>
+
+              <div className="manager-chart">
+                <Bar
+                  data={taskChartData}
+                  options={taskChartOptions}
+                />
+              </div>
+
+            </div>
+
+            {/* LEAVE SUMMARY */}
+
+            <div className="manager-panel">
+
+              <div className="manager-panel-header">
+
+                <div>
+
+                  <h3>
+                    Leave Summary
+                  </h3>
+
+                  <p>
+                    Current leave requests
+                  </p>
+
+                </div>
+
+                <span className="three-dot">
+                  •••
+                </span>
+
+              </div>
+
+              <div className="leave-chart">
+
+                <Doughnut
+                  data={leaveChartData}
+                  options={leaveChartOptions}
+                />
+
+                <div className="leave-chart-center">
+
+                  <strong>
+                    {pendingLeaves +
+                      approvedLeaves +
+                      rejectedLeaves}
+                  </strong>
+
+                  <span>
+                    Total Leaves
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* =================================================
+              AI WORKFORCE INSIGHTS
+          ================================================= */}
+
+          <section className="manager-panel ai-panel">
+
+            <div className="manager-panel-header">
+
+              <div>
+
+                <h3>
+                  🤖 AI Workforce Insights
+                </h3>
+
+                <p>
+                  Workforce risk analysis
+                </p>
+
+              </div>
+
+              <span className="ai-badge">
+                Powered by AI
+              </span>
+
+            </div>
+
+            <div className="ai-grid">
+
+              <div className="ai-card high">
+
+                <div className="ai-icon">
+                  ⚠
+                </div>
+
+                <div>
+
+                  <strong>
+                    {highRiskEmployees}
+                  </strong>
+
+                  <span>
+                    High Risk Employees
+                  </span>
+
+                  <small>
+                    Requires immediate attention
+                  </small>
+
+                </div>
+
+              </div>
+
+              <div className="ai-card medium">
+
+                <div className="ai-icon">
+                  !
+                </div>
+
+                <div>
+
+                  <strong>
+                    {mediumRiskEmployees}
+                  </strong>
+
+                  <span>
+                    Medium Risk Employees
+                  </span>
+
+                  <small>
+                    Monitor workforce trends
+                  </small>
+
+                </div>
+
+              </div>
+
+              <div className="ai-card low">
+
+                <div className="ai-icon">
+                  ✓
+                </div>
+
+                <div>
+
+                  <strong>
+                    {lowRiskEmployees}
+                  </strong>
+
+                  <span>
+                    Low Risk Employees
+                  </span>
+
+                  <small>
+                    Workforce performing well
+                  </small>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* =================================================
+              QUICK ACTIONS
+          ================================================= */}
+
+          <section className="manager-panel">
+
+            <div className="manager-panel-header">
+
+              <div>
+
+                <h3>
+                  Quick Actions
+                </h3>
+
+                <p>
+                  Manage your team quickly
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="quick-actions">
+
+              <a
+                href="/tasks"
+                className="quick-action purple"
+              >
+
+                <span>
+                  ➕
+                </span>
+
+                <div>
+                  <strong>
+                    Assign Task
+                  </strong>
+
+                  <small>
+                    Create team task
+                  </small>
+                </div>
+
+              </a>
+
+              <a
+                href="/projects"
+                className="quick-action green"
+              >
+
+                <span>
+                  📁
+                </span>
+
+                <div>
+                  <strong>
+                    Projects
+                  </strong>
+
+                  <small>
+                    Manage projects
+                  </small>
+                </div>
+
+              </a>
+
+              <a
+                href="/leave-management"
+                className="quick-action orange"
+              >
+
+                <span>
+                  🌴
+                </span>
+
+                <div>
+                  <strong>
+                    Leave Approval
+                  </strong>
+
+                  <small>
+                    Review requests
+                  </small>
+                </div>
+
+              </a>
+
+              <a
+                href="/reports"
+                className="quick-action blue"
+              >
+
+                <span>
+                  📊
+                </span>
+
+                <div>
+                  <strong>
+                    Reports
+                  </strong>
+
+                  <small>
+                    View analytics
+                  </small>
+                </div>
+
+              </a>
+
+            </div>
+
+          </section>
+
+          {/* =================================================
+              TEAM TASKS + LEAVE REQUESTS
+          ================================================= */}
+
+          <section className="manager-tables-grid">
+
+            {/* TEAM TASKS */}
+
+            <div className="manager-panel">
+
+              <div className="manager-panel-header">
+
+                <div>
+
+                  <h3>
+                    Team Tasks
+                  </h3>
+
+                  <p>
+                    Latest assigned tasks
+                  </p>
+
+                </div>
+
+                <a href="/tasks">
+                  View All →
+                </a>
+
+              </div>
+
+              <div className="modern-table-wrapper">
+
+                <table className="modern-table">
+
+                  <thead>
 
                     <tr>
 
-                        <th>Name</th>
+                      <th>
+                        Task
+                      </th>
 
-                        <th>Department</th>
+                      <th>
+                        Employee
+                      </th>
 
-                        <th>Performance</th>
-
-                        <th>Attendance</th>
-
-                        <th>Risk</th>
+                      <th>
+                        Status
+                      </th>
 
                     </tr>
 
-                </thead>
+                  </thead>
 
-                <tbody>
+                  <tbody>
 
-                    {
+                    {recentTasks.length === 0 ? (
 
-                        employees
+                      <tr>
 
-                        .sort((a,b)=>
+                        <td
+                          colSpan="3"
+                          className="empty-table"
+                        >
+                          No tasks available
+                        </td>
 
-                            b.performanceScore-a.performanceScore
+                      </tr>
+
+                    ) : (
+
+                      recentTasks.map(
+                        (task) => (
+
+                          <tr key={task.id}>
+
+                            <td>
+
+                              <strong>
+                                {task.taskName ||
+                                  "Untitled Task"}
+                              </strong>
+
+                              {task.projectName && (
+                                <small>
+                                  {task.projectName}
+                                </small>
+                              )}
+
+                            </td>
+
+                            <td>
+                              {task.employeeName ||
+                                "Not Assigned"}
+                            </td>
+
+                            <td>
+
+                              <span
+                                className={`task-status ${getTaskStatusClass(
+                                  task.status
+                                )}`}
+                              >
+                                {task.status ||
+                                  "PENDING"}
+                              </span>
+
+                            </td>
+
+                          </tr>
 
                         )
+                      )
 
-                        .slice(0,5)
+                    )}
 
-                        .map(emp=>(
+                  </tbody>
 
-                            <tr key={emp.id}>
+                </table>
 
-                                <td>
-
-                                    {emp.firstName}
-
-                                    {" "}
-
-                                    {emp.lastName}
-
-                                </td>
-
-                                <td>
-
-                                    {emp.department}
-
-                                </td>
-
-                                <td>
-
-                                    {emp.performanceScore}%
-
-                                </td>
-
-                                <td>
-
-                                    {emp.attendancePercentage}%
-
-                                </td>
-
-                                <td>
-
-                                    <span
-                                        className={`badge ${
-                                            emp.attritionRisk==="LOW"
-                                            ?"bg-success"
-                                            :emp.attritionRisk==="MEDIUM"
-                                            ?"bg-warning text-dark"
-                                            :"bg-danger"
-                                        }`}
-                                    >
-
-                                        {emp.attritionRisk}
-
-                                    </span>
-
-                                </td>
-
-                            </tr>
-
-                        ))
-
-                    }
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-</div>
-
-{/* Employee Performance */}
-
-<div className="row mt-4">
-
-    <div className="col-lg-6 mb-4">
-
-        <div className="card border-0 shadow rounded-4">
-
-            <div className="card-header bg-white border-0">
-
-                <h4 className="fw-bold">
-
-                    📈 Employee Performance
-
-                </h4>
+              </div>
 
             </div>
 
-            <div className="card-body">
+            {/* LEAVE REQUESTS */}
 
-                {
+            <div className="manager-panel">
 
-                    employees
-                    .slice(0,6)
-                    .map(emp=>(
+              <div className="manager-panel-header">
 
-                        <div
-                            key={emp.id}
-                            className="mb-4"
-                        >
+                <div>
 
-                            <div className="d-flex justify-content-between">
+                  <h3>
+                    Leave Requests
+                  </h3>
 
-                                <strong>
-
-                                    {emp.firstName} {emp.lastName}
-
-                                </strong>
-
-                                <strong>
-
-                                    {emp.performanceScore}%
-
-                                </strong>
-
-                            </div>
-
-                            <div className="progress mt-2">
-
-                                <div
-
-                                    className="progress-bar bg-success"
-
-                                    style={{
-
-                                        width:`${emp.performanceScore}%`
-
-                                    }}
-
-                                >
-
-                                    {emp.performanceScore}%
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    ))
-
-                }
-
-            </div>
-
-        </div>
-
-    </div>
-
-    {/* Quick Actions */}
-
-    <div className="col-lg-6 mb-4">
-
-        <div className="card border-0 shadow rounded-4">
-
-            <div className="card-header bg-white border-0">
-
-                <h4 className="fw-bold">
-
-                    ⚡ Quick Actions
-
-                </h4>
-
-            </div>
-
-            <div className="card-body">
-
-                <div className="d-grid gap-3">
-
-                    <button className="btn btn-primary btn-lg">
-
-                        ➕ Add New Employee
-
-                    </button>
-
-                    <button className="btn btn-success btn-lg">
-
-                        📁 Create Project
-
-                    </button>
-
-                    <button className="btn btn-warning btn-lg">
-
-                        ✅ Assign Task
-
-                    </button>
-
-                    <button className="btn btn-info btn-lg text-white">
-
-                        📊 Generate Report
-
-                    </button>
-
-                    <button className="btn btn-danger btn-lg">
-
-                        🌴 Approve Leave
-
-                    </button>
+                  <p>
+                    Pending approvals
+                  </p>
 
                 </div>
 
+                <a href="/leave-management">
+                  View All →
+                </a>
+
+              </div>
+
+              <div className="leave-request-list">
+
+                {pendingLeaveRequests.length === 0 ? (
+
+                  <div className="empty-leaves">
+
+                    <span>
+                      ✓
+                    </span>
+
+                    <strong>
+                      No pending leave requests
+                    </strong>
+
+                    <small>
+                      Your team is up to date
+                    </small>
+
+                  </div>
+
+                ) : (
+
+                  pendingLeaveRequests.map(
+                    (leave) => (
+
+                      <div
+                        className="leave-request"
+                        key={leave.id}
+                      >
+
+                        <div className="leave-person-icon">
+                          👤
+                        </div>
+
+                        <div className="leave-details">
+
+                          <strong>
+                            Employee #
+                            {leave.employeeId}
+                          </strong>
+
+                          <span>
+                            {leave.reason ||
+                              "Leave request"}
+                          </span>
+
+                        </div>
+
+                        <div className="leave-actions">
+
+                          <button
+                            className="approve-btn"
+                            disabled={
+                              actionLoading ===
+                              leave.id
+                            }
+                            onClick={() =>
+                              approveLeave(
+                                leave.id
+                              )
+                            }
+                          >
+                            {actionLoading ===
+                            leave.id
+                              ? "..."
+                              : "✓"}
+                          </button>
+
+                          <button
+                            className="reject-btn"
+                            disabled={
+                              actionLoading ===
+                              leave.id
+                            }
+                            onClick={() =>
+                              rejectLeave(
+                                leave.id
+                              )
+                            }
+                          >
+                            {actionLoading ===
+                            leave.id
+                              ? "..."
+                              : "×"}
+                          </button>
+
+                        </div>
+
+                      </div>
+
+                    )
+                  )
+
+                )}
+
+              </div>
+
             </div>
 
-        </div>
+          </section>
+
+          {/* =================================================
+              REAL-TIME STATUS
+          ================================================= */}
+
+          <div className="manager-live-status">
+
+            <div>
+
+              <span className="live-dot"></span>
+
+              <strong>
+                Real-time monitoring active
+              </strong>
+
+              <span>
+                Dashboard automatically refreshes
+                every 10 seconds
+              </span>
+
+            </div>
+
+            <span className="connected-status">
+              ● Connected
+            </span>
+
+          </div>
+
+          {/* =================================================
+              FOOTER
+          ================================================= */}
+
+          <footer className="manager-footer">
+
+            <span>
+              © 2026 NexusHR Enterprise HRMS
+            </span>
+
+            <span>
+              Manager Workforce Dashboard
+            </span>
+
+          </footer>
+
+        </main>
+
+      </div>
 
     </div>
-
-</div>
-
-{/* Recent Activity */}
-
-<div className="card border-0 shadow rounded-4 mt-4">
-
-    <div className="card-header bg-white border-0">
-
-        <h4 className="fw-bold">
-
-            🕒 Recent Activity
-
-        </h4>
-
-    </div>
-
-    <div className="card-body">
-
-        <ul className="list-group list-group-flush">
-
-            <li className="list-group-item">
-
-                ✅ Employee joined the organization.
-
-            </li>
-
-            <li className="list-group-item">
-
-                📁 New project assigned.
-
-            </li>
-
-            <li className="list-group-item">
-
-                📝 Task status updated.
-
-            </li>
-
-            <li className="list-group-item">
-
-                🌴 Leave request submitted.
-
-            </li>
-
-            <li className="list-group-item">
-
-                📊 Attendance updated.
-
-            </li>
-
-        </ul>
-
-    </div>
-
-</div>
-
-{/* Footer */}
-
-<div className="text-center mt-5 mb-3 text-muted">
-
-    <hr />
-
-    <h6>
-
-        NexusHR Enterprise Management System
-
-    </h6>
-
-    <small>
-
-        Version 2.0 • Built with React, Spring Boot & PostgreSQL
-
-    </small>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-    );
-
+  );
 }
 
 export default ManagerDashboard;
