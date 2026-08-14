@@ -1,787 +1,311 @@
-* {
-    box-sizing: border-box;
-}
+/* ================================
+   MANAGER DASHBOARD LAYOUT
+================================ */
 
 .manager-layout {
-    display: flex;
-    width: 100%;
     min-height: 100vh;
     background: #f7f8f3;
-    color: #17211b;
+    display: flex;
+    width: 100%;
 }
 
+/* Main content beside fixed sidebar */
 .manager-main {
     flex: 1;
     min-width: 0;
+    margin-left: 162px;
     min-height: 100vh;
-    background:
-        radial-gradient(
-            circle at top right,
-            rgba(239, 231, 201, .45),
-            transparent 35%
-        ),
-        #f7f8f3;
+    background: #f7f8f3;
 }
 
+/* Dashboard content */
 .manager-container {
     width: 100%;
-    padding: 25px 28px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 28px 50px;
 }
 
-
-/* ================= HEADER ================= */
-
-.manager-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    margin-bottom: 20px;
+/* Remove accidental top spacing */
+.manager-main > * {
+    margin-top: 0;
 }
+
+/* ================================
+   WELCOME
+================================ */
 
 .manager-welcome {
     display: flex;
     align-items: center;
-    gap: 13px;
+    justify-content: space-between;
+    margin-bottom: 24px;
 }
 
-.manager-avatar-small {
-    width: 42px;
-    height: 42px;
-
-    border-radius: 50%;
-
+.manager-welcome-left {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 12px;
+}
 
-    background: #d9eadf;
-
-    font-size: 22px;
+.manager-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 .manager-welcome h2 {
     margin: 0;
-
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 700;
+    color: #14261b;
 }
 
 .manager-welcome p {
     margin: 4px 0 0;
-
-    color: #87918a;
-
-    font-size: 10px;
+    color: #8b958e;
+    font-size: 13px;
 }
 
-.manager-date {
-    padding: 11px 16px;
+/* ================================
+   KPI GRID
+================================ */
 
-    border-radius: 9px;
-
-    background: white;
-
-    border: 1px solid #edf0ec;
-
-    color: #5f6c63;
-
-    font-size: 10px;
-
-    box-shadow: 0 3px 12px rgba(30, 50, 35, .04);
-}
-
-
-/* ================= KPI ================= */
-
-.manager-grid {
+.manager-kpi-grid {
     display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 14px;
+}
 
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
+.manager-kpi-card {
+    background: #ffffff;
+    border: 1px solid #e9ece8;
+    border-radius: 12px;
+    padding: 18px;
+    min-height: 115px;
+    box-shadow: 0 3px 12px rgba(20, 38, 27, 0.04);
+    transition: all .2s ease;
+}
 
-    gap: 13px;
+.manager-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(20, 38, 27, 0.08);
+}
 
-    margin-bottom: 13px;
+.manager-kpi-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.manager-kpi-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff4e8;
+    font-size: 18px;
+}
+
+.manager-kpi-value {
+    margin-top: 10px;
+    font-size: 23px;
+    font-weight: 700;
+    color: #16241a;
+}
+
+.manager-kpi-label {
+    color: #929b95;
+    font-size: 11px;
+}
+
+/* ================================
+   ATTENDANCE
+================================ */
+
+.manager-content-grid {
+    display: grid;
+    grid-template-columns: 1.65fr 1fr;
+    gap: 14px;
+    margin-top: 14px;
 }
 
 .manager-card {
-    background: #ffffff;
-
-    border: 1px solid #edf0ec;
-
-    border-radius: 10px;
-
-    box-shadow:
-        0 4px 18px rgba(35, 55, 42, .05);
+    background: #fff;
+    border: 1px solid #e8ece8;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 3px 12px rgba(20, 38, 27, .04);
 }
 
-.stat-card {
-    min-height: 125px;
-
-    padding: 16px;
-
-    position: relative;
-
-    overflow: hidden;
-}
-
-.stat-top {
+.manager-card-header {
     display: flex;
-
+    align-items: center;
     justify-content: space-between;
-
-    align-items: center;
+    margin-bottom: 15px;
 }
 
-.stat-icon {
-    width: 28px;
-    height: 28px;
-
-    border-radius: 8px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #fff5ed;
-
-    font-size: 14px;
-}
-
-.stat-icon.green {
-    background: #eaf8ee;
-}
-
-.stat-change {
-    font-size: 8px;
-
-    padding: 4px 7px;
-
-    border-radius: 20px;
-
-    background: #eefaf1;
-}
-
-.green {
-    color: #26a95f;
-}
-
-.red {
-    color: #e96a6a;
-
-    background: #fff0f0;
-}
-
-.orange-text {
-    color: #e88a23;
-
-    background: #fff6e9;
-}
-
-.stat-card h2 {
-    margin: 9px 0 1px;
-
-    font-size: 20px;
-
-    font-weight: 700;
-}
-
-.stat-card p {
+.manager-card-header h3 {
     margin: 0;
-
-    color: #9ba39d;
-
-    font-size: 9px;
-}
-
-.mini-chart {
-    position: absolute;
-
-    right: 13px;
-    bottom: 12px;
-
     font-size: 15px;
-
-    letter-spacing: -2px;
+    color: #16241a;
 }
 
-.green-chart {
-    color: #45c398;
-}
-
-.red-chart {
-    color: #e98d98;
-}
-
-.orange-chart {
-    color: #f1a14a;
-}
-
-
-/* ================= TWO COLUMN ================= */
-
-.manager-two-column {
-    display: grid;
-
-    grid-template-columns:
-        2fr 1fr;
-
-    gap: 13px;
-
-    margin-top: 13px;
-}
-
-.manager-panel {
-    background: #ffffff;
-
-    border: 1px solid #edf0ec;
-
-    border-radius: 10px;
-
-    box-shadow:
-        0 4px 18px rgba(35, 55, 42, .05);
-
-    overflow: hidden;
-}
-
-.panel-header {
-    padding: 15px 16px 7px;
-
-    display: flex;
-
-    align-items: flex-start;
-
-    justify-content: space-between;
-}
-
-.panel-header h3 {
-    margin: 0;
-
-    font-size: 12px;
-
-    font-weight: 700;
-}
-
-.panel-header span {
-    display: block;
-
-    margin-top: 4px;
-
+.manager-card-header p {
+    margin: 4px 0 0;
     color: #9aa29c;
-
-    font-size: 8px;
+    font-size: 11px;
 }
 
-.panel-header select {
-    padding: 7px 10px;
+/* ================================
+   ATTENDANCE BOX
+================================ */
 
-    border: 1px solid #e6eae5;
-
-    border-radius: 7px;
-
-    font-size: 9px;
-
-    background: white;
+.manager-attendance {
+    text-align: center;
+    padding: 10px;
 }
 
-
-/* ================= ATTENDANCE ================= */
-
-.attendance-panel {
-    min-height: 245px;
+.manager-clock {
+    font-size: 27px;
+    font-weight: 700;
+    color: #16241a;
+    margin: 12px 0;
 }
 
-.attendance-chart {
-    height: 160px;
-
-    padding: 5px 18px 0;
-
-    background:
-        repeating-linear-gradient(
-            to bottom,
-            transparent 0,
-            transparent 31px,
-            #edf0ed 32px
-        );
-}
-
-.chart-grid {
-    height: 100%;
-
+.manager-attendance-info {
+    background: #f6f8f5;
+    border-radius: 8px;
+    padding: 12px;
     display: flex;
-
-    align-items: flex-end;
-
     justify-content: space-around;
-
-    gap: 7px;
 }
 
-.chart-bar {
-    height: 100%;
-
-    width: 25px;
-
-    display: flex;
-
-    flex-direction: column;
-
-    justify-content: flex-end;
-
-    align-items: center;
+.manager-attendance-info div {
+    font-size: 10px;
+    color: #9aa29c;
 }
 
-.chart-bar span {
+.manager-attendance-info strong {
     display: block;
-
-    width: 20px;
-
-    min-height: 15px;
-
-    border-radius: 4px 4px 0 0;
-
-    background:
-        linear-gradient(
-            to bottom,
-            #ef605b 0 18%,
-            #f27d1b 18% 39%,
-            #173d25 39% 100%
-        );
+    color: #16241a;
+    font-size: 12px;
+    margin-top: 3px;
 }
 
-.chart-bar small {
-    margin-top: 7px;
+/* ================================
+   BUTTONS
+================================ */
 
-    color: #8d968f;
-
-    font-size: 7px;
-}
-
-.chart-legend {
+.manager-actions {
     display: flex;
-
-    gap: 14px;
-
-    padding: 6px 17px 12px;
-
-    color: #879088;
-
-    font-size: 8px;
+    gap: 8px;
+    margin-top: 12px;
 }
 
-.dot {
-    width: 6px;
-    height: 6px;
-
-    display: inline-block;
-
-    border-radius: 50%;
-
-    margin-right: 4px;
+.manager-btn {
+    flex: 1;
+    border: 0;
+    border-radius: 7px;
+    padding: 9px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
-.green-dot {
-    background: #173d25;
+.manager-btn-orange {
+    background: #ff7518;
+    color: white;
 }
 
-.orange-dot {
-    background: #f27d1b;
+.manager-btn-green {
+    background: #123d22;
+    color: white;
 }
 
-.red-dot {
-    background: #ef605b;
-}
+/* ================================
+   TEAM STATUS
+================================ */
 
-.gray-dot {
-    background: #cfd4d0;
-}
-
-
-/* ================= DONUT ================= */
-
-.status-panel {
-    min-height: 245px;
-}
-
-.donut-wrapper {
+.team-status {
     display: flex;
-
     align-items: center;
     justify-content: center;
-
-    height: 175px;
+    min-height: 200px;
 }
 
-.donut {
-    width: 125px;
-    height: 125px;
-
+.team-donut {
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
     background:
         conic-gradient(
-            #173d25 0 82%,
-            #d9dedb 82% 92%,
-            #f27d1b 92% 100%
+            #123d22 0deg 360deg
         );
-
-    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.donut::after {
-    content: "";
-
-    position: absolute;
-
-    width: 82px;
-    height: 82px;
-
+.team-donut-inner {
+    width: 105px;
+    height: 105px;
     border-radius: 50%;
-
     background: white;
-}
-
-.donut-center {
-    position: relative;
-
-    z-index: 2;
-
-    text-align: center;
-
     display: flex;
-
     flex-direction: column;
-}
-
-.donut-center strong {
-    font-size: 20px;
-}
-
-.donut-center span {
-    color: #8d968f;
-
-    font-size: 8px;
-}
-
-.status-legend {
-    display: flex;
-
-    justify-content: center;
-
-    gap: 10px;
-
-    padding-bottom: 13px;
-
-    color: #8d968f;
-
-    font-size: 8px;
-}
-
-
-/* ================= PERFORMANCE ================= */
-
-.performance-panel {
-    margin-top: 13px;
-
-    min-height: 135px;
-}
-
-.performers {
-    display: flex;
-
-    justify-content: space-around;
-
-    padding: 10px 20px 18px;
-}
-
-.performer {
-    text-align: center;
-
-    min-width: 70px;
-}
-
-.performer-avatar {
-    width: 42px;
-    height: 42px;
-
-    margin: auto;
-
-    border-radius: 50%;
-
-    display: flex;
-
     align-items: center;
     justify-content: center;
-
-    background: #f0d6bd;
-
-    border: 2px solid #efb187;
-
-    font-size: 20px;
 }
 
-.performer strong {
-    display: block;
-
-    margin-top: 5px;
-
-    font-size: 8px;
+.team-donut-inner strong {
+    font-size: 22px;
+    color: #16241a;
 }
 
-.performer span {
-    display: block;
-
-    margin-top: 3px;
-
-    color: #f47b20;
-
-    font-size: 8px;
-
-    font-weight: 700;
-}
-
-
-/* ================= BOTTOM ================= */
-
-.manager-bottom-grid {
-    display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
-    gap: 13px;
-
-    margin-top: 13px;
-}
-
-.manager-bottom-grid .manager-panel {
-    min-height: 170px;
-}
-
-.panel-header a {
-    color: #eb7b1e;
-
-    font-size: 8px;
-
-    text-decoration: none;
-}
-
-.task-row,
-.leave-row {
-    display: flex;
-
-    align-items: center;
-
-    gap: 10px;
-
-    padding: 9px 15px;
-
-    border-top: 1px solid #f1f3f1;
-}
-
-.task-icon {
-    width: 25px;
-    height: 25px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 7px;
-
-    background: #eaf8ee;
-
-    color: #27a45d;
-
+.team-donut-inner span {
     font-size: 10px;
+    color: #999;
 }
 
-.task-info {
-    flex: 1;
-}
-
-.task-info strong,
-.leave-row strong {
-    display: block;
-
-    font-size: 9px;
-}
-
-.task-info span,
-.leave-row span {
-    display: block;
-
-    margin-top: 2px;
-
-    color: #9aa29c;
-
-    font-size: 7px;
-}
-
-.status-badge {
-    padding: 4px 7px;
-
-    border-radius: 15px;
-
-    font-size: 7px;
-}
-
-.status-badge.completed {
-    background: #eaf8ee;
-
-    color: #24a15a;
-}
-
-.status-badge.pending {
-    background: #fff5e7;
-
-    color: #e68a20;
-}
-
-.empty-state {
-    padding: 35px;
-
-    text-align: center;
-
-    color: #a2aaa4;
-
-    font-size: 9px;
-}
-
-.leave-row > div:first-child {
-    flex: 1;
-}
-
-.leave-actions {
-    display: flex;
-
-    gap: 5px;
-}
-
-.approve-btn,
-.reject-btn {
-    width: 25px;
-    height: 25px;
-
-    border: 0;
-
-    border-radius: 6px;
-
-    cursor: pointer;
-
-    font-weight: 700;
-}
-
-.approve-btn {
-    background: #e9f8ee;
-
-    color: #249e58;
-}
-
-.reject-btn {
-    background: #fff0f0;
-
-    color: #e65c5c;
-}
-
-
-/* ================= REAL TIME ================= */
-
-.realtime-bar {
-    display: flex;
-
-    align-items: center;
-
-    gap: 8px;
-
-    margin-top: 13px;
-
-    padding: 9px 13px;
-
-    border-radius: 7px;
-
-    background: #edf9f0;
-
-    border: 1px solid #d9f0df;
-
-    color: #4d7058;
-
-    font-size: 8px;
-}
-
-.live-dot {
-    width: 7px;
-    height: 7px;
-
-    border-radius: 50%;
-
-    background: #31b566;
-
-    box-shadow:
-        0 0 0 4px rgba(49,181,102,.12);
-}
-
-.live-time {
-    margin-left: auto;
-
-    font-weight: 700;
-
-    color: #1e6d3d;
-}
-
-
-/* ================= RESPONSIVE ================= */
+/* ================================
+   RESPONSIVE
+================================ */
 
 @media (max-width: 1100px) {
 
-    .manager-grid {
-        grid-template-columns:
-            repeat(2, 1fr);
+    .manager-main {
+        margin-left: 162px;
     }
 
-    .manager-two-column {
-        grid-template-columns: 1fr;
+    .manager-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
-    .manager-bottom-grid {
+    .manager-content-grid {
         grid-template-columns: 1fr;
     }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 768px) {
+
+    .manager-main {
+        margin-left: 0;
+    }
 
     .manager-container {
-        padding: 15px;
+        padding: 20px 15px;
     }
 
-    .manager-top {
-        align-items: flex-start;
-
-        flex-direction: column;
-
-        gap: 10px;
-    }
-
-    .manager-grid {
+    .manager-kpi-grid {
         grid-template-columns: 1fr;
     }
 
-    .performers {
-        overflow-x: auto;
-
-        justify-content: flex-start;
-
-        gap: 18px;
-    }
-
-    .attendance-chart {
-        overflow-x: auto;
+    .manager-welcome {
+        align-items: flex-start;
     }
 }
