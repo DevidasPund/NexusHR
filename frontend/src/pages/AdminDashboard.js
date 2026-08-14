@@ -1,29 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
-import "./AdminDashboard.css";
 
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
-  PointElement,
-  LineElement,
   ArcElement,
   Tooltip,
   Legend,
 } from "chart.js";
 
-import { Bar, Line, Doughnut } from "react-chartjs-2";
+import { Bar, Doughnut } from "react-chartjs-2";
+
+import "./AdminDashboard.css";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  PointElement,
-  LineElement,
   ArcElement,
   Tooltip,
   Legend
@@ -33,18 +30,29 @@ function AdminDashboard() {
   const [dashboard, setDashboard] = useState({});
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  const API_URL =
-    "https://nexushr-production-bdec.up.railway.app";
+  /*
+   * =========================================================
+   * REAL-TIME DATA
+   * =========================================================
+   */
 
   useEffect(() => {
     loadData();
 
-    const interval = setInterval(() => {
+    const dataInterval = setInterval(() => {
       loadData();
     }, 10000);
 
-    return () => clearInterval(interval);
+    const clockInterval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => {
+      clearInterval(dataInterval);
+      clearInterval(clockInterval);
+    };
   }, []);
 
   const loadData = async () => {
@@ -57,180 +65,250 @@ function AdminDashboard() {
 
       setDashboard(dashboardResponse.data || {});
       setEmployees(employeeResponse.data || []);
-      setLoading(false);
     } catch (error) {
       console.error("Dashboard loading error:", error);
+    } finally {
       setLoading(false);
     }
   };
 
+  /*
+   * =========================================================
+   * CALCULATED REAL-TIME VALUES
+   * =========================================================
+   */
+
   const totalEmployees =
-    dashboard.totalEmployees || employees.length || 0;
+    Number(dashboard.totalEmployees) || employees.length || 0;
 
   const activeEmployees =
-    dashboard.activeEmployees ||
-    employees.filter((e) => e.status === "ACTIVE").length ||
+    Number(dashboard.activeEmployees) ||
+    employees.filter(
+      (employee) =>
+        String(employee.status || "").toUpperCase() === "ACTIVE"
+    ).length ||
     0;
 
   const pendingLeaves =
-    dashboard.pendingLeaves || 0;
+    Number(dashboard.pendingLeaves) || 0;
 
   const approvedLeaves =
-    dashboard.approvedLeaves || 0;
-
-  const totalDepartments =
-    dashboard.totalDepartments || 0;
-
-  const totalSalary =
-    dashboard.totalSalary || 0;
-
-  const attendancePercentage =
-    dashboard.attendancePercentage || 0;
+    Number(dashboard.approvedLeaves) || 0;
 
   const presentToday =
-    dashboard.presentToday || 0;
+    Number(dashboard.presentToday) || 0;
 
   const absentToday =
-    dashboard.absentToday || 0;
+    Number(dashboard.absentToday) || 0;
 
-  const highRisk =
-    dashboard.highRiskEmployees || 0;
+  const totalSalary =
+    Number(dashboard.totalSalary) || 0;
 
-  const mediumRisk =
-    dashboard.mediumRiskEmployees || 0;
+  const attendancePercentage =
+    Number(dashboard.attendancePercentage) || 0;
 
-  const lowRisk =
-    dashboard.lowRiskEmployees || 0;
+  /*
+   * =========================================================
+   * GENDER DATA
+   *
+   * If backend provides gender, it will be used.
+   * Otherwise values remain 0 instead of inventing data.
+   * =========================================================
+   */
 
-  const topPerformers =
-    dashboard.topPerformers || 0;
+  const genderData = useMemo(() => {
+    let male = 0;
+    let female = 0;
 
-  const averagePerformance =
-    dashboard.averagePerformance ||
-    dashboard.averagePerformers ||
-    0;
+    employees.forEach((employee) => {
+      const gender = String(
+        employee.gender || employee.sex || ""
+      ).toLowerCase();
 
-  const recentEmployees = employees.slice(0, 6);
+      if (gender === "male" || gender === "m") {
+        male++;
+      }
 
-  /* ---------------- BAR CHART ---------------- */
+      if (gender === "female" || gender === "f") {
+        female++;
+      }
+    });
 
-  const barData = {
+    if (dashboard.maleEmployees !== undefined) {
+      male = Number(dashboard.maleEmployees) || 0;
+    }
+
+    if (dashboard.femaleEmployees !== undefined) {
+      female = Number(dashboard.femaleEmployees) || 0;
+    }
+
+    return {
+      male,
+      female,
+    };
+  }, [employees, dashboard]);
+
+  /*
+   * =========================================================
+   * TOP PERFORMERS
+   * =========================================================
+   */
+
+  const topPerformers = useMemo(() => {
+    return [...employees]
+      .filter(
+        (employee) =>
+          employee.performanceScore !== null &&
+          employee.performanceScore !== undefined
+      )
+      .sort(
+        (a, b) =>
+          Number(b.performanceScore || 0) -
+          Number(a.performanceScore || 0)
+      )
+      .slice(0, 8);
+  }, [employees]);
+
+  /*
+   * If no performanceScore exists, show recent employees.
+   */
+  const displayPerformers =
+    topPerformers.length > 0
+      ? topPerformers
+      : employees.slice(0, 8);
+
+  /*
+   * =========================================================
+   * ATTENDANCE CHART
+   *
+   * Uses backend monthly data when available.
+   * =========================================================
+   */
+
+  const attendanceOverview =
+    dashboard.attendanceOverview ||
+    dashboard.monthlyAttendance ||
+    [];
+
+  const attendanceValues = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ].map((month, index) => {
+    const item = attendanceOverview[index];
+
+    if (typeof item === "number") {
+      return item;
+    }
+
+    if (item && typeof item === "object") {
+      return (
+        Number(item.present) ||
+        Number(item.onTime) ||
+        Number(item.attendance) ||
+        0
+      );
+    }
+
+    return 0;
+  });
+
+  /*
+   * If backend doesn't provide monthly data,
+   * show current employee count as the first value.
+   */
+  if (
+    attendanceValues.every((value) => value === 0) &&
+    totalEmployees > 0
+  ) {
+    attendanceValues[0] = presentToday || totalEmployees;
+  }
+
+  /*
+   * =========================================================
+   * BAR CHART
+   * =========================================================
+   */
+
+  const attendanceChartData = {
     labels: [
-      "Employees",
-      "Attendance",
-      "Pending Leaves",
-      "Approved Leaves",
-      "Departments",
-    ],
-
-    datasets: [
-      {
-        label: "HR Analytics",
-
-        data: [
-          totalEmployees,
-          dashboard.totalAttendance || 0,
-          pendingLeaves,
-          approvedLeaves,
-          totalDepartments,
-        ],
-
-        backgroundColor: [
-          "#4f46e5",
-          "#10b981",
-          "#f59e0b",
-          "#06b6d4",
-          "#ef4444",
-        ],
-
-        borderRadius: 8,
-        borderSkipped: false,
-      },
-    ],
-  };
-
-  const barOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-
-    plugins: {
-      legend: {
-        display: false,
-      },
-    },
-
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: "#eef2f7",
-        },
-      },
-
-      x: {
-        grid: {
-          display: false,
-        },
-      },
-    },
-  };
-
-  /* ---------------- LINE CHART ---------------- */
-
-  const lineData = {
-    labels: [
-      "Mon",
-      "Tue",
-      "Wed",
-      "Thu",
-      "Fri",
-      "Sat",
-      "Sun",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ],
 
     datasets: [
       {
         label: "Attendance",
 
-        data: [
-          72,
-          81,
-          76,
-          88,
-          92,
-          85,
-          attendancePercentage || 90,
-        ],
+        data: attendanceValues,
 
-        borderColor: "#4f46e5",
-        backgroundColor: "rgba(79,70,229,0.08)",
+        backgroundColor: "#173b24",
 
-        tension: 0.4,
-        fill: true,
+        borderRadius: 6,
 
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        borderSkipped: false,
+
+        barThickness: 21,
       },
     ],
   };
 
-  const lineOptions = {
+  const attendanceChartOptions = {
     responsive: true,
+
     maintainAspectRatio: false,
 
     plugins: {
       legend: {
         display: false,
       },
+
+      tooltip: {
+        backgroundColor: "#173b24",
+
+        titleColor: "#ffffff",
+
+        bodyColor: "#ffffff",
+
+        padding: 10,
+
+        cornerRadius: 8,
+      },
     },
 
     scales: {
       y: {
-        min: 0,
-        max: 100,
+        beginAtZero: true,
 
         grid: {
-          color: "#eef2f7",
+          color: "#edf0eb",
+        },
+
+        ticks: {
+          color: "#9aa39d",
+
+          font: {
+            size: 10,
+          },
         },
       },
 
@@ -238,717 +316,739 @@ function AdminDashboard() {
         grid: {
           display: false,
         },
+
+        ticks: {
+          color: "#7e8a82",
+
+          font: {
+            size: 10,
+          },
+        },
       },
     },
   };
 
-  /* ---------------- DOUGHNUT ---------------- */
+  /*
+   * =========================================================
+   * GENDER DOUGHNUT
+   * =========================================================
+   */
 
-  const leaveData = {
-    labels: [
-      "Pending",
-      "Approved",
-    ],
+  const genderChartData = {
+    labels: ["Male", "Female"],
 
     datasets: [
       {
         data: [
-          pendingLeaves,
-          approvedLeaves,
+          genderData.male,
+          genderData.female,
         ],
 
         backgroundColor: [
-          "#f59e0b",
-          "#10b981",
+          "#173b24",
+          "#ff7117",
         ],
 
         borderWidth: 0,
+
+        hoverOffset: 5,
       },
     ],
   };
 
-  const leaveOptions = {
+  const genderChartOptions = {
     responsive: true,
+
     maintainAspectRatio: false,
 
-    cutout: "70%",
+    cutout: "68%",
 
     plugins: {
       legend: {
         position: "bottom",
+
+        labels: {
+          usePointStyle: true,
+
+          pointStyle: "circle",
+
+          padding: 18,
+
+          color: "#637066",
+
+          font: {
+            size: 10,
+          },
+        },
+      },
+
+      tooltip: {
+        backgroundColor: "#173b24",
+
+        padding: 10,
+
+        cornerRadius: 8,
       },
     },
   };
 
-  /* ---------------- PROFILE IMAGE ---------------- */
+  /*
+   * =========================================================
+   * PROFILE IMAGE
+   * =========================================================
+   */
 
   const getProfileImage = (employee) => {
     if (employee.profileImage) {
-      return `${API_URL}/uploads/${employee.profileImage}`;
+      return `https://nexushr-production-bdec.up.railway.app/uploads/${employee.profileImage}`;
     }
 
     return "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
   };
 
-  /* ---------------- RISK ---------------- */
+  /*
+   * =========================================================
+   * PERFORMANCE SCORE
+   * =========================================================
+   */
 
-  const getRiskClass = (risk) => {
-    if (!risk) return "risk-low";
-
-    const value = String(risk).toLowerCase();
-
-    if (value.includes("high")) {
-      return "risk-high";
+  const getPerformanceScore = (employee, index) => {
+    if (
+      employee.performanceScore !== null &&
+      employee.performanceScore !== undefined
+    ) {
+      return Number(employee.performanceScore);
     }
 
-    if (value.includes("medium")) {
-      return "risk-medium";
+    if (
+      employee.attendancePercentage !== null &&
+      employee.attendancePercentage !== undefined
+    ) {
+      return Number(employee.attendancePercentage);
     }
 
-    return "risk-low";
+    /*
+     * No score supplied by backend.
+     * Display "-" rather than fake performance data.
+     */
+    return null;
   };
+
+  /*
+   * =========================================================
+   * DATE / TIME
+   * =========================================================
+   */
+
+  const formattedDate = currentTime.toLocaleDateString(
+    "en-IN",
+    {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }
+  );
+
+  const formattedTime = currentTime.toLocaleTimeString(
+    "en-IN",
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    }
+  );
+
+  /*
+   * =========================================================
+   * LOADING
+   * =========================================================
+   */
 
   if (loading) {
     return (
       <div className="dashboard-loading">
-        <div className="spinner-border text-primary"></div>
-        <p>Loading NexusHR Dashboard...</p>
+        <div className="spinner-border text-success"></div>
+
+        <p>
+          Loading NexusHR Dashboard...
+        </p>
       </div>
     );
   }
 
+  /*
+   * =========================================================
+   * DASHBOARD
+   * =========================================================
+   */
+
   return (
     <div className="nexus-dashboard">
 
-      {/* SIDEBAR */}
+      {/* =====================================================
+          SIDEBAR
+      ===================================================== */}
 
       <Sidebar />
 
       <div className="dashboard-main">
 
-        {/* NAVBAR */}
+        {/* ===================================================
+            TOP NAVBAR
+        =================================================== */}
 
         <Navbar />
 
         <main className="dashboard-content">
 
-          {/* ================= WELCOME ================= */}
+          {/* =================================================
+              HEADER
+          ================================================= */}
 
-          <section className="welcome-banner">
+          <div className="dashboard-header">
 
-            <div className="welcome-content">
-
-              <span className="welcome-small">
-                NEXUSHR ENTERPRISE HRMS
-              </span>
+            <div className="header-left">
 
               <h1>
                 Good Morning, Admin
-                <span> 👋</span>
+                <span className="wave">
+                  👋
+                </span>
               </h1>
 
               <p>
-                Manage your workforce, monitor performance
-                and make smarter HR decisions in real time.
+                Let's manage your employees in one place.
               </p>
 
-              <div className="welcome-actions">
+            </div>
 
-                <button
-                  className="primary-action"
-                  onClick={() =>
-                    window.location.href = "/employees"
-                  }
-                >
-                  + Add Employee
-                </button>
+            <div className="header-date">
 
-                <button
-                  className="secondary-action"
-                  onClick={() =>
-                    window.location.href = "/reports"
-                  }
-                >
-                  View Reports
-                </button>
+              <span className="calendar-icon">
+                📅
+              </span>
 
-              </div>
+              {formattedDate}
 
             </div>
 
-            <div className="welcome-decoration">
+          </div>
 
-              <div className="decoration-circle circle-one"></div>
-              <div className="decoration-circle circle-two"></div>
-              <div className="decoration-circle circle-three"></div>
+          {/* =================================================
+              MAIN DASHBOARD GRID
+          ================================================= */}
 
-              <div className="dashboard-icon">
-                📊
-              </div>
+          <section className="main-dashboard-grid">
 
-            </div>
+            {/* ===============================================
+                LEFT KPI AREA
+            =============================================== */}
 
-          </section>
+            <div className="kpi-area">
 
-          {/* ================= KPI ================= */}
+              {/* TOTAL EMPLOYEES */}
 
-          <section className="kpi-grid">
+              <div className="image-kpi-card">
 
-            {/* Employees */}
+                <div className="kpi-card-top">
 
-            <div className="kpi-card">
+                  <div className="image-kpi-icon">
+                    👥
+                  </div>
 
-              <div className="kpi-top">
+                  <span className="image-kpi-trend green">
+                    +12% ↑
+                  </span>
 
-                <div className="kpi-icon blue">
-                  👥
                 </div>
 
-                <span className="kpi-trend positive">
-                  +12%
-                </span>
+                <h2>
+                  {totalEmployees.toLocaleString()}
+                </h2>
 
-              </div>
+                <p>
+                  Total Employees
+                </p>
 
-              <h2>{totalEmployees}</h2>
-
-              <p>Total Employees</p>
-
-              <div className="mini-line blue-line">
-                ━╱╲╱╲━━╱╲╱
-              </div>
-
-            </div>
-
-            {/* Active */}
-
-            <div className="kpi-card">
-
-              <div className="kpi-top">
-
-                <div className="kpi-icon green">
-                  ✓
+                <div className="mini-sparkline green-spark">
+                  ╱╲╱╲━━╱╲╱╲
                 </div>
 
-                <span className="kpi-trend positive">
-                  +8%
-                </span>
-
               </div>
 
-              <h2>{activeEmployees}</h2>
+              {/* NEW / ACTIVE EMPLOYEES */}
 
-              <p>Active Employees</p>
+              <div className="image-kpi-card">
 
-              <div className="mini-line green-line">
-                ━╱╲━━╱╲╱╲━
-              </div>
+                <div className="kpi-card-top">
 
-            </div>
+                  <div className="image-kpi-icon">
+                    👤
+                  </div>
 
-            {/* Leaves */}
+                  <span className="image-kpi-trend red">
+                    Active
+                  </span>
 
-            <div className="kpi-card">
-
-              <div className="kpi-top">
-
-                <div className="kpi-icon orange">
-                  📋
                 </div>
 
-                <span className="kpi-trend warning">
-                  Pending
-                </span>
+                <h2>
+                  {activeEmployees.toLocaleString()}
+                </h2>
+
+                <p>
+                  Active Employees
+                </p>
+
+                <div className="mini-sparkline red-spark">
+                  ╱╲━━╱╲╱╲
+                </div>
 
               </div>
 
-              <h2>{pendingLeaves}</h2>
+              {/* JOB APPLICANTS / PENDING LEAVES */}
 
-              <p>Pending Leaves</p>
+              <div className="image-kpi-card">
 
-              <div className="mini-line orange-line">
-                ━╲╱╲━━╲╱╲━
+                <div className="kpi-card-top">
+
+                  <div className="image-kpi-icon">
+                    📋
+                  </div>
+
+                  <span className="image-kpi-trend orange">
+                    Pending
+                  </span>
+
+                </div>
+
+                <h2>
+                  {pendingLeaves}
+                </h2>
+
+                <p>
+                  Pending Leaves
+                </p>
+
+                <div className="mini-sparkline orange-spark">
+                  ╱╲╱╲━━╱╲
+                </div>
+
               </div>
 
-            </div>
+              {/* PAYROLL */}
 
-            {/* Payroll */}
+              <div className="image-kpi-card">
 
-            <div className="kpi-card">
+                <div className="kpi-card-top">
 
-              <div className="kpi-top">
+                  <div className="image-kpi-icon">
+                    ₹
+                  </div>
 
-                <div className="kpi-icon purple">
+                  <span className="image-kpi-trend green">
+                    Monthly
+                  </span>
+
+                </div>
+
+                <h2>
                   ₹
+                  {totalSalary.toLocaleString(
+                    "en-IN"
+                  )}
+                </h2>
+
+                <p>
+                  Total Payroll
+                </p>
+
+                <div className="mini-sparkline purple-spark">
+                  ╱╲━━╱╲╱╲
                 </div>
 
-                <span className="kpi-trend positive">
-                  +15%
+              </div>
+
+            </div>
+
+            {/* ===============================================
+                ATTENDANCE TIME CARD
+            =============================================== */}
+
+            <div className="attendance-time-card">
+
+              <div className="attendance-card-header">
+
+                <strong>
+                  Your Attendance
+                </strong>
+
+                <span>
+                  •••
                 </span>
 
               </div>
 
-              <h2>
-                ₹{Number(totalSalary).toLocaleString("en-IN")}
-              </h2>
+              <div className="live-time">
+                {formattedTime}
+              </div>
 
-              <p>Total Payroll</p>
+              <div className="attendance-info">
 
-              <div className="mini-line purple-line">
-                ━╱╲━━╱╲╱╲━
+                <div>
+                  <span>
+                    Break Time:
+                  </span>
+
+                  <strong>
+                    01:00 PM - 01:45 PM
+                  </strong>
+                </div>
+
+                <div>
+                  <span>
+                    Target Hours:
+                  </span>
+
+                  <strong>
+                    08:15 H (Per Day)
+                  </strong>
+                </div>
+
+              </div>
+
+              <div className="attendance-buttons">
+
+                <button className="break-button">
+                  Break ↩
+                </button>
+
+                <button className="clock-button">
+                  Clock Out →
+                </button>
+
               </div>
 
             </div>
 
           </section>
 
-          {/* ================= QUICK STATS ================= */}
+          {/* =================================================
+              ANALYTICS
+          ================================================= */}
 
-          <section className="quick-stats">
+          <section className="analytics-row">
 
-            <div className="quick-stat">
+            {/* ATTENDANCE */}
 
-              <div className="quick-icon green">
+            <div className="reference-card attendance-reference">
+
+              <div className="reference-card-header">
+
+                <div>
+
+                  <h3>
+                    Attendance Overview
+                  </h3>
+
+                  <div className="chart-legend">
+
+                    <span>
+                      <i className="dot dark-green"></i>
+                      On Time
+                    </span>
+
+                    <span>
+                      <i className="dot orange"></i>
+                      Late In
+                    </span>
+
+                    <span>
+                      <i className="dot red"></i>
+                      Absent
+                    </span>
+
+                  </div>
+
+                </div>
+
+                <select defaultValue="2026">
+                  <option>2026</option>
+                  <option>2025</option>
+                  <option>2024</option>
+                </select>
+
+              </div>
+
+              <div className="reference-chart">
+                <Bar
+                  data={attendanceChartData}
+                  options={attendanceChartOptions}
+                />
+              </div>
+
+            </div>
+
+            {/* GENDER */}
+
+            <div className="reference-card gender-reference">
+
+              <div className="reference-card-header">
+
+                <div>
+
+                  <h3>
+                    Gender By Employees
+                  </h3>
+
+                </div>
+
+                <span className="three-dots">
+                  •••
+                </span>
+
+              </div>
+
+              <div className="gender-chart-wrapper">
+
+                <Doughnut
+                  data={genderChartData}
+                  options={genderChartOptions}
+                />
+
+                <div className="gender-center">
+
+                  <strong>
+                    {genderData.male +
+                      genderData.female}
+                  </strong>
+
+                  <span>
+                    Employees
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* =================================================
+              TOP PERFORMANCE EMPLOYEES
+          ================================================= */}
+
+          <section className="reference-card top-performance-card">
+
+            <div className="reference-card-header">
+
+              <h3>
+                Top Performance Employees
+              </h3>
+
+              <span className="three-dots">
+                •••
+              </span>
+
+            </div>
+
+            <div className="performance-list">
+
+              {displayPerformers.length === 0 ? (
+
+                <div className="no-performance">
+                  No employee records available
+                </div>
+
+              ) : (
+
+                displayPerformers.map(
+                  (employee, index) => {
+
+                    const score =
+                      getPerformanceScore(
+                        employee,
+                        index
+                      );
+
+                    return (
+                      <div
+                        className="performance-person"
+                        key={
+                          employee.id ||
+                          index
+                        }
+                      >
+
+                        <div className="performance-avatar">
+
+                          <img
+                            src={getProfileImage(
+                              employee
+                            )}
+                            alt={
+                              employee.firstName ||
+                              "Employee"
+                            }
+                          />
+
+                        </div>
+
+                        <strong>
+                          {employee.firstName || ""}
+                          {" "}
+                          {employee.lastName || ""}
+                        </strong>
+
+                        <span>
+                          {score !== null
+                            ? `${score}%`
+                            : "N/A"}
+                        </span>
+
+                      </div>
+                    );
+                  }
+                )
+
+              )}
+
+            </div>
+
+          </section>
+
+          {/* =================================================
+              REAL-TIME SUMMARY
+          ================================================= */}
+
+          <section className="bottom-summary">
+
+            <div className="summary-card">
+
+              <div className="summary-icon green">
                 ✓
               </div>
 
               <div>
-                <strong>{presentToday}</strong>
-                <span>Present Today</span>
+
+                <strong>
+                  {presentToday}
+                </strong>
+
+                <span>
+                  Present Today
+                </span>
+
               </div>
 
             </div>
 
-            <div className="quick-stat">
+            <div className="summary-card">
 
-              <div className="quick-icon red">
+              <div className="summary-icon red">
                 !
               </div>
 
               <div>
-                <strong>{absentToday}</strong>
-                <span>Absent Today</span>
+
+                <strong>
+                  {absentToday}
+                </strong>
+
+                <span>
+                  Absent Today
+                </span>
+
               </div>
 
             </div>
 
-            <div className="quick-stat">
+            <div className="summary-card">
 
-              <div className="quick-icon blue">
+              <div className="summary-icon blue">
                 %
               </div>
 
               <div>
-                <strong>{attendancePercentage}%</strong>
-                <span>Attendance</span>
+
+                <strong>
+                  {attendancePercentage}%
+                </strong>
+
+                <span>
+                  Attendance
+                </span>
+
               </div>
 
             </div>
 
-            <div className="quick-stat">
+            <div className="summary-card">
 
-              <div className="quick-icon purple">
+              <div className="summary-icon orange">
                 🏢
               </div>
 
               <div>
-                <strong>{totalDepartments}</strong>
-                <span>Departments</span>
-              </div>
-
-            </div>
-
-          </section>
-
-          {/* ================= ANALYTICS ================= */}
-
-          <section className="analytics-grid">
-
-            <div className="dashboard-card large-chart">
-
-              <div className="card-heading">
-
-                <div>
-                  <h3>HR Analytics</h3>
-                  <span>Workforce overview</span>
-                </div>
-
-                <button className="chart-filter">
-                  This Week ▾
-                </button>
-
-              </div>
-
-              <div className="chart-container">
-                <Bar
-                  data={barData}
-                  options={barOptions}
-                />
-              </div>
-
-            </div>
-
-            <div className="dashboard-card">
-
-              <div className="card-heading">
-
-                <div>
-                  <h3>Leave Summary</h3>
-                  <span>Current leave status</span>
-                </div>
-
-              </div>
-
-              <div className="donut-container">
-
-                <Doughnut
-                  data={leaveData}
-                  options={leaveOptions}
-                />
-
-                <div className="donut-center">
-                  <strong>
-                    {pendingLeaves + approvedLeaves}
-                  </strong>
-                  <span>Total</span>
-                </div>
-
-              </div>
-
-            </div>
-
-          </section>
-
-          {/* ================= ATTENDANCE ================= */}
-
-          <section className="dashboard-card attendance-chart">
-
-            <div className="card-heading">
-
-              <div>
-                <h3>Attendance Overview</h3>
-                <span>Weekly attendance performance</span>
-              </div>
-
-              <div className="attendance-value">
-                {attendancePercentage}%
-                <small>Average</small>
-              </div>
-
-            </div>
-
-            <div className="line-chart-container">
-
-              <Line
-                data={lineData}
-                options={lineOptions}
-              />
-
-            </div>
-
-          </section>
-
-          {/* ================= EMPLOYEES ================= */}
-
-          <section className="dashboard-card employees-card">
-
-            <div className="card-heading">
-
-              <div>
-                <h3>Recent Employees</h3>
-                <span>
-                  Latest workforce records
-                </span>
-              </div>
-
-              <button
-                className="view-all-btn"
-                onClick={() =>
-                  window.location.href = "/employees"
-                }
-              >
-                View All →
-              </button>
-
-            </div>
-
-            <div className="employee-table-wrapper">
-
-              <table className="employee-table">
-
-                <thead>
-
-                  <tr>
-                    <th>EMPLOYEE</th>
-                    <th>DEPARTMENT</th>
-                    <th>DESIGNATION</th>
-                    <th>STATUS</th>
-                    <th>ATTENDANCE</th>
-                    <th>RISK</th>
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  {recentEmployees.length === 0 ? (
-
-                    <tr>
-                      <td
-                        colSpan="6"
-                        className="empty-table"
-                      >
-                        No employees found
-                      </td>
-                    </tr>
-
-                  ) : (
-
-                    recentEmployees.map((employee) => (
-
-                      <tr key={employee.id}>
-
-                        <td>
-
-                          <div className="employee-info">
-
-                            <img
-                              src={getProfileImage(employee)}
-                              alt="Employee"
-                            />
-
-                            <div>
-
-                              <strong>
-                                {employee.firstName}{" "}
-                                {employee.lastName}
-                              </strong>
-
-                              <span>
-                                {employee.email}
-                              </span>
-
-                            </div>
-
-                          </div>
-
-                        </td>
-
-                        <td>
-                          <span className="department">
-                            {employee.department || "N/A"}
-                          </span>
-                        </td>
-
-                        <td>
-                          {employee.designation || "N/A"}
-                        </td>
-
-                        <td>
-
-                          <span
-                            className={
-                              employee.status === "ACTIVE"
-                                ? "status active"
-                                : "status inactive"
-                            }
-                          >
-                            ●{" "}
-                            {employee.status || "UNKNOWN"}
-                          </span>
-
-                        </td>
-
-                        <td>
-
-                          <div className="attendance-cell">
-
-                            <div className="progress">
-
-                              <div
-                                className="progress-bar"
-                                style={{
-                                  width: `${Math.min(
-                                    employee.attendancePercentage ||
-                                      0,
-                                    100
-                                  )}%`,
-                                }}
-                              ></div>
-
-                            </div>
-
-                            <span>
-                              {employee.attendancePercentage ||
-                                0}
-                              %
-                            </span>
-
-                          </div>
-
-                        </td>
-
-                        <td>
-
-                          <span
-                            className={`risk-badge ${getRiskClass(
-                              employee.attritionRisk
-                            )}`}
-                          >
-                            {employee.attritionRisk ||
-                              "LOW"}
-                          </span>
-
-                        </td>
-
-                      </tr>
-
-                    ))
-
-                  )}
-
-                </tbody>
-
-              </table>
-
-            </div>
-
-          </section>
-
-          {/* ================= AI INSIGHTS ================= */}
-
-          <section className="ai-section">
-
-            <div className="section-title">
-
-              <div>
-                <h2>
-                  🤖 AI Workforce Insights
-                </h2>
-
-                <p>
-                  Intelligent workforce analytics
-                </p>
-              </div>
-
-              <span className="ai-live">
-                ● LIVE
-              </span>
-
-            </div>
-
-            <div className="ai-grid">
-
-              <div className="ai-card high">
-
-                <span className="ai-card-icon">
-                  ⚠
-                </span>
-
-                <div>
-                  <strong>{highRisk}</strong>
-                  <span>High Risk Employees</span>
-                </div>
-
-              </div>
-
-              <div className="ai-card medium">
-
-                <span className="ai-card-icon">
-                  !
-                </span>
-
-                <div>
-                  <strong>{mediumRisk}</strong>
-                  <span>Medium Risk Employees</span>
-                </div>
-
-              </div>
-
-              <div className="ai-card low">
-
-                <span className="ai-card-icon">
-                  ✓
-                </span>
-
-                <div>
-                  <strong>{lowRisk}</strong>
-                  <span>Low Risk Employees</span>
-                </div>
-
-              </div>
-
-              <div className="ai-card performance">
-
-                <span className="ai-card-icon">
-                  ⭐
-                </span>
-
-                <div>
-                  <strong>{topPerformers}</strong>
-                  <span>Top Performers</span>
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="ai-summary">
-
-              <div>
-                <span>
-                  Average Performance
-                </span>
 
                 <strong>
-                  {averagePerformance}%
+                  {dashboard.totalDepartments ||
+                    0}
                 </strong>
-              </div>
 
-              <div>
                 <span>
-                  Top Skill Gaps
+                  Departments
                 </span>
 
-                <strong>
-                  {dashboard.topSkillGaps ||
-                    "No major gaps"}
-                </strong>
               </div>
 
             </div>
 
           </section>
 
-          {/* ================= SYSTEM STATUS ================= */}
+          {/* =================================================
+              REAL-TIME STATUS
+          ================================================= */}
 
-          <section className="system-status">
+          <div className="real-time-status">
 
             <div>
 
-              <span className="live-dot"></span>
+              <span className="real-time-dot"></span>
 
               <strong>
-                System Operational
+                Real-Time Dashboard
               </strong>
 
               <span>
-                All NexusHR services are running normally
+                Data automatically refreshes every 10 seconds
               </span>
 
             </div>
 
-            <div className="websocket-status">
-              <span></span>
-              WebSocket Connected
-            </div>
+            <span className="connected">
+              ● Connected
+            </span>
 
-          </section>
+          </div>
+
+          {/* =================================================
+              FOOTER
+          ================================================= */}
 
           <footer className="dashboard-footer">
+
             © 2026 NexusHR Enterprise HRMS
-            <span>•</span>
+
+            <span>
+              •
+            </span>
+
             Real-Time Workforce Management
+
           </footer>
 
         </main>
