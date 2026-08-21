@@ -8,7 +8,13 @@ function ManagerDashboard() {
   const [dashboard, setDashboard] = useState({});
   const [tasks, setTasks] = useState([]);
   const [leaves, setLeaves] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [time, setTime] = useState(new Date());
+  const [loading, setLoading] = useState(true);
+
+  /* =====================================================
+     LOAD DATA
+  ===================================================== */
 
   useEffect(() => {
     loadData();
@@ -29,68 +35,255 @@ function ManagerDashboard() {
 
   const loadData = async () => {
     try {
-      const [dashboardRes, taskRes, leaveRes] =
-        await Promise.all([
-          API.get("/dashboard"),
-          API.get("/tasks"),
-          API.get("/leave")
-        ]);
+      const requests = [
+        API.get("/dashboard"),
+        API.get("/tasks"),
+        API.get("/leave"),
+        API.get("/employees")
+      ];
 
-      setDashboard(dashboardRes.data || {});
-      setTasks(Array.isArray(taskRes.data) ? taskRes.data : []);
-      setLeaves(Array.isArray(leaveRes.data) ? leaveRes.data : []);
+      const [
+        dashboardRes,
+        taskRes,
+        leaveRes,
+        employeeRes
+      ] = await Promise.allSettled(requests);
+
+      if (dashboardRes.status === "fulfilled") {
+        setDashboard(dashboardRes.value.data || {});
+      }
+
+      if (taskRes.status === "fulfilled") {
+        setTasks(
+          Array.isArray(taskRes.value.data)
+            ? taskRes.value.data
+            : []
+        );
+      }
+
+      if (leaveRes.status === "fulfilled") {
+        setLeaves(
+          Array.isArray(leaveRes.value.data)
+            ? leaveRes.value.data
+            : []
+        );
+      }
+
+      if (employeeRes.status === "fulfilled") {
+        setEmployees(
+          Array.isArray(employeeRes.value.data)
+            ? employeeRes.value.data
+            : []
+        );
+      }
+
+      setLoading(false);
+
     } catch (error) {
-      console.error("Manager dashboard error:", error);
+      console.error(
+        "Manager dashboard error:",
+        error
+      );
+
+      setLoading(false);
     }
   };
 
+  /* =====================================================
+     LEAVE ACTIONS
+  ===================================================== */
+
   const approveLeave = async (id) => {
     try {
-      await API.put(`/leave/manager-approve/${id}`);
-      loadData();
+      await API.put(
+        `/leave/manager-approve/${id}`
+      );
+
+      await loadData();
+
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Approve leave error:",
+        error
+      );
     }
   };
 
   const rejectLeave = async (id) => {
     try {
-      await API.put(`/leave/manager-reject/${id}`);
-      loadData();
+      await API.put(
+        `/leave/manager-reject/${id}`
+      );
+
+      await loadData();
+
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Reject leave error:",
+        error
+      );
     }
   };
 
+  /* =====================================================
+     USER
+  ===================================================== */
+
   const username =
-    localStorage.getItem("username") || "Manager";
+    localStorage.getItem("username") ||
+    "Manager";
+
+  /* =====================================================
+     TASK CALCULATIONS
+  ===================================================== */
 
   const pendingTasks = tasks.filter(
     (task) =>
-      task.status === "PENDING" ||
-      task.status === "Pending"
+      String(task.status).toUpperCase() ===
+      "PENDING"
   ).length;
 
   const completedTasks = tasks.filter(
     (task) =>
-      task.status === "COMPLETED" ||
-      task.status === "Completed"
+      String(task.status).toUpperCase() ===
+      "COMPLETED"
   ).length;
 
+  const totalTasks = tasks.length;
+
+  const taskCompletion =
+    totalTasks > 0
+      ? Math.round(
+          (completedTasks / totalTasks) * 100
+        )
+      : 0;
+
+  /* =====================================================
+     LEAVE CALCULATIONS
+  ===================================================== */
+
   const pendingLeaves = leaves.filter(
-    (leave) => leave.status === "PENDING"
+    (leave) =>
+      String(leave.status).toUpperCase() ===
+      "PENDING"
   );
 
+  const approvedLeaves = leaves.filter(
+    (leave) =>
+      String(leave.status).toUpperCase() ===
+      "APPROVED"
+  ).length;
+
+  /* =====================================================
+     TEAM
+  ===================================================== */
+
   const totalTeam =
-    dashboard.totalEmployees ||
-    dashboard.teamMembers ||
+    dashboard.totalEmployees ??
+    dashboard.teamMembers ??
+    employees.length ??
     0;
 
+  const activeEmployees =
+    dashboard.activeEmployees ??
+    employees.filter(
+      (employee) =>
+        String(employee.status).toUpperCase() ===
+        "ACTIVE"
+    ).length;
+
   const projects =
-    dashboard.totalProjects || 0;
+    dashboard.totalProjects ?? 0;
 
   const attendance =
-    dashboard.attendancePercentage || 0;
+    dashboard.attendancePercentage ??
+    0;
+
+  /* =====================================================
+     PERFORMANCE
+  ===================================================== */
+
+  const performanceEmployees = [...employees]
+    .filter(
+      (employee) =>
+        employee.performanceScore !== null &&
+        employee.performanceScore !== undefined
+    )
+    .sort(
+      (a, b) =>
+        Number(b.performanceScore || 0) -
+        Number(a.performanceScore || 0)
+    )
+    .slice(0, 8);
+
+  /* =====================================================
+     FALLBACK PERFORMANCE DATA
+  ===================================================== */
+
+  const fallbackPerformance = [
+    {
+      name: "Team Member",
+      score: 90
+    },
+    {
+      name: "Team Member",
+      score: 88
+    },
+    {
+      name: "Team Member",
+      score: 85
+    },
+    {
+      name: "Team Member",
+      score: 80
+    }
+  ];
+
+  const performers =
+    performanceEmployees.length > 0
+      ? performanceEmployees.map(
+          (employee) => ({
+            name:
+              `${employee.firstName || ""} ${
+                employee.lastName || ""
+              }`.trim() ||
+              employee.username ||
+              "Employee",
+
+            score: Number(
+              employee.performanceScore || 0
+            )
+          })
+        )
+      : fallbackPerformance;
+
+  /* =====================================================
+     ATTENDANCE
+  ===================================================== */
+
+  const attendanceValue =
+    Number(attendance) > 0
+      ? Math.min(Number(attendance), 100)
+      : 75;
+
+  const attendanceBars = [
+    82,
+    68,
+    76,
+    84,
+    62,
+    58,
+    47,
+    78,
+    83,
+    42,
+    70,
+    attendanceValue
+  ];
+
+  /* =====================================================
+     DATE / TIME
+  ===================================================== */
 
   const formatTime = () => {
     return time.toLocaleTimeString([], {
@@ -109,14 +302,44 @@ function ManagerDashboard() {
     });
   };
 
+  /* =====================================================
+     LOADING
+  ===================================================== */
+
+  if (loading) {
+    return (
+      <div className="manager-layout">
+
+        <Sidebar />
+
+        <main className="manager-main">
+
+          <Navbar />
+
+          <div className="manager-container">
+
+            <div className="manager-panel">
+              <div className="empty-state">
+                Loading Manager Dashboard...
+              </div>
+            </div>
+
+          </div>
+
+        </main>
+
+      </div>
+    );
+  }
+
+  /* =====================================================
+     RETURN
+  ===================================================== */
+
   return (
     <div className="manager-layout">
 
-      {/* ================= SIDEBAR ================= */}
-
       <Sidebar />
-
-      {/* ================= MAIN ================= */}
 
       <main className="manager-main">
 
@@ -124,7 +347,9 @@ function ManagerDashboard() {
 
         <div className="manager-container">
 
-          {/* ================= TOP HEADER ================= */}
+          {/* =================================================
+              WELCOME
+          ================================================= */}
 
           <div className="manager-top">
 
@@ -135,6 +360,7 @@ function ManagerDashboard() {
               </div>
 
               <div>
+
                 <h2>
                   Good Morning, {username} 👋
                 </h2>
@@ -142,6 +368,7 @@ function ManagerDashboard() {
                 <p>
                   Let's manage your employees in one place.
                 </p>
+
               </div>
 
             </div>
@@ -152,11 +379,14 @@ function ManagerDashboard() {
 
           </div>
 
-          {/* ================= KPI AREA ================= */}
+
+          {/* =================================================
+              KPI CARDS
+          ================================================= */}
 
           <div className="manager-grid">
 
-            {/* TOTAL EMPLOYEES */}
+            {/* TEAM */}
 
             <div className="manager-card stat-card">
 
@@ -167,7 +397,7 @@ function ManagerDashboard() {
                 </div>
 
                 <span className="stat-change green">
-                  +12% ↑
+                  Active
                 </span>
 
               </div>
@@ -282,7 +512,9 @@ function ManagerDashboard() {
           </div>
 
 
-          {/* ================= ATTENDANCE + TEAM STATUS ================= */}
+          {/* =================================================
+              ATTENDANCE + TEAM STATUS
+          ================================================= */}
 
           <div className="manager-two-column">
 
@@ -293,6 +525,7 @@ function ManagerDashboard() {
               <div className="panel-header">
 
                 <div>
+
                   <h3>
                     Attendance Overview
                   </h3>
@@ -300,131 +533,76 @@ function ManagerDashboard() {
                   <span>
                     Team attendance analytics
                   </span>
+
                 </div>
 
-                <select>
-                  <option>2026</option>
-                  <option>2025</option>
-                  <option>2024</option>
+                <select defaultValue="2026">
+
+                  <option value="2026">
+                    2026
+                  </option>
+
+                  <option value="2025">
+                    2025
+                  </option>
+
+                  <option value="2024">
+                    2024
+                  </option>
+
                 </select>
 
               </div>
+
 
               <div className="attendance-chart">
 
                 <div className="chart-grid">
 
-                  <div className="chart-bar">
-                    <span
-                      style={{
-                        height: "82%"
-                      }}
-                    ></span>
-                    <small>Jan</small>
-                  </div>
+                  {attendanceBars.map(
+                    (value, index) => {
 
-                  <div className="chart-bar">
-                    <span
-                      style={{
-                        height: "68%"
-                      }}
-                    ></span>
-                    <small>Feb</small>
-                  </div>
+                      const months = [
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Oct",
+                        "Nov",
+                        "Dec"
+                      ];
 
-                  <div className="chart-bar">
-                    <span
-                      style={{
-                        height: "76%"
-                      }}
-                    ></span>
-                    <small>Mar</small>
-                  </div>
+                      return (
+                        <div
+                          className="chart-bar"
+                          key={months[index]}
+                        >
 
-                  <div className="chart-bar">
-                    <span
-                      style={{
-                        height: "84%"
-                      }}
-                    ></span>
-                    <small>Apr</small>
-                  </div>
+                          <span
+                            style={{
+                              height:
+                                `${value}%`
+                            }}
+                          ></span>
 
-                  <div className="chart-bar">
-                    <span
-                      style={{
-                        height: "62%"
-                      }}
-                    ></span>
-                    <small>May</small>
-                  </div>
+                          <small>
+                            {months[index]}
+                          </small>
 
-                  <div className="chart-bar">
-                    <span
-                      style={{
-                        height: "58%"
-                      }}
-                    ></span>
-                    <small>Jun</small>
-                  </div>
-
-                  <div className="chart-bar">
-                    <span
-                      style={{
-                        height: "47%"
-                      }}
-                    ></span>
-                    <small>Jul</small>
-                  </div>
-
-                  <div className="chart-bar">
-                    <span
-                      style={{
-                        height: "78%"
-                      }}
-                    ></span>
-                    <small>Aug</small>
-                  </div>
-
-                  <div className="chart-bar">
-                    <span
-                      style={{
-                        height: "83%"
-                      }}
-                    ></span>
-                    <small>Sep</small>
-                  </div>
-
-                  <div className="chart-bar">
-                    <span
-                      style={{
-                        height: "42%"
-                      }}
-                    ></span>
-                    <small>Oct</small>
-                  </div>
-
-                  <div className="chart-bar">
-                    <span
-                      style={{
-                        height: "70%"
-                      }}
-                    ></span>
-                    <small>Nov</small>
-                  </div>
-
-                  <div className="chart-bar">
-                    <span
-                      style={{
-                        height: "88%"
-                      }}
-                    ></span>
-                    <small>Dec</small>
-                  </div>
+                        </div>
+                      );
+                    }
+                  )}
 
                 </div>
 
               </div>
+
 
               <div className="chart-legend">
 
@@ -455,6 +633,7 @@ function ManagerDashboard() {
               <div className="panel-header">
 
                 <div>
+
                   <h3>
                     Team Status
                   </h3>
@@ -462,6 +641,7 @@ function ManagerDashboard() {
                   <span>
                     Current team overview
                   </span>
+
                 </div>
 
                 <span className="more">
@@ -469,6 +649,7 @@ function ManagerDashboard() {
                 </span>
 
               </div>
+
 
               <div className="donut-wrapper">
 
@@ -490,16 +671,17 @@ function ManagerDashboard() {
 
               </div>
 
+
               <div className="status-legend">
 
                 <span>
                   <i className="dot green-dot"></i>
-                  Active
+                  Active {activeEmployees}
                 </span>
 
                 <span>
                   <i className="dot gray-dot"></i>
-                  Leave
+                  Leave {pendingLeaves.length}
                 </span>
 
                 <span>
@@ -514,13 +696,16 @@ function ManagerDashboard() {
           </div>
 
 
-          {/* ================= TOP PERFORMANCE ================= */}
+          {/* =================================================
+              PERFORMANCE
+          ================================================= */}
 
           <div className="manager-panel performance-panel">
 
             <div className="panel-header">
 
               <div>
+
                 <h3>
                   Top Performance Employees
                 </h3>
@@ -528,6 +713,7 @@ function ManagerDashboard() {
                 <span>
                   Highest performing team members
                 </span>
+
               </div>
 
               <span className="more">
@@ -536,80 +722,53 @@ function ManagerDashboard() {
 
             </div>
 
+
             <div className="performers">
 
-              {[
-                {
-                  name: "Mark Wood",
-                  score: 90
-                },
-                {
-                  name: "Nora Ray",
-                  score: 88
-                },
-                {
-                  name: "Mark Wood",
-                  score: 85
-                },
-                {
-                  name: "Ava Singh",
-                  score: 80
-                },
-                {
-                  name: "Mark Wood",
-                  score: 70
-                },
-                {
-                  name: "Nora Ray",
-                  score: 69
-                },
-                {
-                  name: "Mark Wood",
-                  score: 65
-                },
-                {
-                  name: "Ava Singh",
-                  score: 62
-                }
-              ].map((employee, index) => (
+              {performers.map(
+                (employee, index) => (
 
-                <div
-                  className="performer"
-                  key={index}
-                >
+                  <div
+                    className="performer"
+                    key={index}
+                  >
 
-                  <div className="performer-avatar">
-                    👤
+                    <div className="performer-avatar">
+                      👤
+                    </div>
+
+                    <strong>
+                      {employee.name}
+                    </strong>
+
+                    <span>
+                      {employee.score}%
+                    </span>
+
                   </div>
 
-                  <strong>
-                    {employee.name}
-                  </strong>
-
-                  <span>
-                    {employee.score}%
-                  </span>
-
-                </div>
-
-              ))}
+                )
+              )}
 
             </div>
 
           </div>
 
 
-          {/* ================= TASK + LEAVE ================= */}
+          {/* =================================================
+              TASKS + LEAVES
+          ================================================= */}
 
           <div className="manager-bottom-grid">
 
-            {/* TEAM TASKS */}
+            {/* TASKS */}
 
             <div className="manager-panel">
 
               <div className="panel-header">
 
                 <div>
+
                   <h3>
                     Team Tasks
                   </h3>
@@ -617,6 +776,7 @@ function ManagerDashboard() {
                   <span>
                     Latest team tasks
                   </span>
+
                 </div>
 
                 <a href="/tasks">
@@ -624,6 +784,7 @@ function ManagerDashboard() {
                 </a>
 
               </div>
+
 
               <div className="task-list">
 
@@ -635,42 +796,50 @@ function ManagerDashboard() {
 
                 ) : (
 
-                  tasks.slice(0, 5).map((task) => (
+                  tasks
+                    .slice(0, 5)
+                    .map((task) => (
 
-                    <div
-                      className="task-row"
-                      key={task.id}
-                    >
+                      <div
+                        className="task-row"
+                        key={task.id}
+                      >
 
-                      <div className="task-icon">
-                        ✓
-                      </div>
+                        <div className="task-icon">
+                          ✓
+                        </div>
 
-                      <div className="task-info">
+                        <div className="task-info">
 
-                        <strong>
-                          {task.taskName}
-                        </strong>
+                          <strong>
+                            {task.taskName ||
+                              "Task"}
+                          </strong>
 
-                        <span>
-                          {task.employeeName}
+                          <span>
+                            {task.employeeName ||
+                              "Employee"}
+                          </span>
+
+                        </div>
+
+                        <span
+                          className={
+                            String(
+                              task.status
+                            ).toUpperCase() ===
+                            "COMPLETED"
+                              ? "status-badge completed"
+                              : "status-badge pending"
+                          }
+                        >
+                          {task.status ||
+                            "PENDING"}
                         </span>
 
                       </div>
 
-                      <span
-                        className={
-                          task.status === "COMPLETED"
-                            ? "status-badge completed"
-                            : "status-badge pending"
-                        }
-                      >
-                        {task.status}
-                      </span>
-
-                    </div>
-
-                  ))
+                    ))
 
                 )}
 
@@ -686,6 +855,7 @@ function ManagerDashboard() {
               <div className="panel-header">
 
                 <div>
+
                   <h3>
                     Leave Requests
                   </h3>
@@ -701,6 +871,7 @@ function ManagerDashboard() {
                 </a>
 
               </div>
+
 
               <div className="leave-list">
 
@@ -724,21 +895,26 @@ function ManagerDashboard() {
                         <div>
 
                           <strong>
-                            Employee #{leave.employeeId}
+                            Employee #
+                            {leave.employeeId}
                           </strong>
 
                           <span>
-                            {leave.reason}
+                            {leave.reason ||
+                              "Leave request"}
                           </span>
 
                         </div>
+
 
                         <div className="leave-actions">
 
                           <button
                             className="approve-btn"
                             onClick={() =>
-                              approveLeave(leave.id)
+                              approveLeave(
+                                leave.id
+                              )
                             }
                           >
                             ✓
@@ -747,7 +923,9 @@ function ManagerDashboard() {
                           <button
                             className="reject-btn"
                             onClick={() =>
-                              rejectLeave(leave.id)
+                              rejectLeave(
+                                leave.id
+                              )
                             }
                           >
                             ×
@@ -768,7 +946,9 @@ function ManagerDashboard() {
           </div>
 
 
-          {/* ================= REAL TIME ================= */}
+          {/* =================================================
+              REAL TIME
+          ================================================= */}
 
           <div className="realtime-bar">
 
@@ -779,7 +959,8 @@ function ManagerDashboard() {
             </strong>
 
             <span>
-              Dashboard automatically refreshes every 10 seconds.
+              Dashboard automatically refreshes
+              every 10 seconds.
             </span>
 
             <span className="live-time">
