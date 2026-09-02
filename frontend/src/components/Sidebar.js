@@ -1,12 +1,18 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
 
 function Sidebar() {
-  const role = localStorage.getItem("role") || "EMPLOYEE";
-  const username = localStorage.getItem("username") || "User";
+  const role = (
+    localStorage.getItem("role") || "EMPLOYEE"
+  ).toUpperCase();
 
-  const location = useLocation();
+  const username =
+    localStorage.getItem("username") || "User";
+
+  /* =====================================================
+     DASHBOARD PATH
+     ===================================================== */
 
   const dashboardPath =
     role === "ADMIN"
@@ -15,26 +21,38 @@ function Sidebar() {
       ? "/manager/dashboard"
       : "/employee/dashboard";
 
-  const isActive = (path) => {
-    return location.pathname === path ? "active-menu" : "";
-  };
+  /* =====================================================
+     MENU ITEM
+     ===================================================== */
 
-  const menuItem = (path, icon, label) => (
-    <Link
-      to={path}
-      className={`sidebar-menu-item ${isActive(path)}`}
-    >
-      <span className="sidebar-icon">{icon}</span>
-      <span>{label}</span>
-    </Link>
-  );
+  const menuItem = (path, icon, label) => {
+    return (
+      <NavLink
+        to={path}
+        className={({ isActive }) =>
+          `sidebar-menu-item ${
+            isActive ? "active-menu" : ""
+          }`
+        }
+      >
+        <span className="sidebar-icon">
+          {icon}
+        </span>
+
+        <span>{label}</span>
+      </NavLink>
+    );
+  };
 
   return (
     <aside className="nexushr-sidebar">
 
-      {/* ================= LOGO ================= */}
+      {/* =================================================
+          LOGO
+         ================================================= */}
 
       <div className="sidebar-logo">
+
         <div className="logo-box">
           HR.
         </div>
@@ -43,13 +61,18 @@ function Sidebar() {
           <strong>NexusHR</strong>
           <small>HRMS</small>
         </div>
+
       </div>
 
-      {/* ================= PROFILE ================= */}
+
+      {/* =================================================
+          PROFILE
+         ================================================= */}
 
       <div className="sidebar-profile">
 
         <div className="profile-image-wrapper">
+
           <img
             src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
             alt="Profile"
@@ -57,9 +80,12 @@ function Sidebar() {
           />
 
           <span className="online-dot"></span>
+
         </div>
 
-        <h5>{username}</h5>
+        <h5>
+          {username}
+        </h5>
 
         <span className="role-badge">
           {role}
@@ -67,11 +93,14 @@ function Sidebar() {
 
       </div>
 
-      {/* ================= NAVIGATION ================= */}
+
+      {/* =================================================
+          NAVIGATION
+         ================================================= */}
 
       <nav className="sidebar-navigation">
 
-        {/* Dashboard */}
+        {/* DASHBOARD */}
 
         {menuItem(
           dashboardPath,
@@ -79,10 +108,14 @@ function Sidebar() {
           "Dashboard"
         )}
 
-        {/* ================= ADMIN ================= */}
+
+        {/* =================================================
+            ADMIN
+           ================================================= */}
 
         {role === "ADMIN" && (
           <>
+
             <div className="sidebar-section-title">
               WORKFORCE
             </div>
@@ -111,6 +144,7 @@ function Sidebar() {
               "Teams"
             )}
 
+
             <div className="sidebar-section-title">
               OPERATIONS
             </div>
@@ -133,6 +167,7 @@ function Sidebar() {
               "Payroll"
             )}
 
+
             <div className="sidebar-section-title">
               PROJECTS
             </div>
@@ -148,6 +183,7 @@ function Sidebar() {
               "✓",
               "Tasks"
             )}
+
 
             <div className="sidebar-section-title">
               AI & REPORTS
@@ -170,13 +206,18 @@ function Sidebar() {
               "♧",
               "Notifications"
             )}
+
           </>
         )}
 
-        {/* ================= MANAGER ================= */}
+
+        {/* =================================================
+            MANAGER
+           ================================================= */}
 
         {role === "MANAGER" && (
           <>
+
             <div className="sidebar-section-title">
               TEAM MANAGEMENT
             </div>
@@ -192,6 +233,7 @@ function Sidebar() {
               "▣",
               "Leave Management"
             )}
+
 
             <div className="sidebar-section-title">
               PROJECTS
@@ -215,6 +257,7 @@ function Sidebar() {
               "Milestones"
             )}
 
+
             <div className="sidebar-section-title">
               PERFORMANCE
             </div>
@@ -224,6 +267,7 @@ function Sidebar() {
               "★",
               "Performance"
             )}
+
 
             <div className="sidebar-section-title">
               AI INSIGHTS
@@ -258,13 +302,18 @@ function Sidebar() {
               "♧",
               "Notifications"
             )}
+
           </>
         )}
 
-        {/* ================= EMPLOYEE ================= */}
+
+        {/* =================================================
+            EMPLOYEE
+           ================================================= */}
 
         {role === "EMPLOYEE" && (
           <>
+
             <div className="sidebar-section-title">
               MY WORK
             </div>
@@ -304,12 +353,16 @@ function Sidebar() {
               "♧",
               "Notifications"
             )}
+
           </>
         )}
 
       </nav>
 
-      {/* ================= COMMON MENU ================= */}
+
+      {/* =================================================
+          COMMON MENU
+         ================================================= */}
 
       <div className="sidebar-divider"></div>
 
@@ -335,7 +388,10 @@ function Sidebar() {
 
       </div>
 
-      {/* ================= AI WIDGET ================= */}
+
+      {/* =================================================
+          AI WORKFORCE CARD
+         ================================================= */}
 
       <div className="ai-sidebar-card">
 
@@ -357,7 +413,10 @@ function Sidebar() {
 
       </div>
 
-      {/* ================= FOOTER ================= */}
+
+      {/* =================================================
+          FOOTER
+         ================================================= */}
 
       <div className="sidebar-footer">
 

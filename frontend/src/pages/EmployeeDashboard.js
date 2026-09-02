@@ -5,1056 +5,1074 @@ import Navbar from "../components/Navbar";
 import "./EmployeeDashboard.css";
 
 function EmployeeDashboard() {
+  const [employee, setEmployee] = useState({});
+  const [tasks, setTasks] = useState([]);
+  const [leaves, setLeaves] = useState([]);
+  const [time, setTime] = useState(new Date());
+  const [loading, setLoading] = useState(true);
 
-    const [attendance, setAttendance] = useState([]);
-    const [tasks, setTasks] = useState([]);
-    const [leaves, setLeaves] = useState([]);
-    const [profile, setProfile] = useState({});
+  const username =
+    localStorage.getItem("username") || "Employee";
 
-    useEffect(() => {
+  const employeeId =
+    localStorage.getItem("employeeId");
 
-        loadProfile();
+  useEffect(() => {
+    loadDashboard();
 
-        const interval = setInterval(() => {
-            loadProfile();
-        }, 10000);
+    const dataTimer = setInterval(() => {
+      loadDashboard();
+    }, 10000);
 
-        return () => clearInterval(interval);
+    const clockTimer = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
 
-    }, []);
-
-    const loadProfile = async () => {
-
-        try {
-
-            const employeeId =
-                localStorage.getItem("employeeId");
-
-            if (!employeeId) {
-                console.error("Employee ID not found");
-                return;
-            }
-
-            const response =
-                await API.get(`/employees/${employeeId}`);
-
-            setProfile(response.data);
-
-            await Promise.all([
-                loadAttendance(employeeId),
-                loadLeaves(employeeId)
-            ]);
-
-            if (response.data.username) {
-                await loadTasks(response.data.username);
-            }
-
-        } catch (error) {
-
-            console.error(
-                "Employee dashboard error:",
-                error
-            );
-
-        }
+    return () => {
+      clearInterval(dataTimer);
+      clearInterval(clockTimer);
     };
+  }, []);
 
-    const loadAttendance = async (employeeId) => {
+  const loadDashboard = async () => {
+    try {
+      setLoading(true);
 
+      let employeeData = {};
+
+      /*
+       * First try employee ID from localStorage.
+       */
+      if (employeeId) {
         try {
+          const response = await API.get(
+            `/employees/${employeeId}`
+          );
 
-            const response =
-                await API.get(
-                    `/attendance/employee/${employeeId}`
-                );
-
-            setAttendance(
-                Array.isArray(response.data)
-                    ? response.data
-                    : []
-            );
-
+          employeeData = response.data || {};
         } catch (error) {
-
-            console.error(
-                "Attendance error:",
-                error
-            );
-
+          console.log("Employee ID API unavailable");
         }
-    };
+      }
 
-    const loadLeaves = async (employeeId) => {
-
+      /*
+       * If employee ID is not available,
+       * try username.
+       */
+      if (
+        !employeeData.id &&
+        username
+      ) {
         try {
+          const response = await API.get(
+            `/employees/username/${username}`
+          );
 
-            const response =
-                await API.get(
-                    `/leave/employee/${employeeId}`
-                );
-
-            setLeaves(
-                Array.isArray(response.data)
-                    ? response.data
-                    : []
-            );
-
+          employeeData = response.data || {};
         } catch (error) {
-
-            console.error(
-                "Leave error:",
-                error
-            );
-
+          console.log("Username API unavailable");
         }
-    };
+      }
 
-    const loadTasks = async (username) => {
+      /*
+       * Dashboard API
+       */
+      try {
+        const response =
+          await API.get("/dashboard");
 
-        try {
-
-            const response =
-                await API.get(
-                    `/tasks/employee/${username}`
-                );
-
-            setTasks(
-                Array.isArray(response.data)
-                    ? response.data
-                    : []
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Task error:",
-                error
-            );
-
+        if (response.data) {
+          employeeData = {
+            ...response.data,
+            ...employeeData
+          };
         }
-    };
+      } catch (error) {
+        console.log("Dashboard API unavailable");
+      }
 
-    const completedTasks =
-        tasks.filter(
-            task => task.status === "COMPLETED"
-        ).length;
+      /*
+       * Tasks
+       */
+      try {
+        const response =
+          await API.get("/tasks");
 
-    const pendingTasks =
-        tasks.filter(
-            task =>
-                task.status === "PENDING" ||
-                task.status === "IN_PROGRESS"
-        ).length;
-
-    const attendancePercentage =
-        Number(
-            profile.attendancePercentage || 0
+        setTasks(
+          Array.isArray(response.data)
+            ? response.data
+            : []
         );
+      } catch (error) {
+        setTasks([]);
+      }
 
-    const performanceScore =
-        Number(
-            profile.performanceScore || 0
+      /*
+       * Leaves
+       */
+      try {
+        const response =
+          await API.get("/leave");
+
+        setLeaves(
+          Array.isArray(response.data)
+            ? response.data
+            : []
         );
+      } catch (error) {
+        setLeaves([]);
+      }
+
+      setEmployee(employeeData);
+
+    } catch (error) {
+      console.error(
+        "Employee dashboard error:",
+        error
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const completedTasks = tasks.filter(
+    (task) =>
+      task.status === "COMPLETED" ||
+      task.status === "Completed"
+  ).length;
+
+  const pendingTasks = tasks.filter(
+    (task) =>
+      task.status === "PENDING" ||
+      task.status === "Pending"
+  ).length;
+
+  const attendance =
+    Number(
+      employee.attendancePercentage ??
+      employee.attendance_percentage ??
+      0
+    );
+
+  const performance =
+    Number(
+      employee.performanceScore ??
+      employee.performance_score ??
+      0
+    );
+
+  const salary =
+    employee.salary ??
+    0;
+
+  const attritionRisk =
+    employee.attritionRisk ??
+    employee.attrition_risk ??
+    "LOW";
+
+  const department =
+    employee.department ||
+    "IT";
+
+  const designation =
+    employee.designation ||
+    "EMPLOYEE";
+
+  const firstName =
+    employee.firstName ||
+    employee.first_name ||
+    username;
+
+  const lastName =
+    employee.lastName ||
+    employee.last_name ||
+    "";
+
+  const fullName =
+    `${firstName} ${lastName}`.trim();
+
+  const email =
+    employee.email ||
+    "Not available";
+
+  const phone =
+    employee.phone ||
+    "Not available";
+
+  const status =
+    employee.status ||
+    "ACTIVE";
+
+  const project =
+    employee.currentProject ||
+    employee.current_project ||
+    "";
+
+  const projectCount =
+    employee.projectCount ||
+    employee.project_count ||
+    0;
+
+  const missingSkills =
+    employee.missingSkills ||
+    employee.missing_skills ||
+    "None";
+
+  const taskCompletion =
+    tasks.length > 0
+      ? Math.round(
+          (completedTasks / tasks.length) *
+            100
+        )
+      : 0;
+
+  const formatTime = () =>
+    time.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
 
-    const salary =
-        Number(
-            profile.salary || 0
-        );
+  const formatDate = () =>
+    time.toLocaleDateString([], {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric"
+    });
 
-    const taskCompletion =
-        tasks.length > 0
-            ? Math.round(
-                (completedTasks / tasks.length) * 100
-            )
-            : 0;
+  const attendanceData = [
+    88,
+    66,
+    58,
+    80,
+    73,
+    39,
+    58
+  ];
 
-    const attritionRisk =
-        profile.attritionRisk || "LOW";
+  return (
+    <div className="employee-dashboard-layout">
 
-    const riskClass =
-        attritionRisk === "HIGH"
-            ? "risk-high"
-            : attritionRisk === "MEDIUM"
-                ? "risk-medium"
-                : "risk-low";
+      {/* SIDEBAR */}
+      <Sidebar />
 
-    const profileImage =
-        profile.profileImage
-            ? `https://nexushr-production-bdec.up.railway.app/uploads/${profile.profileImage}`
-            : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+      {/* MAIN */}
+      <main className="employee-dashboard-main">
 
-    const today =
-        new Date().toLocaleDateString(
-            "en-IN",
-            {
-                weekday: "long",
-                day: "2-digit",
-                month: "long",
-                year: "numeric"
-            }
-        );
+        <Navbar />
 
-    return (
+        <div className="employee-dashboard-container">
 
-        <div className="employee-app">
+          {/* ================= HEADER ================= */}
 
-            {/* SIDEBAR */}
+          <div className="employee-page-header">
 
-            <Sidebar />
+            <div>
+              <h1>
+                Employee Dashboard
+              </h1>
 
-            {/* MAIN */}
+              <p>
+                Enterprise Workforce Management System
+              </p>
+            </div>
 
-            <main className="employee-main">
+            <div className="employee-header-right">
 
-                <Navbar />
+              <div className="employee-search">
+                <span>⌕</span>
+                <input
+                  placeholder="Search anything..."
+                />
+              </div>
 
-                <div className="employee-content">
+              <div className="notification-icon">
+                🔔
+                <span>3</span>
+              </div>
 
-                    {/* TOP HEADER */}
+              <div className="header-user">
 
-                    <div className="employee-header">
+                <div>
+                  <strong>
+                    Welcome, {firstName}
+                  </strong>
 
-                        <div>
+                  <small>
+                    EMPLOYEE
+                  </small>
+                </div>
 
-                            <h1>
-                                Employee Dashboard
-                            </h1>
+                <div className="header-avatar">
+                  👨‍💼
+                  <i></i>
+                </div>
 
-                            <p>
-                                Enterprise Workforce Management System
-                            </p>
+              </div>
 
-                        </div>
+            </div>
 
-                        <div className="employee-date">
-                            📅 {today}
-                        </div>
+          </div>
 
-                    </div>
+          {/* ================= WELCOME ================= */}
 
+          <section className="employee-welcome">
 
-                    {/* WELCOME BANNER */}
+            <div className="welcome-profile">
 
-                    <section className="employee-hero">
+              <div className="large-avatar">
+                👨‍💼
+                <span></span>
+              </div>
 
-                        <div className="hero-info">
+              <div>
 
-                            <img
-                                src={profileImage}
-                                alt="Employee"
-                                className="hero-avatar"
-                            />
+                <h2>
+                  Good Morning, {firstName} 👋
+                </h2>
 
-                            <div>
+                <p>
+                  Let's manage your work in one place.
+                </p>
 
-                                <h2>
-                                    Good Morning,{" "}
-                                    {profile.firstName || "Employee"} 👋
-                                </h2>
+                <div className="welcome-tags">
 
-                                <p>
-                                    Let's manage your work in one place.
-                                </p>
+                  <span>
+                    👤 EMPLOYEE
+                  </span>
 
-                                <div className="hero-tags">
-
-                                    <span>
-                                        👤 {profile.designation || "Employee"}
-                                    </span>
-
-                                    <span>
-                                        🏢 {profile.department || "Department"}
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div className="real-time">
-
-                            <span></span>
-
-                            Real-time
-
-                        </div>
-
-                    </section>
-
-
-                    {/* KPI */}
-
-                    <section className="employee-kpis">
-
-                        <div className="kpi-card">
-
-                            <div className="kpi-top">
-
-                                <div className="kpi-icon attendance">
-                                    ✓
-                                </div>
-
-                                <span className="trend green">
-                                    Live
-                                </span>
-
-                            </div>
-
-                            <h2>
-                                {attendancePercentage}%
-                            </h2>
-
-                            <p>
-                                Attendance
-                            </p>
-
-                            <small>
-                                Current attendance
-                            </small>
-
-                            <div className="mini-chart blue">
-                                ╱╲╱╲━━╱╲
-                            </div>
-
-                        </div>
-
-
-                        <div className="kpi-card">
-
-                            <div className="kpi-top">
-
-                                <div className="kpi-icon completed">
-                                    ✓
-                                </div>
-
-                                <span className="trend green">
-                                    Active
-                                </span>
-
-                            </div>
-
-                            <h2>
-                                {completedTasks}
-                            </h2>
-
-                            <p>
-                                Completed Tasks
-                            </p>
-
-                            <small>
-                                Tasks completed
-                            </small>
-
-                            <div className="mini-chart green">
-                                ━╱╲╱╲━━
-                            </div>
-
-                        </div>
-
-
-                        <div className="kpi-card">
-
-                            <div className="kpi-top">
-
-                                <div className="kpi-icon pending">
-                                    !
-                                </div>
-
-                                <span className="trend orange">
-                                    Attention
-                                </span>
-
-                            </div>
-
-                            <h2>
-                                {pendingTasks}
-                            </h2>
-
-                            <p>
-                                Pending Tasks
-                            </p>
-
-                            <small>
-                                Need attention
-                            </small>
-
-                            <div className="mini-chart orange">
-                                ━╲╱╲━━╱
-                            </div>
-
-                        </div>
-
-
-                        <div className="kpi-card">
-
-                            <div className="kpi-top">
-
-                                <div className="kpi-icon salary">
-                                    ₹
-                                </div>
-
-                                <span className="trend purple">
-                                    Monthly
-                                </span>
-
-                            </div>
-
-                            <h2>
-                                ₹{salary.toLocaleString("en-IN")}
-                            </h2>
-
-                            <p>
-                                Monthly Salary
-                            </p>
-
-                            <small>
-                                Current salary
-                            </small>
-
-                            <div className="mini-chart purple">
-                                ╱╲━━╱╲
-                            </div>
-
-                        </div>
-
-                    </section>
-
-
-                    {/* ATTENDANCE + PERFORMANCE */}
-
-                    <section className="analytics-grid">
-
-                        <div className="dashboard-card">
-
-                            <div className="card-heading">
-
-                                <div>
-
-                                    <h3>
-                                        Attendance Overview
-                                    </h3>
-
-                                    <p>
-                                        Your attendance analytics
-                                    </p>
-
-                                </div>
-
-                                <button>
-                                    Today ▾
-                                </button>
-
-                            </div>
-
-                            <div className="attendance-chart">
-
-                                <div className="chart-grid">
-
-                                    <span>100%</span>
-                                    <span>75%</span>
-                                    <span>50%</span>
-                                    <span>25%</span>
-                                    <span>0%</span>
-
-                                </div>
-
-                                <div className="attendance-bars">
-
-                                    {[
-                                        "Mon",
-                                        "Tue",
-                                        "Wed",
-                                        "Thu",
-                                        "Fri",
-                                        "Sat",
-                                        "Sun"
-                                    ].map(
-                                        (day, index) => (
-
-                                            <div
-                                                className="bar-column"
-                                                key={day}
-                                            >
-
-                                                <div
-                                                    className="bar"
-                                                    style={{
-                                                        height:
-                                                            index === 0
-                                                                ? `${Math.max(attendancePercentage, 8)}%`
-                                                                : `${Math.max(attendancePercentage * (0.7 + index * 0.04), 5)}%`
-                                                    }}
-                                                ></div>
-
-                                                <span>
-                                                    {day}
-                                                </span>
-
-                                            </div>
-
-                                        )
-                                    )}
-
-                                </div>
-
-                            </div>
-
-                            <div className="chart-legend">
-
-                                <span>
-                                    <i className="dot present"></i>
-                                    Attendance
-                                </span>
-
-                                <span>
-                                    <i className="dot absent"></i>
-                                    Absent
-                                </span>
-
-                            </div>
-
-                        </div>
-
-
-                        {/* PERFORMANCE */}
-
-                        <div className="dashboard-card performance-card">
-
-                            <div className="card-heading">
-
-                                <div>
-
-                                    <h3>
-                                        Performance
-                                    </h3>
-
-                                    <p>
-                                        Current performance score
-                                    </p>
-
-                                </div>
-
-                                <span className="live-badge">
-                                    ● Live
-                                </span>
-
-                            </div>
-
-                            <div className="performance-circle">
-
-                                <div
-                                    className="circle-progress"
-                                    style={{
-                                        "--progress":
-                                            `${Math.min(
-                                                performanceScore,
-                                                100
-                                            ) * 3.6}deg`
-                                    }}
-                                >
-
-                                    <div className="circle-inner">
-
-                                        <strong>
-                                            {performanceScore}%
-                                        </strong>
-
-                                        <span>
-                                            Score
-                                        </span>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div className="performance-label">
-                                Current Performance
-                            </div>
-
-                        </div>
-
-                    </section>
-
-
-                    {/* LOWER CARDS */}
-
-                    <section className="lower-grid">
-
-                        {/* PROFILE */}
-
-                        <div className="dashboard-card">
-
-                            <div className="card-heading">
-
-                                <h3>
-                                    👤 My Profile
-                                </h3>
-
-                                <a href="/profile">
-                                    View All →
-                                </a>
-
-                            </div>
-
-                            <div className="profile-row">
-
-                                <img
-                                    src={profileImage}
-                                    alt="Profile"
-                                />
-
-                                <div>
-
-                                    <h4>
-                                        {profile.firstName}{" "}
-                                        {profile.lastName}
-                                    </h4>
-
-                                    <p>
-                                        {profile.designation}
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                            <div className="profile-info">
-
-                                <div>
-                                    <span>Email</span>
-                                    <strong>
-                                        {profile.email || "N/A"}
-                                    </strong>
-                                </div>
-
-                                <div>
-                                    <span>Phone</span>
-                                    <strong>
-                                        {profile.phone || "N/A"}
-                                    </strong>
-                                </div>
-
-                                <div>
-                                    <span>Department</span>
-                                    <strong>
-                                        {profile.department || "N/A"}
-                                    </strong>
-                                </div>
-
-                                <div>
-                                    <span>Status</span>
-                                    <strong className="active-text">
-                                        {profile.status || "ACTIVE"}
-                                    </strong>
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-                        {/* TASKS */}
-
-                        <div className="dashboard-card">
-
-                            <div className="card-heading">
-
-                                <h3>
-                                    ✅ My Tasks
-                                </h3>
-
-                                <a href="/my-tasks">
-                                    View All →
-                                </a>
-
-                            </div>
-
-                            <div className="task-stat">
-
-                                <div className="task-stat-box green-box">
-
-                                    <strong>
-                                        {completedTasks}
-                                    </strong>
-
-                                    <span>
-                                        Completed
-                                    </span>
-
-                                </div>
-
-                                <div className="task-stat-box orange-box">
-
-                                    <strong>
-                                        {pendingTasks}
-                                    </strong>
-
-                                    <span>
-                                        Pending
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-                            <div className="task-progress">
-
-                                <div>
-
-                                    <span>
-                                        Task Completion
-                                    </span>
-
-                                    <strong>
-                                        {taskCompletion}%
-                                    </strong>
-
-                                </div>
-
-                                <div className="progress-track">
-
-                                    <div
-                                        className="progress-value"
-                                        style={{
-                                            width:
-                                                `${taskCompletion}%`
-                                        }}
-                                    ></div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-                        {/* AI */}
-
-                        <div className="dashboard-card">
-
-                            <div className="card-heading">
-
-                                <h3>
-                                    🤖 AI Workforce
-                                </h3>
-
-                                <span className="ai-badge">
-                                    AI
-                                </span>
-
-                            </div>
-
-                            <div className="risk-section">
-
-                                <span>
-                                    Attrition Risk
-                                </span>
-
-                                <strong
-                                    className={riskClass}
-                                >
-                                    {attritionRisk}
-                                </strong>
-
-                            </div>
-
-                            <p className="risk-description">
-
-                                {attritionRisk === "HIGH"
-                                    ? "High risk detected. Review your career insights."
-                                    : attritionRisk === "MEDIUM"
-                                        ? "Moderate risk. Continue improving your performance."
-                                        : "Your current attrition risk is low."}
-
-                            </p>
-
-                            <div className="skill-info">
-
-                                <span>
-                                    Missing Skills
-                                </span>
-
-                                <strong>
-                                    {profile.missingSkills || "None"}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-                    </section>
-
-
-                    {/* PROJECT */}
-
-                    <section className="dashboard-card project-card">
-
-                        <div className="card-heading">
-
-                            <div>
-
-                                <h3>
-                                    🚀 Current Project
-                                </h3>
-
-                                <p>
-                                    Your assigned project
-                                </p>
-
-                            </div>
-
-                            <span className="project-count">
-                                {profile.projectCount || 0} Projects
-                            </span>
-
-                        </div>
-
-                        <div className="project-content">
-
-                            <div className="project-icon">
-                                📁
-                            </div>
-
-                            <div>
-
-                                <h3>
-                                    {profile.currentProject ||
-                                        "No Project Assigned"}
-                                </h3>
-
-                                <p>
-                                    {profile.currentProject
-                                        ? "Currently assigned project"
-                                        : "No project has been assigned yet."}
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </section>
-
-
-                    {/* RECENT TASKS */}
-
-                    <section className="dashboard-card table-card">
-
-                        <div className="card-heading">
-
-                            <h3>
-                                📋 Recent Tasks
-                            </h3>
-
-                            <a href="/my-tasks">
-                                View All →
-                            </a>
-
-                        </div>
-
-                        <div className="table-responsive">
-
-                            <table>
-
-                                <thead>
-
-                                    <tr>
-                                        <th>Task</th>
-                                        <th>Project</th>
-                                        <th>Priority</th>
-                                        <th>Status</th>
-                                    </tr>
-
-                                </thead>
-
-                                <tbody>
-
-                                    {tasks.length > 0 ? (
-
-                                        tasks.slice(0, 5).map(
-                                            task => (
-
-                                                <tr key={task.id}>
-
-                                                    <td>
-                                                        {task.taskName}
-                                                    </td>
-
-                                                    <td>
-                                                        {task.projectName}
-                                                    </td>
-
-                                                    <td>
-                                                        <span className="priority">
-                                                            {task.priority}
-                                                        </span>
-                                                    </td>
-
-                                                    <td>
-
-                                                        <span
-                                                            className={
-                                                                task.status ===
-                                                                    "COMPLETED"
-                                                                    ? "status completed-status"
-                                                                    : task.status ===
-                                                                        "IN_PROGRESS"
-                                                                        ? "status progress-status"
-                                                                        : "status pending-status"
-                                                            }
-                                                        >
-                                                            {task.status}
-                                                        </span>
-
-                                                    </td>
-
-                                                </tr>
-
-                                            )
-                                        )
-
-                                    ) : (
-
-                                        <tr>
-
-                                            <td
-                                                colSpan="4"
-                                                className="empty-row"
-                                            >
-                                                No Tasks Found
-                                            </td>
-
-                                        </tr>
-
-                                    )}
-
-                                </tbody>
-
-                            </table>
-
-                        </div>
-
-                    </section>
-
-
-                    {/* LEAVES */}
-
-                    <section className="dashboard-card table-card">
-
-                        <div className="card-heading">
-
-                            <h3>
-                                🌴 My Leave Requests
-                            </h3>
-
-                            <a href="/leave">
-                                View All →
-                            </a>
-
-                        </div>
-
-                        <div className="table-responsive">
-
-                            <table>
-
-                                <thead>
-
-                                    <tr>
-                                        <th>Leave Type</th>
-                                        <th>Reason</th>
-                                        <th>Status</th>
-                                    </tr>
-
-                                </thead>
-
-                                <tbody>
-
-                                    {leaves.length > 0 ? (
-
-                                        leaves.slice(0, 5).map(
-                                            leave => (
-
-                                                <tr key={leave.id}>
-
-                                                    <td>
-                                                        {leave.leaveType}
-                                                    </td>
-
-                                                    <td>
-                                                        {leave.reason}
-                                                    </td>
-
-                                                    <td>
-
-                                                        <span
-                                                            className={
-                                                                leave.status ===
-                                                                    "APPROVED"
-                                                                    ? "status completed-status"
-                                                                    : leave.status ===
-                                                                        "REJECTED"
-                                                                        ? "status rejected-status"
-                                                                        : "status pending-status"
-                                                            }
-                                                        >
-                                                            {leave.status}
-                                                        </span>
-
-                                                    </td>
-
-                                                </tr>
-
-                                            )
-                                        )
-
-                                    ) : (
-
-                                        <tr>
-
-                                            <td
-                                                colSpan="3"
-                                                className="empty-row"
-                                            >
-                                                No Leave Requests Found
-                                            </td>
-
-                                        </tr>
-
-                                    )}
-
-                                </tbody>
-
-                            </table>
-
-                        </div>
-
-                    </section>
-
-
-                    {/* REAL TIME */}
-
-                    <div className="sync-bar">
-
-                        <span className="sync-dot"></span>
-
-                        <strong>
-                            Real-time data synchronized
-                        </strong>
-
-                        <span>
-                            Dashboard automatically refreshes every 10 seconds
-                        </span>
-
-                    </div>
+                  <span>
+                    ▣ {department}
+                  </span>
 
                 </div>
 
-            </main>
+              </div>
+
+            </div>
+
+            <div className="realtime-pill">
+              <span></span>
+              Real-time
+            </div>
+
+          </section>
+
+          {/* ================= KPI ================= */}
+
+          <section className="employee-kpi-grid">
+
+            {/* ATTENDANCE */}
+
+            <div className="employee-kpi">
+
+              <div className="kpi-icon blue">
+                ✓
+              </div>
+
+              <div className="kpi-content">
+
+                <div className="kpi-top">
+                  <span>
+                    Attendance
+                  </span>
+
+                  <b className="green-text">
+                    ● Live
+                  </b>
+                </div>
+
+                <strong>
+                  {attendance}%
+                </strong>
+
+                <small>
+                  Current attendance
+                </small>
+
+              </div>
+
+              <div className="kpi-mini-chart blue-chart">
+                ╱╲╱╲╱╲
+              </div>
+
+            </div>
+
+            {/* COMPLETED */}
+
+            <div className="employee-kpi">
+
+              <div className="kpi-icon green">
+                ✓
+              </div>
+
+              <div className="kpi-content">
+
+                <div className="kpi-top">
+                  <span>
+                    Completed Tasks
+                  </span>
+
+                  <b className="green-text">
+                    Active
+                  </b>
+                </div>
+
+                <strong>
+                  {completedTasks}
+                </strong>
+
+                <small>
+                  Tasks completed
+                </small>
+
+              </div>
+
+              <div className="kpi-mini-chart green-chart">
+                ╱╲╱╲╱╲
+              </div>
+
+            </div>
+
+            {/* PENDING */}
+
+            <div className="employee-kpi">
+
+              <div className="kpi-icon orange">
+                !
+              </div>
+
+              <div className="kpi-content">
+
+                <div className="kpi-top">
+                  <span>
+                    Pending Tasks
+                  </span>
+
+                  <b className="orange-text">
+                    Attention
+                  </b>
+                </div>
+
+                <strong>
+                  {pendingTasks}
+                </strong>
+
+                <small>
+                  Need attention
+                </small>
+
+              </div>
+
+              <div className="kpi-mini-chart orange-chart">
+                ╱╲━━╱╲
+              </div>
+
+            </div>
+
+            {/* SALARY */}
+
+            <div className="employee-kpi">
+
+              <div className="kpi-icon purple">
+                ₹
+              </div>
+
+              <div className="kpi-content">
+
+                <div className="kpi-top">
+                  <span>
+                    Monthly Salary
+                  </span>
+
+                  <b className="purple-text">
+                    Monthly
+                  </b>
+                </div>
+
+                <strong>
+                  ₹{Number(salary).toLocaleString("en-IN")}
+                </strong>
+
+                <small>
+                  Current salary
+                </small>
+
+              </div>
+
+              <div className="kpi-mini-chart purple-chart">
+                ╱╲╱╲╱╲
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* ================= ROW 1 ================= */}
+
+          <section className="employee-main-grid">
+
+            {/* ATTENDANCE */}
+
+            <div className="employee-panel attendance-panel">
+
+              <div className="panel-heading">
+
+                <div>
+                  <h3>
+                    Attendance Overview
+                  </h3>
+
+                  <p>
+                    Your attendance analytics
+                  </p>
+                </div>
+
+                <select>
+                  <option>Today</option>
+                  <option>This Week</option>
+                  <option>This Month</option>
+                </select>
+
+              </div>
+
+              <div className="bar-chart">
+
+                <div className="chart-y">
+                  <span>100%</span>
+                  <span>75%</span>
+                  <span>50%</span>
+                  <span>25%</span>
+                  <span>0%</span>
+                </div>
+
+                <div className="bars">
+
+                  {attendanceData.map(
+                    (value, index) => (
+
+                    <div
+                      className="bar-column"
+                      key={index}
+                    >
+
+                      <div
+                        className="bar"
+                        style={{
+                          height:
+                            `${value}%`
+                        }}
+                      ></div>
+
+                      <small>
+                        {
+                          [
+                            "Mon",
+                            "Tue",
+                            "Wed",
+                            "Thu",
+                            "Fri",
+                            "Sat",
+                            "Sun"
+                          ][index]
+                        }
+                      </small>
+
+                    </div>
+
+                  ))}
+
+                </div>
+
+              </div>
+
+              <div className="chart-footer">
+
+                <span>
+                  <i className="dot blue-dot"></i>
+                  Attendance
+                </span>
+
+                <span>
+                  <i className="dot red-dot"></i>
+                  Absent
+                </span>
+
+              </div>
+
+            </div>
+
+            {/* PERFORMANCE */}
+
+            <div className="employee-panel performance-card">
+
+              <div className="panel-heading">
+
+                <div>
+                  <h3>
+                    Performance
+                  </h3>
+
+                  <p>
+                    Current performance score
+                  </p>
+                </div>
+
+                <b className="green-text">
+                  ● Live
+                </b>
+
+              </div>
+
+              <div
+                className="performance-ring"
+                style={{
+                  "--score":
+                    `${performance}%`
+                }}
+              >
+
+                <div>
+                  <strong>
+                    {performance}%
+                  </strong>
+
+                  <span>
+                    Score
+                  </span>
+                </div>
+
+              </div>
+
+              <p className="performance-label">
+                Current Performance
+              </p>
+
+            </div>
+
+            {/* PROFILE */}
+
+            <div className="employee-panel profile-card">
+
+              <div className="panel-heading">
+
+                <h3>
+                  My Profile
+                </h3>
+
+                <a href="/profile">
+                  View All →
+                </a>
+
+              </div>
+
+              <div className="profile-main">
+
+                <div className="profile-avatar">
+                  👨‍💼
+                </div>
+
+                <div>
+                  <strong>
+                    {fullName}
+                  </strong>
+
+                  <span>
+                    {designation}
+                  </span>
+                </div>
+
+              </div>
+
+              <div className="profile-details">
+
+                <div>
+                  <span>Email</span>
+                  <strong>{email}</strong>
+                </div>
+
+                <div>
+                  <span>Phone</span>
+                  <strong>{phone}</strong>
+                </div>
+
+                <div>
+                  <span>Department</span>
+                  <strong>{department}</strong>
+                </div>
+
+                <div>
+                  <span>Status</span>
+                  <strong className="active-status">
+                    {status}
+                  </strong>
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* ================= ROW 2 ================= */}
+
+          <section className="employee-secondary-grid">
+
+            {/* TASKS */}
+
+            <div className="employee-panel tasks-card">
+
+              <div className="panel-heading">
+
+                <h3>
+                  My Tasks
+                </h3>
+
+                <a href="/my-tasks">
+                  View All →
+                </a>
+
+              </div>
+
+              <div className="task-summary">
+
+                <div className="task-box completed-box">
+                  <strong>
+                    {completedTasks}
+                  </strong>
+                  <span>
+                    Completed
+                  </span>
+                </div>
+
+                <div className="task-box pending-box">
+                  <strong>
+                    {pendingTasks}
+                  </strong>
+                  <span>
+                    Pending
+                  </span>
+                </div>
+
+                <div className="completion-info">
+
+                  <span>
+                    Task Completion
+                  </span>
+
+                  <strong>
+                    {taskCompletion}%
+                  </strong>
+
+                  <div className="progress">
+                    <span
+                      style={{
+                        width:
+                          `${taskCompletion}%`
+                      }}
+                    ></span>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* AI */}
+
+            <div className="employee-panel ai-card">
+
+              <div className="panel-heading">
+
+                <h3>
+                  AI Workforce
+                </h3>
+
+                <span className="ai-badge">
+                  AI
+                </span>
+
+              </div>
+
+              <div className="ai-content">
+
+                <div>
+                  <span>
+                    Attrition Risk
+                  </span>
+
+                  <strong className="low-risk">
+                    {attritionRisk}
+                  </strong>
+
+                  <small>
+                    Your current attrition risk is low.
+                  </small>
+                </div>
+
+                <div className="ai-divider"></div>
+
+                <div>
+                  <span>
+                    Missing Skills
+                  </span>
+
+                  <strong>
+                    {missingSkills}
+                  </strong>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* PROJECT */}
+
+            <div className="employee-panel project-card">
+
+              <div className="panel-heading">
+
+                <h3>
+                  Current Project
+                </h3>
+
+                <a href="/projects">
+                  View All →
+                </a>
+
+              </div>
+
+              <div className="project-content">
+
+                <div className="project-icon">
+                  📁
+                </div>
+
+                <div>
+
+                  <strong>
+                    {project ||
+                      "No Project Assigned"}
+                  </strong>
+
+                  <p>
+                    {project
+                      ? "Currently assigned project"
+                      : "No project has been assigned yet."}
+                  </p>
+
+                </div>
+
+                <span className="project-count">
+                  {projectCount} Projects
+                </span>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* ================= ROW 3 ================= */}
+
+          <section className="employee-bottom-grid">
+
+            {/* RECENT TASKS */}
+
+            <div className="employee-panel table-card">
+
+              <div className="panel-heading">
+
+                <h3>
+                  Recent Tasks
+                </h3>
+
+                <a href="/my-tasks">
+                  View All →
+                </a>
+
+              </div>
+
+              <table>
+
+                <thead>
+                  <tr>
+                    <th>Task</th>
+                    <th>Project</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+
+                  {tasks.length === 0 ? (
+
+                    <tr>
+                      <td
+                        colSpan="4"
+                        className="empty-table"
+                      >
+                        No Tasks Found
+                      </td>
+                    </tr>
+
+                  ) : (
+
+                    tasks
+                      .slice(0, 5)
+                      .map((task) => (
+
+                      <tr key={task.id}>
+
+                        <td>
+                          {task.taskName ||
+                            "Task"}
+                        </td>
+
+                        <td>
+                          {task.projectName ||
+                            "-"}
+                        </td>
+
+                        <td>
+                          {task.priority ||
+                            "-"}
+                        </td>
+
+                        <td>
+                          <span
+                            className={
+                              task.status ===
+                              "COMPLETED"
+                                ? "table-status completed"
+                                : "table-status pending"
+                            }
+                          >
+                            {task.status}
+                          </span>
+                        </td>
+
+                      </tr>
+
+                    ))
+
+                  )}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+            {/* LEAVES */}
+
+            <div className="employee-panel table-card">
+
+              <div className="panel-heading">
+
+                <h3>
+                  My Leave Requests
+                </h3>
+
+                <a href="/leave">
+                  View All →
+                </a>
+
+              </div>
+
+              <table>
+
+                <thead>
+                  <tr>
+                    <th>Leave Type</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+
+                  {leaves.length === 0 ? (
+
+                    <tr>
+                      <td
+                        colSpan="3"
+                        className="empty-table"
+                      >
+                        No Leave Requests Found
+                      </td>
+                    </tr>
+
+                  ) : (
+
+                    leaves
+                      .slice(0, 5)
+                      .map((leave) => (
+
+                      <tr key={leave.id}>
+
+                        <td>
+                          {leave.leaveType ||
+                            leave.type ||
+                            "-"}
+                        </td>
+
+                        <td>
+                          {leave.reason ||
+                            "-"}
+                        </td>
+
+                        <td>
+                          <span className="table-status">
+                            {leave.status}
+                          </span>
+                        </td>
+
+                      </tr>
+
+                    ))
+
+                  )}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </section>
+
+          {/* ================= REAL TIME ================= */}
+
+          <div className="employee-realtime">
+
+            <div>
+              <span className="live-dot"></span>
+
+              <strong>
+                Real-time data synchronized
+              </strong>
+
+              <span>
+                Dashboard automatically refreshes every 10 seconds
+              </span>
+            </div>
+
+            <strong>
+              ◷ {formatTime()}
+            </strong>
+
+          </div>
 
         </div>
-    );
+
+      </main>
+
+    </div>
+  );
 }
 
 export default EmployeeDashboard;

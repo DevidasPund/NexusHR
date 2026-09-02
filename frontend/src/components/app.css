@@ -1,0 +1,141 @@
+/* =========================================================
+   NEXUSHR GLOBAL PAGE LAYOUT
+========================================================= */
+
+:root {
+  --sidebar-width: 210px;
+}
+
+/* Prevent horizontal overflow */
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   ALL PAGE MAIN CONTENT
+========================================================= */
+
+.app-main {
+  width: calc(100% - var(--sidebar-width));
+  min-height: 100vh;
+
+  margin-left: var(--sidebar-width);
+
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   COMMON PAGE CONTAINER
+========================================================= */
+
+.app-container {
+  width: 100%;
+  max-width: 1500px;
+
+  margin: 0 auto;
+
+  padding: 28px 30px 50px;
+
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   IMPORTANT:
+   Existing page main classes
+========================================================= */
+
+.manager-main,
+.admin-main,
+.employee-main,
+.teams-main,
+.leave-main,
+.projects-main,
+.tasks-main,
+.milestones-main,
+.performance-main,
+.insights-main,
+.attrition-main,
+.skill-gap-main,
+.reports-main,
+.notifications-main,
+.profile-main,
+.settings-main {
+  width: calc(100% - var(--sidebar-width));
+
+  margin-left: var(--sidebar-width);
+
+  min-height: 100vh;
+
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  :root {
+    --sidebar-width: 190px;
+  }
+
+  .app-main,
+  .manager-main,
+  .admin-main,
+  .employee-main,
+  .teams-main,
+  .leave-main,
+  .projects-main,
+  .tasks-main,
+  .milestones-main,
+  .performance-main,
+  .insights-main,
+  .attrition-main,
+  .skill-gap-main,
+  .reports-main,
+  .notifications-main,
+  .profile-main,
+  .settings-main {
+    width: calc(100% - var(--sidebar-width));
+
+    margin-left: var(--sidebar-width);
+  }
+}
+
+@media (max-width: 700px) {
+
+  :root {
+    --sidebar-width: 72px;
+  }
+
+  .app-main,
+  .manager-main,
+  .admin-main,
+  .employee-main,
+  .teams-main,
+  .leave-main,
+  .projects-main,
+  .tasks-main,
+  .milestones-main,
+  .performance-main,
+  .insights-main,
+  .attrition-main,
+  .skill-gap-main,
+  .reports-main,
+  .notifications-main,
+  .profile-main,
+  .settings-main {
+    width: calc(100% - var(--sidebar-width));
+
+    margin-left: var(--sidebar-width);
+  }
+}
