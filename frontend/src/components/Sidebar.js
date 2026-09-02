@@ -1,440 +1,707 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import "./Sidebar.css";
 
+/* =========================================================
+   NAVIGATION CONFIGURATION
+   ========================================================= */
+
+const navigation = {
+  ADMIN: [
+    {
+      section: "MAIN",
+      items: [
+        {
+          label: "Dashboard",
+          path: "/admin/dashboard",
+          icon: "⌂",
+        },
+        {
+          label: "Employees",
+          path: "/employees",
+          icon: "👥",
+        },
+        {
+          label: "Departments",
+          path: "/departments",
+          icon: "▦",
+        },
+      ],
+    },
+
+    {
+      section: "PEOPLE",
+      items: [
+        {
+          label: "Attendance",
+          path: "/attendance",
+          icon: "◷",
+        },
+        {
+          label: "Leave Management",
+          path: "/leave",
+          icon: "▣",
+        },
+        {
+          label: "Performance",
+          path: "/performance",
+          icon: "★",
+        },
+      ],
+    },
+
+    {
+      section: "WORK",
+      items: [
+        {
+          label: "Tasks",
+          path: "/tasks",
+          icon: "✓",
+        },
+        {
+          label: "Notifications",
+          path: "/notifications",
+          icon: "♢",
+        },
+      ],
+    },
+  ],
+
+  MANAGER: [
+    {
+      section: "MAIN",
+      items: [
+        {
+          label: "Dashboard",
+          path: "/manager/dashboard",
+          icon: "⌂",
+        },
+        {
+          label: "My Team",
+          path: "/employees",
+          icon: "👥",
+        },
+      ],
+    },
+
+    {
+      section: "TEAM MANAGEMENT",
+      items: [
+        {
+          label: "Attendance",
+          path: "/attendance",
+          icon: "◷",
+        },
+        {
+          label: "Leave Requests",
+          path: "/leave",
+          icon: "▣",
+        },
+        {
+          label: "Performance",
+          path: "/performance",
+          icon: "★",
+        },
+        {
+          label: "Tasks",
+          path: "/tasks",
+          icon: "✓",
+        },
+      ],
+    },
+
+    {
+      section: "COMMUNICATION",
+      items: [
+        {
+          label: "Notifications",
+          path: "/notifications",
+          icon: "♢",
+        },
+      ],
+    },
+  ],
+
+  EMPLOYEE: [
+    {
+      section: "MAIN",
+      items: [
+        {
+          label: "Dashboard",
+          path: "/employee/dashboard",
+          icon: "⌂",
+        },
+      ],
+    },
+
+    {
+      section: "MY WORK",
+      items: [
+        {
+          label: "My Attendance",
+          path: "/attendance",
+          icon: "◷",
+        },
+        {
+          label: "My Leave",
+          path: "/leave",
+          icon: "▣",
+        },
+        {
+          label: "My Tasks",
+          path: "/tasks",
+          icon: "✓",
+        },
+        {
+          label: "My Performance",
+          path: "/performance",
+          icon: "★",
+        },
+      ],
+    },
+
+    {
+      section: "COMMUNICATION",
+      items: [
+        {
+          label: "Notifications",
+          path: "/notifications",
+          icon: "♢",
+        },
+      ],
+    },
+  ],
+};
+
+/* =========================================================
+   ROLE HELPERS
+   ========================================================= */
+
+const normalizeRole = (role) => {
+  const value = String(role || "")
+    .trim()
+    .toUpperCase();
+
+  if (
+    value.includes("ADMIN")
+  ) {
+    return "ADMIN";
+  }
+
+  if (
+    value.includes("MANAGER")
+  ) {
+    return "MANAGER";
+  }
+
+  if (
+    value.includes("EMPLOYEE") ||
+    value.includes("USER")
+  ) {
+    return "EMPLOYEE";
+  }
+
+  return "EMPLOYEE";
+};
+
+const getStoredRole = () => {
+  return (
+    localStorage.getItem("role") ||
+    localStorage.getItem("userRole") ||
+    localStorage.getItem("user_role") ||
+    "EMPLOYEE"
+  );
+};
+
+/* =========================================================
+   SIDEBAR COMPONENT
+   ========================================================= */
+
 function Sidebar() {
-  const role = (
-    localStorage.getItem("role") || "EMPLOYEE"
-  ).toUpperCase();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const username =
-    localStorage.getItem("username") || "User";
+  const [collapsed, setCollapsed] =
+    useState(false);
 
-  /* =====================================================
-     DASHBOARD PATH
-     ===================================================== */
+  const [mobileOpen, setMobileOpen] =
+    useState(false);
 
-  const dashboardPath =
-    role === "ADMIN"
-      ? "/admin/dashboard"
-      : role === "MANAGER"
-      ? "/manager/dashboard"
-      : "/employee/dashboard";
+  const [role, setRole] =
+    useState(
+      normalizeRole(
+        getStoredRole()
+      )
+    );
 
-  /* =====================================================
-     MENU ITEM
-     ===================================================== */
+  const [username, setUsername] =
+    useState(
+      localStorage.getItem(
+        "username"
+      ) ||
+        localStorage.getItem(
+          "name"
+        ) ||
+        "User"
+    );
 
-  const menuItem = (path, icon, label) => {
+  /* =======================================================
+     SYNC USER INFORMATION
+     ======================================================= */
+
+  useEffect(() => {
+    const updateUser = () => {
+      setRole(
+        normalizeRole(
+          getStoredRole()
+        )
+      );
+
+      setUsername(
+        localStorage.getItem(
+          "username"
+        ) ||
+          localStorage.getItem(
+            "name"
+          ) ||
+          "User"
+      );
+    };
+
+    updateUser();
+
+    window.addEventListener(
+      "storage",
+      updateUser
+    );
+
+    return () => {
+      window.removeEventListener(
+        "storage",
+        updateUser
+      );
+    };
+  }, []);
+
+  /* =======================================================
+     NAVIGATION
+     ======================================================= */
+
+  const menuGroups = useMemo(() => {
     return (
-      <NavLink
-        to={path}
-        className={({ isActive }) =>
-          `sidebar-menu-item ${
-            isActive ? "active-menu" : ""
-          }`
-        }
-      >
-        <span className="sidebar-icon">
-          {icon}
-        </span>
+      navigation[role] ||
+      navigation.EMPLOYEE
+    );
+  }, [role]);
 
-        <span>{label}</span>
-      </NavLink>
+  /* =======================================================
+     ACTIVE ROUTE
+     ======================================================= */
+
+  const isActiveRoute = (
+    path
+  ) => {
+    if (
+      location.pathname ===
+      path
+    ) {
+      return true;
+    }
+
+    return (
+      location.pathname.startsWith(
+        `${path}/`
+      )
     );
   };
 
+  /* =======================================================
+     LOGOUT
+     ======================================================= */
+
+  const handleLogout = () => {
+    const confirmed =
+      window.confirm(
+        "Are you sure you want to logout?"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    localStorage.removeItem(
+      "token"
+    );
+
+    localStorage.removeItem(
+      "role"
+    );
+
+    localStorage.removeItem(
+      "userRole"
+    );
+
+    localStorage.removeItem(
+      "user_role"
+    );
+
+    localStorage.removeItem(
+      "username"
+    );
+
+    localStorage.removeItem(
+      "name"
+    );
+
+    localStorage.removeItem(
+      "email"
+    );
+
+    localStorage.removeItem(
+      "employeeId"
+    );
+
+    localStorage.removeItem(
+      "employeeID"
+    );
+
+    localStorage.removeItem(
+      "userId"
+    );
+
+    navigate(
+      "/login",
+      {
+        replace: true,
+      }
+    );
+  };
+
+  /* =======================================================
+     CLOSE MOBILE SIDEBAR
+     ======================================================= */
+
+  const handleNavigation =
+    () => {
+      if (
+        window.innerWidth <=
+        900
+      ) {
+        setMobileOpen(false);
+      }
+    };
+
+  /* =======================================================
+     ROLE LABEL
+     ======================================================= */
+
+  const roleLabel = {
+    ADMIN: "Administrator",
+    MANAGER: "Manager",
+    EMPLOYEE: "Employee",
+  };
+
+  /* =======================================================
+     USER INITIALS
+     ======================================================= */
+
+  const userInitials =
+    String(username || "U")
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(
+        (part) =>
+          part[0]
+      )
+      .join("")
+      .toUpperCase();
+
+  /* =======================================================
+     RENDER
+     ======================================================= */
+
   return (
-    <aside className="nexushr-sidebar">
+    <>
+      {/* ===================================================
+          MOBILE MENU BUTTON
+          =================================================== */}
 
-      {/* =================================================
-          LOGO
-         ================================================= */}
+      <button
+        type="button"
+        className="sidebar-mobile-toggle"
+        onClick={() =>
+          setMobileOpen(
+            !mobileOpen
+          )
+        }
+        aria-label="Toggle navigation"
+      >
+        {mobileOpen
+          ? "×"
+          : "☰"}
+      </button>
 
-      <div className="sidebar-logo">
+      {/* ===================================================
+          MOBILE OVERLAY
+          =================================================== */}
 
-        <div className="logo-box">
-          HR.
-        </div>
+      {mobileOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={() =>
+            setMobileOpen(
+              false
+            )
+          }
+        />
+      )}
 
-        <div className="logo-text">
-          <strong>NexusHR</strong>
-          <small>HRMS</small>
-        </div>
+      {/* ===================================================
+          SIDEBAR
+          =================================================== */}
 
-      </div>
-
-
-      {/* =================================================
-          PROFILE
-         ================================================= */}
-
-      <div className="sidebar-profile">
-
-        <div className="profile-image-wrapper">
-
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-            alt="Profile"
-            className="sidebar-profile-image"
-          />
-
-          <span className="online-dot"></span>
-
-        </div>
-
-        <h5>
-          {username}
-        </h5>
-
-        <span className="role-badge">
-          {role}
-        </span>
-
-      </div>
-
-
-      {/* =================================================
-          NAVIGATION
-         ================================================= */}
-
-      <nav className="sidebar-navigation">
-
-        {/* DASHBOARD */}
-
-        {menuItem(
-          dashboardPath,
-          "▦",
-          "Dashboard"
-        )}
-
+      <aside
+        className={`
+          nexus-sidebar
+          ${collapsed
+            ? "sidebar-collapsed"
+            : ""}
+          ${mobileOpen
+            ? "sidebar-mobile-open"
+            : ""}
+        `}
+      >
 
         {/* =================================================
-            ADMIN
-           ================================================= */}
+            BRAND
+            ================================================= */}
 
-        {role === "ADMIN" && (
-          <>
+        <div className="sidebar-brand">
 
-            <div className="sidebar-section-title">
-              WORKFORCE
+          <div className="sidebar-logo">
+            N
+          </div>
+
+          {!collapsed && (
+            <div className="sidebar-brand-text">
+
+              <strong>
+                NexusHR
+              </strong>
+
+              <span>
+                HR Management
+              </span>
+
             </div>
+          )}
 
-            {menuItem(
-              "/employees",
-              "♟",
-              "Employees"
-            )}
-
-            {menuItem(
-              "/add-employee",
-              "+",
-              "Add Employee"
-            )}
-
-            {menuItem(
-              "/departments",
-              "▦",
-              "Departments"
-            )}
-
-            {menuItem(
-              "/teams",
-              "♟",
-              "Teams"
-            )}
-
-
-            <div className="sidebar-section-title">
-              OPERATIONS
-            </div>
-
-            {menuItem(
-              "/admin-attendance",
-              "◷",
-              "Attendance"
-            )}
-
-            {menuItem(
-              "/leave-management",
-              "▣",
-              "Leave Management"
-            )}
-
-            {menuItem(
-              "/salary-management",
-              "₹",
-              "Payroll"
-            )}
-
-
-            <div className="sidebar-section-title">
-              PROJECTS
-            </div>
-
-            {menuItem(
-              "/projects",
-              "▰",
-              "Projects"
-            )}
-
-            {menuItem(
-              "/tasks",
-              "✓",
-              "Tasks"
-            )}
-
-
-            <div className="sidebar-section-title">
-              AI & REPORTS
-            </div>
-
-            {menuItem(
-              "/audit-logs",
-              "▤",
-              "Audit Logs"
-            )}
-
-            {menuItem(
-              "/reports",
-              "▥",
-              "Reports"
-            )}
-
-            {menuItem(
-              "/notification-management",
-              "♧",
-              "Notifications"
-            )}
-
-          </>
-        )}
-
-
-        {/* =================================================
-            MANAGER
-           ================================================= */}
-
-        {role === "MANAGER" && (
-          <>
-
-            <div className="sidebar-section-title">
-              TEAM MANAGEMENT
-            </div>
-
-            {menuItem(
-              "/teams",
-              "♟",
-              "Team Members"
-            )}
-
-            {menuItem(
-              "/leave-management",
-              "▣",
-              "Leave Management"
-            )}
-
-
-            <div className="sidebar-section-title">
-              PROJECTS
-            </div>
-
-            {menuItem(
-              "/projects",
-              "▰",
-              "Projects"
-            )}
-
-            {menuItem(
-              "/tasks",
-              "✓",
-              "Tasks"
-            )}
-
-            {menuItem(
-              "/milestones",
-              "◆",
-              "Milestones"
-            )}
-
-
-            <div className="sidebar-section-title">
-              PERFORMANCE
-            </div>
-
-            {menuItem(
-              "/performance",
-              "★",
-              "Performance"
-            )}
-
-
-            <div className="sidebar-section-title">
-              AI INSIGHTS
-            </div>
-
-            {menuItem(
-              "/ai-insights",
-              "✦",
-              "AI Insights"
-            )}
-
-            {menuItem(
-              "/attrition-risk",
-              "!",
-              "Attrition Risk"
-            )}
-
-            {menuItem(
-              "/skill-gap-analysis",
-              "◇",
-              "Skill Gap Analysis"
-            )}
-
-            {menuItem(
-              "/reports",
-              "▥",
-              "Reports"
-            )}
-
-            {menuItem(
-              "/notification-management",
-              "♧",
-              "Notifications"
-            )}
-
-          </>
-        )}
-
-
-        {/* =================================================
-            EMPLOYEE
-           ================================================= */}
-
-        {role === "EMPLOYEE" && (
-          <>
-
-            <div className="sidebar-section-title">
-              MY WORK
-            </div>
-
-            {menuItem(
-              "/employee-attendance",
-              "◷",
-              "My Attendance"
-            )}
-
-            {menuItem(
-              "/face-attendance",
-              "▣",
-              "Face Attendance"
-            )}
-
-            {menuItem(
-              "/my-tasks",
-              "✓",
-              "My Tasks"
-            )}
-
-            {menuItem(
-              "/leave",
-              "▣",
-              "My Leaves"
-            )}
-
-            {menuItem(
-              "/salary",
-              "₹",
-              "My Salary"
-            )}
-
-            {menuItem(
-              "/employee-Notification",
-              "♧",
-              "Notifications"
-            )}
-
-          </>
-        )}
-
-      </nav>
-
-
-      {/* =================================================
-          COMMON MENU
-         ================================================= */}
-
-      <div className="sidebar-divider"></div>
-
-      <div className="sidebar-common">
-
-        {menuItem(
-          "/profile",
-          "♟",
-          "Profile"
-        )}
-
-        {menuItem(
-          "/settings",
-          "⚙",
-          "Settings"
-        )}
-
-        {menuItem(
-          "/change-password",
-          "▣",
-          "Change Password"
-        )}
-
-      </div>
-
-
-      {/* =================================================
-          AI WORKFORCE CARD
-         ================================================= */}
-
-      <div className="ai-sidebar-card">
-
-        <div className="ai-icon">
-          ✦
         </div>
 
-        <h6>
-          AI Workforce
-        </h6>
+        {/* =================================================
+            COLLAPSE BUTTON
+            ================================================= */}
 
-        <p>
-          Smart workforce insights
-        </p>
+        <button
+          type="button"
+          className="sidebar-collapse-btn"
+          onClick={() =>
+            setCollapsed(
+              !collapsed
+            )
+          }
+          title={
+            collapsed
+              ? "Expand sidebar"
+              : "Collapse sidebar"
+          }
+        >
+          {collapsed
+            ? "›"
+            : "‹"}
+        </button>
 
-        <span>
-          ● Real-time monitoring
-        </span>
+        {/* =================================================
+            USER PROFILE
+            ================================================= */}
 
-      </div>
+        <div className="sidebar-user">
 
+          <div className="sidebar-avatar">
+            {userInitials}
+          </div>
 
-      {/* =================================================
-          FOOTER
-         ================================================= */}
+          {!collapsed && (
+            <div className="sidebar-user-info">
 
-      <div className="sidebar-footer">
+              <strong>
+                {username}
+              </strong>
 
-        <strong>
-          NexusHR Enterprise
-        </strong>
+              <span>
+                {roleLabel[
+                  role
+                ] ||
+                  "Employee"}
+              </span>
 
-        <span>
-          HRMS v2.0
-        </span>
+            </div>
+          )}
 
-        <small>
-          © 2026 NexusHR
-        </small>
+        </div>
 
-      </div>
+        {/* =================================================
+            NAVIGATION
+            ================================================= */}
 
-    </aside>
+        <nav className="sidebar-navigation">
+
+          {menuGroups.map(
+            (
+              group
+            ) => (
+
+              <div
+                className="sidebar-section"
+                key={
+                  group.section
+                }
+              >
+
+                {!collapsed && (
+                  <div className="sidebar-section-title">
+                    {group.section}
+                  </div>
+                )}
+
+                <div className="sidebar-menu">
+
+                  {group.items.map(
+                    (
+                      item
+                    ) => {
+
+                      const active =
+                        isActiveRoute(
+                          item.path
+                        );
+
+                      return (
+                        <NavLink
+                          key={
+                            item.path
+                          }
+                          to={
+                            item.path
+                          }
+                          onClick={
+                            handleNavigation
+                          }
+                          className={`
+                            sidebar-link
+                            ${
+                              active
+                                ? "sidebar-link-active"
+                                : ""
+                            }
+                          `}
+                          title={
+                            collapsed
+                              ? item.label
+                              : undefined
+                          }
+                        >
+
+                          <span className="sidebar-link-icon">
+                            {item.icon}
+                          </span>
+
+                          {!collapsed && (
+                            <span className="sidebar-link-label">
+                              {
+                                item.label
+                              }
+                            </span>
+                          )}
+
+                          {!collapsed &&
+                            active && (
+                              <span className="sidebar-active-indicator" />
+                            )}
+
+                        </NavLink>
+                      );
+                    }
+                  )}
+
+                </div>
+
+              </div>
+            )
+          )}
+
+        </nav>
+
+        {/* =================================================
+            SIDEBAR BOTTOM
+            ================================================= */}
+
+        <div className="sidebar-bottom">
+
+          {/* Status */}
+
+          {!collapsed && (
+            <div className="sidebar-system-status">
+
+              <span className="sidebar-status-dot" />
+
+              <div>
+
+                <strong>
+                  System Online
+                </strong>
+
+                <small>
+                  NexusHR services active
+                </small>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* Logout */}
+
+          <button
+            type="button"
+            className="sidebar-logout"
+            onClick={
+              handleLogout
+            }
+            title={
+              collapsed
+                ? "Logout"
+                : undefined
+            }
+          >
+
+            <span className="sidebar-logout-icon">
+              ↪
+            </span>
+
+            {!collapsed && (
+              <span>
+                Logout
+              </span>
+            )}
+
+          </button>
+
+        </div>
+
+      </aside>
+    </>
   );
 }
 
