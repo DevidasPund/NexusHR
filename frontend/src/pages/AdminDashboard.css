@@ -811,3 +811,27 @@
     padding: 14px;
   }
 }
+/* =========================================================
+   SIDEBAR LAYOUT FIX
+   ========================================================= */
+
+.admin-layout {
+  min-height: 100vh;
+  width: 100%;
+  background: #f5f7fb;
+}
+
+.admin-main {
+  min-height: 100vh;
+  margin-left: 250px;
+  width: calc(100% - 250px);
+  transition: margin-left 0.25s ease, width 0.25s ease;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .admin-main {
+    margin-left: 0;
+    width: 100%;
+  }
+}
