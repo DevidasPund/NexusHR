@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import API from "../services/ApiService";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
@@ -30,21 +30,49 @@ function AdminDashboard() {
   const [dashboard, setDashboard] = useState({});
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [connectionStatus, setConnectionStatus] = useState("Connecting...");
 
-  /*
-   * =========================================================
-   * REAL-TIME DATA
-   * =========================================================
-   */
+  // =========================================================
+  // LOAD REAL-TIME DATA
+  // =========================================================
+
+  const loadData = useCallback(async () => {
+    try {
+      const [dashboardResponse, employeeResponse] = await Promise.all([
+        API.get("/dashboard"),
+        API.get("/employees"),
+      ]);
+
+      setDashboard(dashboardResponse.data || {});
+      setEmployees(
+        Array.isArray(employeeResponse.data)
+          ? employeeResponse.data
+          : []
+      );
+
+      setLastUpdated(new Date());
+      setConnectionStatus("Connected");
+    } catch (error) {
+      console.error("Dashboard loading error:", error);
+      setConnectionStatus("Disconnected");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // =========================================================
+  // REAL-TIME REFRESH + LIVE CLOCK
+  // =========================================================
 
   useEffect(() => {
     loadData();
 
-    const dataInterval = setInterval(() => {
-      loadData();
-    }, 10000);
+    // Refresh backend data every 10 seconds
+    const dataInterval = setInterval(loadData, 10000);
 
+    // Live clock
     const clockInterval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -53,41 +81,38 @@ function AdminDashboard() {
       clearInterval(dataInterval);
       clearInterval(clockInterval);
     };
-  }, []);
+  }, [loadData]);
 
-  const loadData = async () => {
-    try {
-      const [dashboardResponse, employeeResponse] =
-        await Promise.all([
-          API.get("/dashboard"),
-          API.get("/employees"),
-        ]);
+  // =========================================================
+  // REAL-TIME CALCULATED VALUES
+  // =========================================================
 
-      setDashboard(dashboardResponse.data || {});
-      setEmployees(employeeResponse.data || []);
-    } catch (error) {
-      console.error("Dashboard loading error:", error);
-    } finally {
-      setLoading(false);
+  const totalEmployees = useMemo(() => {
+    if (dashboard.totalEmployees !== undefined) {
+      return Number(dashboard.totalEmployees) || 0;
     }
-  };
 
-  /*
-   * =========================================================
-   * CALCULATED REAL-TIME VALUES
-   * =========================================================
-   */
+    return employees.length;
+  }, [dashboard, employees]);
 
-  const totalEmployees =
-    Number(dashboard.totalEmployees) || employees.length || 0;
+  const activeEmployees = useMemo(() => {
+    if (dashboard.activeEmployees !== undefined) {
+      return Number(dashboard.activeEmployees) || 0;
+    }
 
-  const activeEmployees =
-    Number(dashboard.activeEmployees) ||
-    employees.filter(
+    return employees.filter(
       (employee) =>
         String(employee.status || "").toUpperCase() === "ACTIVE"
-    ).length ||
-    0;
+    ).length;
+  }, [dashboard, employees]);
+
+  const inactiveEmployees = useMemo(() => {
+    if (dashboard.inactiveEmployees !== undefined) {
+      return Number(dashboard.inactiveEmployees) || 0;
+    }
+
+    return Math.max(totalEmployees - activeEmployees, 0);
+  }, [dashboard, totalEmployees, activeEmployees]);
 
   const pendingLeaves =
     Number(dashboard.pendingLeaves) || 0;
@@ -101,20 +126,24 @@ function AdminDashboard() {
   const absentToday =
     Number(dashboard.absentToday) || 0;
 
+  const onLeaveToday =
+    Number(dashboard.onLeaveToday) || 0;
+
+  const lateToday =
+    Number(dashboard.lateToday) || 0;
+
   const totalSalary =
     Number(dashboard.totalSalary) || 0;
 
   const attendancePercentage =
     Number(dashboard.attendancePercentage) || 0;
 
-  /*
-   * =========================================================
-   * GENDER DATA
-   *
-   * If backend provides gender, it will be used.
-   * Otherwise values remain 0 instead of inventing data.
-   * =========================================================
-   */
+  const totalDepartments =
+    Number(dashboard.totalDepartments) || 0;
+
+  // =========================================================
+  // GENDER DATA
+  // =========================================================
 
   const genderData = useMemo(() => {
     let male = 0;
@@ -142,20 +171,15 @@ function AdminDashboard() {
       female = Number(dashboard.femaleEmployees) || 0;
     }
 
-    return {
-      male,
-      female,
-    };
+    return { male, female };
   }, [employees, dashboard]);
 
-  /*
-   * =========================================================
-   * TOP PERFORMERS
-   * =========================================================
-   */
+  // =========================================================
+  // TOP PERFORMERS
+  // =========================================================
 
   const topPerformers = useMemo(() => {
-    return [...employees]
+    return employees
       .filter(
         (employee) =>
           employee.performanceScore !== null &&
@@ -163,34 +187,17 @@ function AdminDashboard() {
       )
       .sort(
         (a, b) =>
-          Number(b.performanceScore || 0) -
-          Number(a.performanceScore || 0)
+          Number(b.performanceScore) -
+          Number(a.performanceScore)
       )
-      .slice(0, 8);
+      .slice(0, 5);
   }, [employees]);
 
-  /*
-   * If no performanceScore exists, show recent employees.
-   */
-  const displayPerformers =
-    topPerformers.length > 0
-      ? topPerformers
-      : employees.slice(0, 8);
+  // =========================================================
+  // ATTENDANCE MONTHLY DATA
+  // =========================================================
 
-  /*
-   * =========================================================
-   * ATTENDANCE CHART
-   *
-   * Uses backend monthly data when available.
-   * =========================================================
-   */
-
-  const attendanceOverview =
-    dashboard.attendanceOverview ||
-    dashboard.monthlyAttendance ||
-    [];
-
-  const attendanceValues = [
+  const months = [
     "Jan",
     "Feb",
     "Mar",
@@ -203,7 +210,14 @@ function AdminDashboard() {
     "Oct",
     "Nov",
     "Dec",
-  ].map((month, index) => {
+  ];
+
+  const attendanceOverview =
+    dashboard.attendanceOverview ||
+    dashboard.monthlyAttendance ||
+    [];
+
+  const attendanceValues = months.map((month, index) => {
     const item = attendanceOverview[index];
 
     if (typeof item === "number") {
@@ -222,59 +236,26 @@ function AdminDashboard() {
     return 0;
   });
 
-  /*
-   * If backend doesn't provide monthly data,
-   * show current employee count as the first value.
-   */
-  if (
-    attendanceValues.every((value) => value === 0) &&
-    totalEmployees > 0
-  ) {
-    attendanceValues[0] = presentToday || totalEmployees;
-  }
-
-  /*
-   * =========================================================
-   * BAR CHART
-   * =========================================================
-   */
+  // =========================================================
+  // ATTENDANCE BAR CHART
+  // =========================================================
 
   const attendanceChartData = {
-    labels: [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ],
+    labels: months,
 
     datasets: [
       {
         label: "Attendance",
-
         data: attendanceValues,
-
         backgroundColor: "#173b24",
-
         borderRadius: 6,
-
         borderSkipped: false,
-
-        barThickness: 21,
       },
     ],
   };
 
   const attendanceChartOptions = {
     responsive: true,
-
     maintainAspectRatio: false,
 
     plugins: {
@@ -284,13 +265,9 @@ function AdminDashboard() {
 
       tooltip: {
         backgroundColor: "#173b24",
-
         titleColor: "#ffffff",
-
         bodyColor: "#ffffff",
-
         padding: 10,
-
         cornerRadius: 8,
       },
     },
@@ -304,11 +281,7 @@ function AdminDashboard() {
         },
 
         ticks: {
-          color: "#9aa39d",
-
-          font: {
-            size: 10,
-          },
+          color: "#7e8a82",
         },
       },
 
@@ -319,20 +292,14 @@ function AdminDashboard() {
 
         ticks: {
           color: "#7e8a82",
-
-          font: {
-            size: 10,
-          },
         },
       },
     },
   };
 
-  /*
-   * =========================================================
-   * GENDER DOUGHNUT
-   * =========================================================
-   */
+  // =========================================================
+  // GENDER DOUGHNUT
+  // =========================================================
 
   const genderChartData = {
     labels: ["Male", "Female"],
@@ -350,7 +317,6 @@ function AdminDashboard() {
         ],
 
         borderWidth: 0,
-
         hoverOffset: 5,
       },
     ],
@@ -358,7 +324,6 @@ function AdminDashboard() {
 
   const genderChartOptions = {
     responsive: true,
-
     maintainAspectRatio: false,
 
     cutout: "68%",
@@ -369,34 +334,17 @@ function AdminDashboard() {
 
         labels: {
           usePointStyle: true,
-
           pointStyle: "circle",
-
           padding: 18,
-
           color: "#637066",
-
-          font: {
-            size: 10,
-          },
         },
-      },
-
-      tooltip: {
-        backgroundColor: "#173b24",
-
-        padding: 10,
-
-        cornerRadius: 8,
       },
     },
   };
 
-  /*
-   * =========================================================
-   * PROFILE IMAGE
-   * =========================================================
-   */
+  // =========================================================
+  // PROFILE IMAGE
+  // =========================================================
 
   const getProfileImage = (employee) => {
     if (employee.profileImage) {
@@ -406,39 +354,9 @@ function AdminDashboard() {
     return "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
   };
 
-  /*
-   * =========================================================
-   * PERFORMANCE SCORE
-   * =========================================================
-   */
-
-  const getPerformanceScore = (employee, index) => {
-    if (
-      employee.performanceScore !== null &&
-      employee.performanceScore !== undefined
-    ) {
-      return Number(employee.performanceScore);
-    }
-
-    if (
-      employee.attendancePercentage !== null &&
-      employee.attendancePercentage !== undefined
-    ) {
-      return Number(employee.attendancePercentage);
-    }
-
-    /*
-     * No score supplied by backend.
-     * Display "-" rather than fake performance data.
-     */
-    return null;
-  };
-
-  /*
-   * =========================================================
-   * DATE / TIME
-   * =========================================================
-   */
+  // =========================================================
+  // DATE / TIME
+  // =========================================================
 
   const formattedDate = currentTime.toLocaleDateString(
     "en-IN",
@@ -460,52 +378,44 @@ function AdminDashboard() {
     }
   );
 
-  /*
-   * =========================================================
-   * LOADING
-   * =========================================================
-   */
+  const lastUpdatedTime =
+    lastUpdated.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+
+  // =========================================================
+  // LOADING
+  // =========================================================
 
   if (loading) {
     return (
       <div className="dashboard-loading">
         <div className="spinner-border text-success"></div>
 
-        <p>
-          Loading NexusHR Dashboard...
-        </p>
+        <p>Loading NexusHR Dashboard...</p>
       </div>
     );
   }
 
-  /*
-   * =========================================================
-   * DASHBOARD
-   * =========================================================
-   */
+  // =========================================================
+  // DASHBOARD
+  // =========================================================
 
   return (
     <div className="nexus-dashboard">
-
-      {/* =====================================================
-          SIDEBAR
-      ===================================================== */}
 
       <Sidebar />
 
       <div className="dashboard-main">
 
-        {/* ===================================================
-            TOP NAVBAR
-        =================================================== */}
-
         <Navbar />
 
         <main className="dashboard-content">
 
-          {/* =================================================
-              HEADER
-          ================================================= */}
+          {/* HEADER */}
 
           <div className="dashboard-header">
 
@@ -513,13 +423,12 @@ function AdminDashboard() {
 
               <h1>
                 Good Morning, Admin
-                <span className="wave">
-                  👋
-                </span>
+                <span className="wave">👋</span>
               </h1>
 
               <p>
-                Let's manage your employees in one place.
+                Here's what's happening across your
+                workforce today.
               </p>
 
             </div>
@@ -537,198 +446,159 @@ function AdminDashboard() {
           </div>
 
           {/* =================================================
-              MAIN DASHBOARD GRID
+              KPI CARDS
           ================================================= */}
 
-          <section className="main-dashboard-grid">
+          <section className="dashboard-kpi-grid">
 
-            {/* ===============================================
-                LEFT KPI AREA
-            =============================================== */}
+            {/* TOTAL EMPLOYEES */}
 
-            <div className="kpi-area">
+            <div className="dashboard-kpi-card">
 
-              {/* TOTAL EMPLOYEES */}
+              <div className="dashboard-kpi-icon">
+                👥
+              </div>
 
-              <div className="image-kpi-card">
+              <div className="dashboard-kpi-content">
 
-                <div className="kpi-card-top">
+                <span>Total Employees</span>
 
-                  <div className="image-kpi-icon">
-                    👥
-                  </div>
-
-                  <span className="image-kpi-trend green">
-                    +12% ↑
-                  </span>
-
-                </div>
-
-                <h2>
+                <strong>
                   {totalEmployees.toLocaleString()}
-                </h2>
+                </strong>
 
-                <p>
-                  Total Employees
-                </p>
-
-                <div className="mini-sparkline green-spark">
-                  ╱╲╱╲━━╱╲╱╲
-                </div>
-
-              </div>
-
-              {/* NEW / ACTIVE EMPLOYEES */}
-
-              <div className="image-kpi-card">
-
-                <div className="kpi-card-top">
-
-                  <div className="image-kpi-icon">
-                    👤
-                  </div>
-
-                  <span className="image-kpi-trend red">
-                    Active
-                  </span>
-
-                </div>
-
-                <h2>
-                  {activeEmployees.toLocaleString()}
-                </h2>
-
-                <p>
-                  Active Employees
-                </p>
-
-                <div className="mini-sparkline red-spark">
-                  ╱╲━━╱╲╱╲
-                </div>
-
-              </div>
-
-              {/* JOB APPLICANTS / PENDING LEAVES */}
-
-              <div className="image-kpi-card">
-
-                <div className="kpi-card-top">
-
-                  <div className="image-kpi-icon">
-                    📋
-                  </div>
-
-                  <span className="image-kpi-trend orange">
-                    Pending
-                  </span>
-
-                </div>
-
-                <h2>
-                  {pendingLeaves}
-                </h2>
-
-                <p>
-                  Pending Leaves
-                </p>
-
-                <div className="mini-sparkline orange-spark">
-                  ╱╲╱╲━━╱╲
-                </div>
-
-              </div>
-
-              {/* PAYROLL */}
-
-              <div className="image-kpi-card">
-
-                <div className="kpi-card-top">
-
-                  <div className="image-kpi-icon">
-                    ₹
-                  </div>
-
-                  <span className="image-kpi-trend green">
-                    Monthly
-                  </span>
-
-                </div>
-
-                <h2>
-                  ₹
-                  {totalSalary.toLocaleString(
-                    "en-IN"
-                  )}
-                </h2>
-
-                <p>
-                  Total Payroll
-                </p>
-
-                <div className="mini-sparkline purple-spark">
-                  ╱╲━━╱╲╱╲
-                </div>
+                <small>
+                  Workforce size
+                </small>
 
               </div>
 
             </div>
 
-            {/* ===============================================
-                ATTENDANCE TIME CARD
-            =============================================== */}
+            {/* ACTIVE */}
 
-            <div className="attendance-time-card">
+            <div className="dashboard-kpi-card">
 
-              <div className="attendance-card-header">
+              <div className="dashboard-kpi-icon green">
+                🟢
+              </div>
+
+              <div className="dashboard-kpi-content">
+
+                <span>Active Employees</span>
 
                 <strong>
-                  Your Attendance
+                  {activeEmployees.toLocaleString()}
                 </strong>
 
-                <span>
-                  •••
-                </span>
+                <small>
+                  {inactiveEmployees} inactive
+                </small>
 
               </div>
 
-              <div className="live-time">
-                {formattedTime}
+            </div>
+
+            {/* PENDING LEAVES */}
+
+            <div className="dashboard-kpi-card">
+
+              <div className="dashboard-kpi-icon orange">
+                🏖️
               </div>
 
-              <div className="attendance-info">
+              <div className="dashboard-kpi-content">
 
-                <div>
-                  <span>
-                    Break Time:
-                  </span>
+                <span>Pending Leaves</span>
 
-                  <strong>
-                    01:00 PM - 01:45 PM
-                  </strong>
-                </div>
+                <strong>
+                  {pendingLeaves}
+                </strong>
 
-                <div>
-                  <span>
-                    Target Hours:
-                  </span>
-
-                  <strong>
-                    08:15 H (Per Day)
-                  </strong>
-                </div>
+                <small>
+                  {approvedLeaves} approved
+                </small>
 
               </div>
 
-              <div className="attendance-buttons">
+            </div>
 
-                <button className="break-button">
-                  Break ↩
-                </button>
+            {/* PAYROLL */}
 
-                <button className="clock-button">
-                  Clock Out →
-                </button>
+            <div className="dashboard-kpi-card">
 
+              <div className="dashboard-kpi-icon purple">
+                ₹
+              </div>
+
+              <div className="dashboard-kpi-content">
+
+                <span>Monthly Payroll</span>
+
+                <strong>
+                  ₹{totalSalary.toLocaleString("en-IN")}
+                </strong>
+
+                <small>
+                  Current payroll
+                </small>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* =================================================
+              LIVE ATTENDANCE
+          ================================================= */}
+
+          <section className="live-attendance-section">
+
+            <div className="section-title">
+
+              <div>
+                <h2>Today's Attendance</h2>
+                <p>Live workforce attendance status</p>
+              </div>
+
+              <div className="live-indicator">
+                <span></span>
+                LIVE
+              </div>
+
+            </div>
+
+            <div className="attendance-status-grid">
+
+              <div className="attendance-status-card present">
+                <span>✓</span>
+                <strong>{presentToday}</strong>
+                <small>Present</small>
+              </div>
+
+              <div className="attendance-status-card late">
+                <span>⏰</span>
+                <strong>{lateToday}</strong>
+                <small>Late</small>
+              </div>
+
+              <div className="attendance-status-card absent">
+                <span>!</span>
+                <strong>{absentToday}</strong>
+                <small>Absent</small>
+              </div>
+
+              <div className="attendance-status-card leave">
+                <span>🏖️</span>
+                <strong>{onLeaveToday}</strong>
+                <small>On Leave</small>
+              </div>
+
+              <div className="attendance-status-card percentage">
+                <span>%</span>
+                <strong>{attendancePercentage}%</strong>
+                <small>Attendance Rate</small>
               </div>
 
             </div>
@@ -748,37 +618,16 @@ function AdminDashboard() {
               <div className="reference-card-header">
 
                 <div>
+                  <h3>Attendance Overview</h3>
 
-                  <h3>
-                    Attendance Overview
-                  </h3>
-
-                  <div className="chart-legend">
-
-                    <span>
-                      <i className="dot dark-green"></i>
-                      On Time
-                    </span>
-
-                    <span>
-                      <i className="dot orange"></i>
-                      Late In
-                    </span>
-
-                    <span>
-                      <i className="dot red"></i>
-                      Absent
-                    </span>
-
-                  </div>
-
+                  <p>
+                    Monthly attendance statistics
+                  </p>
                 </div>
 
-                <select defaultValue="2026">
-                  <option>2026</option>
-                  <option>2025</option>
-                  <option>2024</option>
-                </select>
+                <span className="live-badge">
+                  Live
+                </span>
 
               </div>
 
@@ -798,16 +647,12 @@ function AdminDashboard() {
               <div className="reference-card-header">
 
                 <div>
+                  <h3>Employees by Gender</h3>
 
-                  <h3>
-                    Gender By Employees
-                  </h3>
-
+                  <p>
+                    Current employee distribution
+                  </p>
                 </div>
-
-                <span className="three-dots">
-                  •••
-                </span>
 
               </div>
 
@@ -821,8 +666,7 @@ function AdminDashboard() {
                 <div className="gender-center">
 
                   <strong>
-                    {genderData.male +
-                      genderData.female}
+                    {totalEmployees}
                   </strong>
 
                   <span>
@@ -838,64 +682,58 @@ function AdminDashboard() {
           </section>
 
           {/* =================================================
-              TOP PERFORMANCE EMPLOYEES
+              TOP PERFORMERS
           ================================================= */}
 
           <section className="reference-card top-performance-card">
 
             <div className="reference-card-header">
 
-              <h3>
-                Top Performance Employees
-              </h3>
+              <div>
+                <h3>Top Performance Employees</h3>
 
-              <span className="three-dots">
-                •••
-              </span>
+                <p>
+                  Based on available performance data
+                </p>
+              </div>
 
             </div>
 
             <div className="performance-list">
 
-              {displayPerformers.length === 0 ? (
+              {topPerformers.length === 0 ? (
 
                 <div className="no-performance">
-                  No employee records available
+                  No performance data available.
                 </div>
 
               ) : (
 
-                displayPerformers.map(
-                  (employee, index) => {
+                topPerformers.map((employee, index) => {
 
-                    const score =
-                      getPerformanceScore(
-                        employee,
-                        index
-                      );
+                  const score =
+                    Number(employee.performanceScore) || 0;
 
-                    return (
-                      <div
-                        className="performance-person"
-                        key={
-                          employee.id ||
-                          index
-                        }
-                      >
+                  return (
+                    <div
+                      className="performance-person"
+                      key={employee.id || index}
+                    >
 
-                        <div className="performance-avatar">
+                      <div className="performance-rank">
+                        #{index + 1}
+                      </div>
 
-                          <img
-                            src={getProfileImage(
-                              employee
-                            )}
-                            alt={
-                              employee.firstName ||
-                              "Employee"
-                            }
-                          />
+                      <div className="performance-avatar">
 
-                        </div>
+                        <img
+                          src={getProfileImage(employee)}
+                          alt="Employee"
+                        />
+
+                      </div>
+
+                      <div className="performance-info">
 
                         <strong>
                           {employee.firstName || ""}
@@ -904,15 +742,19 @@ function AdminDashboard() {
                         </strong>
 
                         <span>
-                          {score !== null
-                            ? `${score}%`
-                            : "N/A"}
+                          {employee.department ||
+                            "Employee"}
                         </span>
 
                       </div>
-                    );
-                  }
-                )
+
+                      <div className="performance-score">
+                        {score}%
+                      </div>
+
+                    </div>
+                  );
+                })
 
               )}
 
@@ -921,90 +763,28 @@ function AdminDashboard() {
           </section>
 
           {/* =================================================
-              REAL-TIME SUMMARY
+              LIVE CLOCK / ADMIN ATTENDANCE
           ================================================= */}
 
-          <section className="bottom-summary">
+          <section className="admin-live-card">
 
-            <div className="summary-card">
+            <div>
 
-              <div className="summary-icon green">
-                ✓
-              </div>
+              <span className="live-indicator">
+                <span></span>
+                LIVE
+              </span>
 
-              <div>
+              <h3>Admin Attendance</h3>
 
-                <strong>
-                  {presentToday}
-                </strong>
-
-                <span>
-                  Present Today
-                </span>
-
-              </div>
+              <p>
+                Current system time
+              </p>
 
             </div>
 
-            <div className="summary-card">
-
-              <div className="summary-icon red">
-                !
-              </div>
-
-              <div>
-
-                <strong>
-                  {absentToday}
-                </strong>
-
-                <span>
-                  Absent Today
-                </span>
-
-              </div>
-
-            </div>
-
-            <div className="summary-card">
-
-              <div className="summary-icon blue">
-                %
-              </div>
-
-              <div>
-
-                <strong>
-                  {attendancePercentage}%
-                </strong>
-
-                <span>
-                  Attendance
-                </span>
-
-              </div>
-
-            </div>
-
-            <div className="summary-card">
-
-              <div className="summary-icon orange">
-                🏢
-              </div>
-
-              <div>
-
-                <strong>
-                  {dashboard.totalDepartments ||
-                    0}
-                </strong>
-
-                <span>
-                  Departments
-                </span>
-
-              </div>
-
+            <div className="admin-live-time">
+              {formattedTime}
             </div>
 
           </section>
@@ -1017,35 +797,37 @@ function AdminDashboard() {
 
             <div>
 
-              <span className="real-time-dot"></span>
+              <span
+                className={
+                  connectionStatus === "Connected"
+                    ? "real-time-dot"
+                    : "real-time-dot disconnected"
+                }
+              ></span>
 
               <strong>
-                Real-Time Dashboard
+                {connectionStatus}
               </strong>
 
               <span>
-                Data automatically refreshes every 10 seconds
+                Last updated: {lastUpdatedTime}
               </span>
 
             </div>
 
-            <span className="connected">
-              ● Connected
-            </span>
+            <button onClick={loadData}>
+              ↻ Refresh
+            </button>
 
           </div>
 
-          {/* =================================================
-              FOOTER
-          ================================================= */}
+          {/* FOOTER */}
 
           <footer className="dashboard-footer">
 
             © 2026 NexusHR Enterprise HRMS
 
-            <span>
-              •
-            </span>
+            <span>•</span>
 
             Real-Time Workforce Management
 
