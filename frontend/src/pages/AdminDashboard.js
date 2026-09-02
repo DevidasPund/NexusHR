@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,10 +10,17 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+
 import { Bar } from "react-chartjs-2";
 import API from "../services/ApiService";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Tooltip,
+  Legend
+);
 
 const REFRESH_MS = 10000;
 
@@ -37,7 +45,9 @@ const toArray = (value) => {
 
 const numberValue = (...values) => {
   for (const value of values) {
-    if (value === null || value === undefined || value === "") continue;
+    if (value === null || value === undefined || value === "") {
+      continue;
+    }
 
     const number = Number(value);
 
@@ -50,7 +60,9 @@ const numberValue = (...values) => {
 };
 
 const formatNumber = (value) => {
-  return new Intl.NumberFormat("en-IN").format(numberValue(value));
+  return new Intl.NumberFormat("en-IN").format(
+    numberValue(value)
+  );
 };
 
 const formatCurrency = (value) => {
@@ -117,7 +129,10 @@ const getEmployeeName = (employee) => {
 
   if (fullName) return fullName;
 
-  return employee.email || `Employee #${employee.id || employee.employeeId || "-"}`;
+  return (
+    employee.email ||
+    `Employee #${employee.id || employee.employeeId || "-"}`
+  );
 };
 
 const getEmployeeId = (employee) => {
@@ -179,7 +194,9 @@ const getInitials = (name) => {
     return parts[0].slice(0, 2).toUpperCase();
   }
 
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  return `${parts[0][0]}${
+    parts[parts.length - 1][0]
+  }`.toUpperCase();
 };
 
 const getLeaveStatusClass = (status) => {
@@ -240,12 +257,6 @@ function AdminDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [errorMessage, setErrorMessage] = useState("");
 
-  /*
-   * -------------------------------------------------------
-   * LIVE CLOCK
-   * -------------------------------------------------------
-   */
-
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -253,12 +264,6 @@ function AdminDashboard() {
 
     return () => clearInterval(timer);
   }, []);
-
-  /*
-   * -------------------------------------------------------
-   * LOAD DASHBOARD DATA
-   * -------------------------------------------------------
-   */
 
   const loadDashboardData = useCallback(async (manual = false) => {
     if (manual) {
@@ -279,10 +284,12 @@ function AdminDashboard() {
       };
 
       const results = await Promise.allSettled(
-        Object.entries(requests).map(async ([key, request]) => {
-          const response = await request;
-          return [key, response.data];
-        })
+        Object.entries(requests).map(
+          async ([key, request]) => {
+            const response = await request;
+            return [key, response.data];
+          }
+        )
       );
 
       const data = {};
@@ -294,9 +301,6 @@ function AdminDashboard() {
         }
       });
 
-      /*
-       * At least one backend request succeeded.
-       */
       const successfulRequests = results.filter(
         (result) => result.status === "fulfilled"
       ).length;
@@ -311,9 +315,6 @@ function AdminDashboard() {
         );
       }
 
-      /*
-       * Store backend responses.
-       */
       setDashboard(data.dashboard || {});
 
       setEmployees(
@@ -368,10 +369,6 @@ function AdminDashboard() {
     }
   }, []);
 
-  /*
-   * Initial load + automatic refresh every 10 seconds.
-   */
-
   useEffect(() => {
     loadDashboardData();
 
@@ -383,12 +380,6 @@ function AdminDashboard() {
       clearInterval(interval);
     };
   }, [loadDashboardData]);
-
-  /*
-   * -------------------------------------------------------
-   * DERIVED EMPLOYEE DATA
-   * -------------------------------------------------------
-   */
 
   const totalEmployees = useMemo(() => {
     return numberValue(
@@ -446,12 +437,6 @@ function AdminDashboard() {
     totalEmployees,
     activeEmployees,
   ]);
-
-  /*
-   * -------------------------------------------------------
-   * ATTENDANCE
-   * -------------------------------------------------------
-   */
 
   const attendancePresentToday = useMemo(() => {
     const direct = numberValue(
@@ -641,12 +626,6 @@ function AdminDashboard() {
     totalEmployees,
   ]);
 
-  /*
-   * -------------------------------------------------------
-   * LEAVE DATA
-   * -------------------------------------------------------
-   */
-
   const pendingLeaves = useMemo(() => {
     const direct =
       dashboard?.pendingLeaves ??
@@ -707,12 +686,6 @@ function AdminDashboard() {
     ).length;
   }, [dashboard, leaves]);
 
-  /*
-   * -------------------------------------------------------
-   * PAYROLL
-   * -------------------------------------------------------
-   */
-
   const monthlyPayroll = useMemo(() => {
     return numberValue(
       dashboard?.monthlyPayroll,
@@ -722,25 +695,12 @@ function AdminDashboard() {
     );
   }, [dashboard]);
 
-  /*
-   * -------------------------------------------------------
-   * DEPARTMENTS
-   * -------------------------------------------------------
-   */
-
   const departmentCount = useMemo(() => {
     return numberValue(
       dashboard?.departmentCount,
       departments.length
     );
   }, [dashboard, departments]);
-
-  /*
-   * -------------------------------------------------------
-   * ATTENDANCE TREND
-   * -------------------------------------------------------
-   */
-
   const attendanceTrend = useMemo(() => {
     const map = {};
 
@@ -770,27 +730,19 @@ function AdminDashboard() {
 
       const status = getStatus(record);
 
-      if (
-        status === STATUS.PRESENT
-      ) {
+      if (status === STATUS.PRESENT) {
         map[key].present += 1;
       }
 
-      if (
-        status === STATUS.LATE
-      ) {
+      if (status === STATUS.LATE) {
         map[key].late += 1;
       }
 
-      if (
-        status === STATUS.ABSENT
-      ) {
+      if (status === STATUS.ABSENT) {
         map[key].absent += 1;
       }
 
-      if (
-        status === STATUS.WFH
-      ) {
+      if (status === STATUS.WFH) {
         map[key].wfh += 1;
       }
 
@@ -823,36 +775,27 @@ function AdminDashboard() {
         {
           label: "Present",
           data: attendanceTrend.map(
-            (item) =>
-              item.present
+            (item) => item.present
           ),
           borderWidth: 1,
         },
         {
           label: "Late",
           data: attendanceTrend.map(
-            (item) =>
-              item.late
+            (item) => item.late
           ),
           borderWidth: 1,
         },
         {
           label: "WFH",
           data: attendanceTrend.map(
-            (item) =>
-              item.wfh
+            (item) => item.wfh
           ),
           borderWidth: 1,
         },
       ],
     };
   }, [attendanceTrend]);
-
-  /*
-   * -------------------------------------------------------
-   * ACTIVE / INACTIVE CHART
-   * -------------------------------------------------------
-   */
 
   const workforceChartData = useMemo(() => {
     return {
@@ -877,12 +820,6 @@ function AdminDashboard() {
     inactiveEmployees,
   ]);
 
-  /*
-   * -------------------------------------------------------
-   * RECENT EMPLOYEES
-   * -------------------------------------------------------
-   */
-
   const recentEmployees = useMemo(() => {
     return [...employees]
       .sort((a, b) => {
@@ -904,12 +841,6 @@ function AdminDashboard() {
       })
       .slice(0, 8);
   }, [employees]);
-
-  /*
-   * -------------------------------------------------------
-   * LIVE ATTENDANCE
-   * -------------------------------------------------------
-   */
 
   const liveAttendance = useMemo(() => {
     const employeeMap = new Map();
@@ -950,12 +881,6 @@ function AdminDashboard() {
     employees,
   ]);
 
-  /*
-   * -------------------------------------------------------
-   * PERFORMANCE
-   * -------------------------------------------------------
-   */
-
   const topPerformers = useMemo(() => {
     return [...performances]
       .sort(
@@ -965,12 +890,6 @@ function AdminDashboard() {
       )
       .slice(0, 5);
   }, [performances]);
-
-  /*
-   * -------------------------------------------------------
-   * RECENT LEAVES
-   * -------------------------------------------------------
-   */
 
   const recentLeaves = useMemo(() => {
     return [...leaves]
@@ -993,12 +912,6 @@ function AdminDashboard() {
       })
       .slice(0, 6);
   }, [leaves]);
-
-  /*
-   * -------------------------------------------------------
-   * NOTIFICATIONS
-   * -------------------------------------------------------
-   */
 
   const recentNotifications = useMemo(() => {
     return [...notifications]
@@ -1024,12 +937,6 @@ function AdminDashboard() {
       .slice(0, 6);
   }, [notifications]);
 
-  /*
-   * -------------------------------------------------------
-   * RISK CALCULATION
-   * -------------------------------------------------------
-   */
-
   const workforceRisk = useMemo(() => {
     const risks = [];
 
@@ -1042,7 +949,8 @@ function AdminDashboard() {
       });
     } else if (attendancePercentage < 85) {
       risks.push({
-        title: "Attendance requires attention",
+        title:
+          "Attendance requires attention",
         message:
           "Attendance is below the recommended 85%.",
         level: "Medium",
@@ -1082,12 +990,6 @@ function AdminDashboard() {
     pendingLeaves,
     inactiveEmployees,
   ]);
-
-  /*
-   * -------------------------------------------------------
-   * DASHBOARD CARD
-   * -------------------------------------------------------
-   */
 
   const StatCard = ({
     title,
@@ -1135,607 +1037,469 @@ function AdminDashboard() {
   };
 
   /*
-   * -------------------------------------------------------
-   * PAGE
-   * -------------------------------------------------------
+   * =======================================================
+   * LOADING SCREEN
+   * =======================================================
    */
 
   if (loading) {
     return (
-      <div className="container-fluid py-5">
-        <div className="d-flex justify-content-center align-items-center">
-          <div className="text-center">
-            <div
-              className="spinner-border text-primary mb-3"
-              role="status"
-            />
+      <div className="admin-layout">
+        <Sidebar />
 
-            <h5>
-              Loading NexusHR Admin Dashboard...
-            </h5>
+        <main className="admin-main">
+          <Navbar />
 
-            <p className="text-muted mb-0">
-              Fetching real data from the backend.
-            </p>
+          <div className="container-fluid py-5">
+            <div className="d-flex justify-content-center align-items-center">
+              <div className="text-center">
+                <div
+                  className="spinner-border text-primary mb-3"
+                  role="status"
+                />
+
+                <h5>
+                  Loading NexusHR Admin Dashboard...
+                </h5>
+
+                <p className="text-muted mb-0">
+                  Fetching real data from the backend.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
+  /*
+   * =======================================================
+   * MAIN ADMIN DASHBOARD
+   * =======================================================
+   */
+
   return (
-    <div
-      className="container-fluid py-4"
-      style={{
-        background: "#f7f8fc",
-        minHeight: "100vh",
-      }}
-    >
-      {/* ==================================================
-          HEADER
-      =================================================== */}
+    <div className="admin-layout">
+      <Sidebar />
 
-      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="fw-bold mb-1">
-            Admin Dashboard
-          </h2>
+      <main className="admin-main">
+        <Navbar />
 
-          <p className="text-muted mb-0">
-            NexusHR workforce management overview
-          </p>
-        </div>
+        <div
+          className="container-fluid py-4"
+          style={{
+            background: "#f7f8fc",
+            minHeight: "100vh",
+          }}
+        >
+          {/* HEADER */}
 
-        <div className="d-flex align-items-center gap-3 mt-3 mt-md-0">
-          <div className="text-end">
-            <div className="fw-semibold">
-              {currentTime.toLocaleTimeString(
-                "en-IN",
-                {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                }
-              )}
-            </div>
-
-            <div className="small text-muted">
-              {currentTime.toLocaleDateString(
-                "en-IN",
-                {
-                  weekday: "short",
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                }
-              )}
-            </div>
-          </div>
-
-          <button
-            className="btn btn-primary"
-            onClick={() =>
-              loadDashboardData(true)
-            }
-            disabled={refreshing}
-          >
-            {refreshing ? (
-              <>
-                <span
-                  className="spinner-border spinner-border-sm me-2"
-                  role="status"
-                />
-                Refreshing
-              </>
-            ) : (
-              <>
-                ↻ Refresh
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* ==================================================
-          BACKEND STATUS
-      =================================================== */}
-
-      <div
-        className={`alert ${
-          backendOnline
-            ? "alert-success"
-            : "alert-danger"
-        } d-flex flex-wrap justify-content-between align-items-center`}
-      >
-        <div>
-          <strong>
-            {backendOnline
-              ? "● Backend Connected"
-              : "● Backend Offline"}
-          </strong>
-
-          <span className="ms-2">
-            {backendOnline
-              ? "Live data is being loaded from NexusHR backend."
-              : errorMessage ||
-                "Backend connection failed."}
-          </span>
-        </div>
-
-        <div className="small">
-          Last updated:{" "}
-          {lastUpdated
-            ? lastUpdated.toLocaleTimeString(
-                "en-IN"
-              )
-            : "-"}
-        </div>
-      </div>
-
-      {/* ==================================================
-          KPI CARDS
-      =================================================== */}
-
-      <div className="row g-4 mb-4">
-        <div className="col-xl-3 col-md-6">
-          <StatCard
-            title="Total Employees"
-            value={formatNumber(
-              totalEmployees
-            )}
-            subtitle="Employees in backend"
-            icon="👥"
-          />
-        </div>
-
-        <div className="col-xl-3 col-md-6">
-          <StatCard
-            title="Present Today"
-            value={formatNumber(
-              attendancePresentToday
-            )}
-            subtitle={`${attendancePercentage}% attendance`}
-            icon="✓"
-          />
-        </div>
-
-        <div className="col-xl-3 col-md-6">
-          <StatCard
-            title="Pending Leaves"
-            value={formatNumber(
-              pendingLeaves
-            )}
-            subtitle="Requests requiring action"
-            icon="📋"
-          />
-        </div>
-
-        <div className="col-xl-3 col-md-6">
-          <StatCard
-            title="Monthly Payroll"
-            value={formatCurrency(
-              monthlyPayroll
-            )}
-            subtitle="Current backend value"
-            icon="₹"
-          />
-        </div>
-      </div>
-
-      {/* ==================================================
-          SECONDARY KPI CARDS
-      =================================================== */}
-
-      <div className="row g-4 mb-4">
-        <div className="col-xl-3 col-md-6">
-          <StatCard
-            title="Active Employees"
-            value={formatNumber(
-              activeEmployees
-            )}
-            subtitle={`${inactiveEmployees} inactive`}
-            icon="🟢"
-          />
-        </div>
-
-        <div className="col-xl-3 col-md-6">
-          <StatCard
-            title="Late Today"
-            value={formatNumber(
-              attendanceLateToday
-            )}
-            subtitle="Late attendance records"
-            icon="⏰"
-          />
-        </div>
-
-        <div className="col-xl-3 col-md-6">
-          <StatCard
-            title="WFH Today"
-            value={formatNumber(
-              attendanceWFHToday
-            )}
-            subtitle="Work from home"
-            icon="🏠"
-          />
-        </div>
-
-        <div className="col-xl-3 col-md-6">
-          <StatCard
-            title="Departments"
-            value={formatNumber(
-              departmentCount
-            )}
-            subtitle="Departments in system"
-            icon="🏢"
-          />
-        </div>
-      </div>
-
-      {/* ==================================================
-          TODAY ATTENDANCE
-      =================================================== */}
-
-      <div className="card border-0 shadow-sm mb-4">
-        <div className="card-body p-4">
-          <div className="d-flex justify-content-between align-items-center mb-4">
+          <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
             <div>
-              <h5 className="fw-bold mb-1">
-                Today's Attendance
-              </h5>
+              <h2 className="fw-bold mb-1">
+                Admin Dashboard
+              </h2>
 
-              <p className="text-muted small mb-0">
-                Live attendance summary from backend
+              <p className="text-muted mb-0">
+                NexusHR workforce management overview
               </p>
             </div>
 
-            <span className="badge bg-success">
-              LIVE
-            </span>
-          </div>
-
-          <div className="row g-3">
-            <div className="col-md-2">
-              <div className="p-3 bg-light rounded">
-                <div className="small text-muted">
-                  Present
+            <div className="d-flex align-items-center gap-3 mt-3 mt-md-0">
+              <div className="text-end">
+                <div className="fw-semibold">
+                  {currentTime.toLocaleTimeString(
+                    "en-IN",
+                    {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    }
+                  )}
                 </div>
-                <h4 className="fw-bold text-success mb-0">
-                  {attendancePresentToday}
-                </h4>
-              </div>
-            </div>
 
-            <div className="col-md-2">
-              <div className="p-3 bg-light rounded">
                 <div className="small text-muted">
-                  Late
+                  {currentTime.toLocaleDateString(
+                    "en-IN",
+                    {
+                      weekday: "short",
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    }
+                  )}
                 </div>
-                <h4 className="fw-bold text-warning mb-0">
-                  {attendanceLateToday}
-                </h4>
               </div>
-            </div>
 
-            <div className="col-md-2">
-              <div className="p-3 bg-light rounded">
-                <div className="small text-muted">
-                  Absent
-                </div>
-                <h4 className="fw-bold text-danger mb-0">
-                  {absentToday}
-                </h4>
-              </div>
-            </div>
-
-            <div className="col-md-2">
-              <div className="p-3 bg-light rounded">
-                <div className="small text-muted">
-                  WFH
-                </div>
-                <h4 className="fw-bold text-info mb-0">
-                  {attendanceWFHToday}
-                </h4>
-              </div>
-            </div>
-
-            <div className="col-md-2">
-              <div className="p-3 bg-light rounded">
-                <div className="small text-muted">
-                  On Leave
-                </div>
-                <h4 className="fw-bold text-primary mb-0">
-                  {onLeaveToday}
-                </h4>
-              </div>
-            </div>
-
-            <div className="col-md-2">
-              <div className="p-3 bg-light rounded">
-                <div className="small text-muted">
-                  Attendance
-                </div>
-                <h4 className="fw-bold mb-0">
-                  {attendancePercentage}%
-                </h4>
-              </div>
+              <button
+                className="btn btn-primary"
+                onClick={() =>
+                  loadDashboardData(true)
+                }
+                disabled={refreshing}
+              >
+                {refreshing ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    />
+                    Refreshing
+                  </>
+                ) : (
+                  <>↻ Refresh</>
+                )}
+              </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ==================================================
-          CHARTS
-      =================================================== */}
+          {/* BACKEND STATUS */}
 
-      <div className="row g-4 mb-4">
-        <div className="col-xl-8">
-          <div className="card border-0 shadow-sm h-100">
+          <div
+            className={`alert ${
+              backendOnline
+                ? "alert-success"
+                : "alert-danger"
+            } d-flex flex-wrap justify-content-between align-items-center`}
+          >
+            <div>
+              <strong>
+                {backendOnline
+                  ? "● Backend Connected"
+                  : "● Backend Offline"}
+              </strong>
+
+              <span className="ms-2">
+                {backendOnline
+                  ? "Live data is being loaded from NexusHR backend."
+                  : errorMessage ||
+                    "Backend connection failed."}
+              </span>
+            </div>
+
+            <div className="small">
+              Last updated:{" "}
+              {lastUpdated
+                ? lastUpdated.toLocaleTimeString(
+                    "en-IN"
+                  )
+                : "-"}
+            </div>
+          </div>
+
+          {/* KPI CARDS */}
+
+          <div className="row g-4 mb-4">
+            <div className="col-xl-3 col-md-6">
+              <StatCard
+                title="Total Employees"
+                value={formatNumber(
+                  totalEmployees
+                )}
+                subtitle="Employees in backend"
+                icon="👥"
+              />
+            </div>
+
+            <div className="col-xl-3 col-md-6">
+              <StatCard
+                title="Present Today"
+                value={formatNumber(
+                  attendancePresentToday
+                )}
+                subtitle={`${attendancePercentage}% attendance`}
+                icon="✓"
+              />
+            </div>
+
+            <div className="col-xl-3 col-md-6">
+              <StatCard
+                title="Pending Leaves"
+                value={formatNumber(
+                  pendingLeaves
+                )}
+                subtitle="Requests requiring action"
+                icon="📋"
+              />
+            </div>
+
+            <div className="col-xl-3 col-md-6">
+              <StatCard
+                title="Monthly Payroll"
+                value={formatCurrency(
+                  monthlyPayroll
+                )}
+                subtitle="Current backend value"
+                icon="₹"
+              />
+            </div>
+          </div>
+
+          {/* SECONDARY KPI CARDS */}
+
+          <div className="row g-4 mb-4">
+            <div className="col-xl-3 col-md-6">
+              <StatCard
+                title="Active Employees"
+                value={formatNumber(
+                  activeEmployees
+                )}
+                subtitle={`${inactiveEmployees} inactive`}
+                icon="🟢"
+              />
+            </div>
+
+            <div className="col-xl-3 col-md-6">
+              <StatCard
+                title="Late Today"
+                value={formatNumber(
+                  attendanceLateToday
+                )}
+                subtitle="Late attendance records"
+                icon="⏰"
+              />
+            </div>
+
+            <div className="col-xl-3 col-md-6">
+              <StatCard
+                title="WFH Today"
+                value={formatNumber(
+                  attendanceWFHToday
+                )}
+                subtitle="Work from home"
+                icon="🏠"
+              />
+            </div>
+
+            <div className="col-xl-3 col-md-6">
+              <StatCard
+                title="Departments"
+                value={formatNumber(
+                  departmentCount
+                )}
+                subtitle="Departments in system"
+                icon="🏢"
+              />
+            </div>
+          </div>
+
+          {/* TODAY ATTENDANCE */}
+
+          <div className="card border-0 shadow-sm mb-4">
             <div className="card-body p-4">
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
                   <h5 className="fw-bold mb-1">
-                    Attendance Trend
+                    Today's Attendance
                   </h5>
 
                   <p className="text-muted small mb-0">
-                    Last available attendance records
+                    Live attendance summary from backend
                   </p>
                 </div>
 
-                <span className="badge bg-light text-dark">
-                  Backend Data
+                <span className="badge bg-success">
+                  LIVE
                 </span>
               </div>
 
-              <div
-                style={{
-                  height: "320px",
-                }}
-              >
-                {attendanceTrend.length > 0 ? (
-                  <Bar
-                    data={attendanceChartData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          ticks: {
-                            precision: 0,
+              <div className="row g-3">
+                <div className="col-md-2">
+                  <div className="p-3 bg-light rounded">
+                    <div className="small text-muted">
+                      Present
+                    </div>
+
+                    <h4 className="fw-bold text-success mb-0">
+                      {attendancePresentToday}
+                    </h4>
+                  </div>
+                </div>
+
+                <div className="col-md-2">
+                  <div className="p-3 bg-light rounded">
+                    <div className="small text-muted">
+                      Late
+                    </div>
+
+                    <h4 className="fw-bold text-warning mb-0">
+                      {attendanceLateToday}
+                    </h4>
+                  </div>
+                </div>
+
+                <div className="col-md-2">
+                  <div className="p-3 bg-light rounded">
+                    <div className="small text-muted">
+                      Absent
+                    </div>
+
+                    <h4 className="fw-bold text-danger mb-0">
+                      {absentToday}
+                    </h4>
+                  </div>
+                </div>
+
+                <div className="col-md-2">
+                  <div className="p-3 bg-light rounded">
+                    <div className="small text-muted">
+                      WFH
+                    </div>
+
+                    <h4 className="fw-bold text-info mb-0">
+                      {attendanceWFHToday}
+                    </h4>
+                  </div>
+                </div>
+
+                <div className="col-md-2">
+                  <div className="p-3 bg-light rounded">
+                    <div className="small text-muted">
+                      On Leave
+                    </div>
+
+                    <h4 className="fw-bold text-primary mb-0">
+                      {onLeaveToday}
+                    </h4>
+                  </div>
+                </div>
+
+                <div className="col-md-2">
+                  <div className="p-3 bg-light rounded">
+                    <div className="small text-muted">
+                      Attendance
+                    </div>
+
+                    <h4 className="fw-bold mb-0">
+                      {attendancePercentage}%
+                    </h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* ==================================================
+              CHARTS
+          =================================================== */}
+
+          <div className="row g-4 mb-4">
+            <div className="col-xl-8">
+              <div className="card border-0 shadow-sm h-100">
+                <div className="card-body p-4">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                      <h5 className="fw-bold mb-1">
+                        Attendance Trend
+                      </h5>
+
+                      <p className="text-muted small mb-0">
+                        Last available attendance records
+                      </p>
+                    </div>
+
+                    <span className="badge bg-light text-dark">
+                      Backend Data
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      height: "320px",
+                    }}
+                  >
+                    {attendanceTrend.length > 0 ? (
+                      <Bar
+                        data={attendanceChartData}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              ticks: {
+                                precision: 0,
+                              },
+                            },
+                          },
+                        }}
+                      />
+                    ) : (
+                      <div className="h-100 d-flex justify-content-center align-items-center text-muted">
+                        No attendance trend data available.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-xl-4">
+              <div className="card border-0 shadow-sm h-100">
+                <div className="card-body p-4">
+                  <h5 className="fw-bold mb-1">
+                    Workforce
+                  </h5>
+
+                  <p className="text-muted small mb-4">
+                    Active vs inactive employees
+                  </p>
+
+                  <div
+                    style={{
+                      height: "320px",
+                    }}
+                  >
+                    <Bar
+                      data={workforceChartData}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            display: false,
                           },
                         },
-                      },
-                    }}
-                  />
-                ) : (
-                  <div className="h-100 d-flex justify-content-center align-items-center text-muted">
-                    No attendance trend data available.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-4">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body p-4">
-              <h5 className="fw-bold mb-1">
-                Workforce
-              </h5>
-
-              <p className="text-muted small mb-4">
-                Active vs inactive employees
-              </p>
-
-              <div
-                style={{
-                  height: "320px",
-                }}
-              >
-                <Bar
-                  data={workforceChartData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        display: false,
-                      },
-                    },
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        ticks: {
-                          precision: 0,
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            ticks: {
+                              precision: 0,
+                            },
+                          },
                         },
-                      },
-                    },
-                  }}
-                />
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ==================================================
-          LIVE ATTENDANCE TABLE
-      =================================================== */}
+          {/* ==================================================
+              LIVE ATTENDANCE TABLE
+          =================================================== */}
 
-      <div className="card border-0 shadow-sm mb-4">
-        <div className="card-body p-4">
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <div>
-              <h5 className="fw-bold mb-1">
-                Live Attendance Monitor
-              </h5>
-
-              <p className="text-muted small mb-0">
-                Today's attendance records
-              </p>
-            </div>
-
-            <span className="badge bg-success">
-              Auto refresh: 10 sec
-            </span>
-          </div>
-
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead className="table-light">
-                <tr>
-                  <th>Employee</th>
-                  <th>Employee ID</th>
-                  <th>Date</th>
-                  <th>Check In</th>
-                  <th>Check Out</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {liveAttendance.length > 0 ? (
-                  liveAttendance.map(
-                    (record, index) => {
-                      const employeeName =
-                        getEmployeeName(
-                          record.employee
-                        );
-
-                      return (
-                        <tr
-                          key={
-                            record.id ||
-                            `${record.employeeId}-${index}`
-                          }
-                        >
-                          <td>
-                            <div className="d-flex align-items-center gap-2">
-                              <div
-                                className="rounded-circle d-flex align-items-center justify-content-center"
-                                style={{
-                                  width: "36px",
-                                  height: "36px",
-                                  background:
-                                    "#eef2ff",
-                                  fontSize:
-                                    "12px",
-                                  fontWeight:
-                                    "700",
-                                }}
-                              >
-                                {getInitials(
-                                  employeeName
-                                )}
-                              </div>
-
-                              <div>
-                                <div className="fw-semibold">
-                                  {employeeName}
-                                </div>
-
-                                {record.employee
-                                  ?.email && (
-                                  <div className="small text-muted">
-                                    {
-                                      record
-                                        .employee
-                                        .email
-                                    }
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-
-                          <td>
-                            {record.employeeId ||
-                              record.employeeID ||
-                              "-"}
-                          </td>
-
-                          <td>
-                            {formatDate(
-                              record.attendanceDate ||
-                                record.date
-                            )}
-                          </td>
-
-                          <td>
-                            {formatTime(
-                              record.checkInTime
-                            )}
-                          </td>
-
-                          <td>
-                            {formatTime(
-                              record.checkOutTime
-                            )}
-                          </td>
-
-                          <td>
-                            <span
-                              className={`badge ${getAttendanceStatusClass(
-                                getStatus(
-                                  record
-                                )
-                              )}`}
-                            >
-                              {getStatus(
-                                record
-                              ) || "UNKNOWN"}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    }
-                  )
-                ) : (
-                  <tr>
-                    <td
-                      colSpan="6"
-                      className="text-center text-muted py-5"
-                    >
-                      No attendance records available
-                      for today.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {/* ==================================================
-          RECENT EMPLOYEES + LEAVE
-      =================================================== */}
-
-      <div className="row g-4 mb-4">
-        <div className="col-xl-7">
-          <div className="card border-0 shadow-sm h-100">
+          <div className="card border-0 shadow-sm mb-4">
             <div className="card-body p-4">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <div>
                   <h5 className="fw-bold mb-1">
-                    Recent Employees
+                    Live Attendance Monitor
                   </h5>
 
                   <p className="text-muted small mb-0">
-                    Employees from the backend
+                    Today's attendance records
                   </p>
                 </div>
 
-                <span className="badge bg-primary">
-                  {employees.length}
+                <span className="badge bg-success">
+                  Auto refresh: 10 sec
                 </span>
               </div>
 
@@ -1744,36 +1508,28 @@ function AdminDashboard() {
                   <thead className="table-light">
                     <tr>
                       <th>Employee</th>
-                      <th>Department</th>
-                      <th>Role</th>
+                      <th>Employee ID</th>
+                      <th>Date</th>
+                      <th>Check In</th>
+                      <th>Check Out</th>
                       <th>Status</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {recentEmployees.length > 0 ? (
-                      recentEmployees.map(
-                        (employee, index) => {
-                          const name =
+                    {liveAttendance.length > 0 ? (
+                      liveAttendance.map(
+                        (record, index) => {
+                          const employeeName =
                             getEmployeeName(
-                              employee
+                              record.employee
                             );
-
-                          const status =
-                            employee?.status ||
-                            employee?.employmentStatus ||
-                            (employee?.active ===
-                            false
-                              ? "INACTIVE"
-                              : "ACTIVE");
 
                           return (
                             <tr
                               key={
-                                getEmployeeId(
-                                  employee
-                                ) ||
-                                index
+                                record.id ||
+                                `${record.employeeId}-${index}`
                               }
                             >
                               <td>
@@ -1781,67 +1537,72 @@ function AdminDashboard() {
                                   <div
                                     className="rounded-circle d-flex align-items-center justify-content-center"
                                     style={{
-                                      width:
-                                        "34px",
-                                      height:
-                                        "34px",
+                                      width: "36px",
+                                      height: "36px",
                                       background:
-                                        "#f1f3f5",
-                                      fontSize:
-                                        "11px",
-                                      fontWeight:
-                                        "700",
+                                        "#eef2ff",
+                                      fontSize: "12px",
+                                      fontWeight: "700",
                                     }}
                                   >
                                     {getInitials(
-                                      name
+                                      employeeName
                                     )}
                                   </div>
 
                                   <div>
                                     <div className="fw-semibold">
-                                      {name}
+                                      {employeeName}
                                     </div>
 
-                                    <div className="small text-muted">
-                                      ID:{" "}
-                                      {getEmployeeId(
-                                        employee
-                                      ) || "-"}
-                                    </div>
+                                    {record.employee
+                                      ?.email && (
+                                      <div className="small text-muted">
+                                        {
+                                          record
+                                            .employee
+                                            .email
+                                        }
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </td>
 
                               <td>
-                                {employee?.departmentName ||
-                                  employee
-                                    ?.department
-                                    ?.name ||
-                                  employee?.department ||
+                                {record.employeeId ||
+                                  record.employeeID ||
                                   "-"}
                               </td>
 
                               <td>
-                                {employee?.role ||
-                                  employee?.designation ||
-                                  "-"}
+                                {formatDate(
+                                  record.attendanceDate ||
+                                    record.date
+                                )}
+                              </td>
+
+                              <td>
+                                {formatTime(
+                                  record.checkInTime
+                                )}
+                              </td>
+
+                              <td>
+                                {formatTime(
+                                  record.checkOutTime
+                                )}
                               </td>
 
                               <td>
                                 <span
-                                  className={`badge ${
-                                    String(
-                                      status
-                                    ).toUpperCase() ===
-                                    "ACTIVE"
-                                      ? "bg-success"
-                                      : "bg-secondary"
-                                  }`}
+                                  className={`badge ${getAttendanceStatusClass(
+                                    getStatus(record)
+                                  )}`}
                                 >
-                                  {String(
-                                    status
-                                  ).toUpperCase()}
+                                  {getStatus(
+                                    record
+                                  ) || "UNKNOWN"}
                                 </span>
                               </td>
                             </tr>
@@ -1851,10 +1612,11 @@ function AdminDashboard() {
                     ) : (
                       <tr>
                         <td
-                          colSpan="4"
+                          colSpan="6"
                           className="text-center text-muted py-5"
                         >
-                          No employee data available.
+                          No attendance records available
+                          for today.
                         </td>
                       </tr>
                     )}
@@ -1863,208 +1625,182 @@ function AdminDashboard() {
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="col-xl-5">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body p-4">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                  <h5 className="fw-bold mb-1">
-                    Leave Requests
-                  </h5>
+          {/* ==================================================
+              RECENT EMPLOYEES + LEAVE
+          =================================================== */}
 
-                  <p className="text-muted small mb-0">
-                    Latest leave activity
-                  </p>
-                </div>
+          <div className="row g-4 mb-4">
+            <div className="col-xl-7">
+              <div className="card border-0 shadow-sm h-100">
+                <div className="card-body p-4">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h5 className="fw-bold mb-1">
+                        Recent Employees
+                      </h5>
 
-                <span className="badge bg-warning text-dark">
-                  {pendingLeaves} Pending
-                </span>
-              </div>
+                      <p className="text-muted small mb-0">
+                        Employees from the backend
+                      </p>
+                    </div>
 
-              <div>
-                {recentLeaves.length > 0 ? (
-                  recentLeaves.map(
-                    (leave, index) => {
-                      const employeeId =
-                        getLeaveEmployeeId(
-                          leave
-                        );
-
-                      const employee =
-                        employees.find(
-                          (item) =>
-                            String(
-                              getEmployeeId(
-                                item
-                              )
-                            ) ===
-                            String(
-                              employeeId
-                            )
-                        );
-
-                      const employeeName =
-                        leave?.employeeName ||
-                        getEmployeeName(
-                          employee
-                        );
-
-                      return (
-                        <div
-                          key={
-                            leave?.id ||
-                            index
-                          }
-                          className="border-bottom py-3"
-                        >
-                          <div className="d-flex justify-content-between align-items-start">
-                            <div>
-                              <div className="fw-semibold">
-                                {employeeName}
-                              </div>
-
-                              <div className="small text-muted">
-                                {leave?.leaveType ||
-                                  leave?.type ||
-                                  "Leave"}
-                              </div>
-                            </div>
-
-                            <span
-                              className={`badge ${getLeaveStatusClass(
-                                leave?.status
-                              )}`}
-                            >
-                              {leave?.status ||
-                                "UNKNOWN"}
-                            </span>
-                          </div>
-
-                          <div className="small text-muted mt-2">
-                            {formatDate(
-                              leave?.startDate ||
-                                leave?.fromDate ||
-                                leave?.leaveDate
-                            )}
-
-                            {" → "}
-
-                            {formatDate(
-                              leave?.endDate ||
-                                leave?.toDate ||
-                                leave?.leaveDate
-                            )}
-                          </div>
-                        </div>
-                      );
-                    }
-                  )
-                ) : (
-                  <div className="text-center text-muted py-5">
-                    No leave records available.
+                    <span className="badge bg-primary">
+                      {employees.length}
+                    </span>
                   </div>
-                )}
+
+                  <div className="table-responsive">
+                    <table className="table table-hover align-middle mb-0">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Employee</th>
+                          <th>Department</th>
+                          <th>Role</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {recentEmployees.length > 0 ? (
+                          recentEmployees.map(
+                            (employee, index) => {
+                              const name =
+                                getEmployeeName(
+                                  employee
+                                );
+
+                              const status =
+                                employee?.status ||
+                                employee?.employmentStatus ||
+                                (employee?.active ===
+                                false
+                                  ? "INACTIVE"
+                                  : "ACTIVE");
+
+                              return (
+                                <tr
+                                  key={
+                                    getEmployeeId(
+                                      employee
+                                    ) ||
+                                    index
+                                  }
+                                >
+                                  <td>
+                                    <div className="d-flex align-items-center gap-2">
+                                      <div
+                                        className="rounded-circle d-flex align-items-center justify-content-center"
+                                        style={{
+                                          width:
+                                            "34px",
+                                          height:
+                                            "34px",
+                                          background:
+                                            "#f1f3f5",
+                                          fontSize:
+                                            "11px",
+                                          fontWeight:
+                                            "700",
+                                        }}
+                                      >
+                                        {getInitials(
+                                          name
+                                        )}
+                                      </div>
+
+                                      <div>
+                                        <div className="fw-semibold">
+                                          {name}
+                                        </div>
+
+                                        <div className="small text-muted">
+                                          ID:{" "}
+                                          {getEmployeeId(
+                                            employee
+                                          ) || "-"}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  <td>
+                                    {employee?.departmentName ||
+                                      employee?.department
+                                        ?.name ||
+                                      employee?.department ||
+                                      "-"}
+                                  </td>
+
+                                  <td>
+                                    {employee?.role ||
+                                      employee?.designation ||
+                                      "-"}
+                                  </td>
+
+                                  <td>
+                                    <span
+                                      className={`badge ${
+                                        String(
+                                          status
+                                        ).toUpperCase() ===
+                                        "ACTIVE"
+                                          ? "bg-success"
+                                          : "bg-secondary"
+                                      }`}
+                                    >
+                                      {String(
+                                        status
+                                      ).toUpperCase()}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            }
+                          )
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan="4"
+                              className="text-center text-muted py-5"
+                            >
+                              No employee data available.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* ==================================================
-          LEAVE SUMMARY
-      =================================================== */}
+            <div className="col-xl-5">
+              <div className="card border-0 shadow-sm h-100">
+                <div className="card-body p-4">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h5 className="fw-bold mb-1">
+                        Leave Requests
+                      </h5>
 
-      <div className="card border-0 shadow-sm mb-4">
-        <div className="card-body p-4">
-          <h5 className="fw-bold mb-3">
-            Leave Summary
-          </h5>
+                      <p className="text-muted small mb-0">
+                        Latest leave activity
+                      </p>
+                    </div>
 
-          <div className="row g-3">
-            <div className="col-md-4">
-              <div className="p-4 rounded bg-warning bg-opacity-10">
-                <div className="text-muted small">
-                  Pending
-                </div>
+                    <span className="badge bg-warning text-dark">
+                      {pendingLeaves} Pending
+                    </span>
+                  </div>
 
-                <h3 className="fw-bold text-warning mb-0">
-                  {pendingLeaves}
-                </h3>
-              </div>
-            </div>
-
-            <div className="col-md-4">
-              <div className="p-4 rounded bg-success bg-opacity-10">
-                <div className="text-muted small">
-                  Approved
-                </div>
-
-                <h3 className="fw-bold text-success mb-0">
-                  {approvedLeaves}
-                </h3>
-              </div>
-            </div>
-
-            <div className="col-md-4">
-              <div className="p-4 rounded bg-danger bg-opacity-10">
-                <div className="text-muted small">
-                  Rejected
-                </div>
-
-                <h3 className="fw-bold text-danger mb-0">
-                  {rejectedLeaves}
-                </h3>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ==================================================
-          PERFORMANCE
-      =================================================== */}
-
-      <div className="row g-4 mb-4">
-        <div className="col-xl-7">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body p-4">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                  <h5 className="fw-bold mb-1">
-                    Top Performers
-                  </h5>
-
-                  <p className="text-muted small mb-0">
-                    Latest performance records
-                  </p>
-                </div>
-
-                <span className="badge bg-primary">
-                  Performance
-                </span>
-              </div>
-
-              <div className="table-responsive">
-                <table className="table table-hover align-middle">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Employee</th>
-                      <th>Review Month</th>
-                      <th>KPI</th>
-                      <th>Overall</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {topPerformers.length > 0 ? (
-                      topPerformers.map(
-                        (performance, index) => {
-                          const score =
-                            getPerformanceScore(
-                              performance
+                  <div>
+                    {recentLeaves.length > 0 ? (
+                      recentLeaves.map(
+                        (leave, index) => {
+                          const employeeId =
+                            getLeaveEmployeeId(
+                              leave
                             );
 
                           const employee =
@@ -2076,317 +1812,526 @@ function AdminDashboard() {
                                   )
                                 ) ===
                                 String(
-                                  performance?.employeeId
+                                  employeeId
                                 )
                             );
 
                           const employeeName =
-                            performance?.employeeName ||
+                            leave?.employeeName ||
                             getEmployeeName(
                               employee
                             );
 
                           return (
-                            <tr
+                            <div
                               key={
-                                performance?.id ||
+                                leave?.id ||
                                 index
                               }
+                              className="border-bottom py-3"
                             >
-                              <td className="fw-semibold">
-                                {employeeName}
-                              </td>
+                              <div className="d-flex justify-content-between align-items-start">
+                                <div>
+                                  <div className="fw-semibold">
+                                    {employeeName}
+                                  </div>
 
-                              <td>
-                                {performance?.reviewMonth ||
-                                  "-"}
-                              </td>
+                                  <div className="small text-muted">
+                                    {leave?.leaveType ||
+                                      leave?.type ||
+                                      "Leave"}
+                                  </div>
+                                </div>
 
-                              <td>
-                                {numberValue(
-                                  performance?.kpiScore
-                                )}
-                              </td>
-
-                              <td>
-                                <span className="fw-bold">
-                                  {score}
+                                <span
+                                  className={`badge ${getLeaveStatusClass(
+                                    leave?.status
+                                  )}`}
+                                >
+                                  {leave?.status ||
+                                    "UNKNOWN"}
                                 </span>
-                              </td>
-                            </tr>
+                              </div>
+
+                              <div className="small text-muted mt-2">
+                                {formatDate(
+                                  leave?.startDate ||
+                                    leave?.fromDate ||
+                                    leave?.leaveDate
+                                )}
+
+                                {" → "}
+
+                                {formatDate(
+                                  leave?.endDate ||
+                                    leave?.toDate ||
+                                    leave?.leaveDate
+                                )}
+                              </div>
+                            </div>
                           );
                         }
                       )
                     ) : (
-                      <tr>
-                        <td
-                          colSpan="4"
-                          className="text-center text-muted py-5"
-                        >
-                          No performance records available.
-                        </td>
-                      </tr>
+                      <div className="text-center text-muted py-5">
+                        No leave records available.
+                      </div>
                     )}
-                  </tbody>
-                </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ==================================================
-            WORKFORCE RISK
-        =================================================== */}
+          {/* ==================================================
+              LEAVE SUMMARY
+          =================================================== */}
 
-        <div className="col-xl-5">
-          <div className="card border-0 shadow-sm h-100">
+          <div className="card border-0 shadow-sm mb-4">
             <div className="card-body p-4">
-              <h5 className="fw-bold mb-1">
-                Workforce Risk
+              <h5 className="fw-bold mb-3">
+                Leave Summary
               </h5>
 
-              <p className="text-muted small mb-3">
-                Calculated from current backend data
-              </p>
-
-              {workforceRisk.map(
-                (risk, index) => (
-                  <div
-                    key={index}
-                    className="border rounded p-3 mb-3"
-                  >
-                    <div className="d-flex justify-content-between align-items-center">
-                      <strong>
-                        {risk.title}
-                      </strong>
-
-                      <span
-                        className={`badge ${
-                          risk.level === "High"
-                            ? "bg-danger"
-                            : risk.level ===
-                              "Medium"
-                            ? "bg-warning text-dark"
-                            : "bg-success"
-                        }`}
-                      >
-                        {risk.level}
-                      </span>
+              <div className="row g-3">
+                <div className="col-md-4">
+                  <div className="p-4 rounded bg-warning bg-opacity-10">
+                    <div className="text-muted small">
+                      Pending
                     </div>
 
-                    <div className="small text-muted mt-2">
-                      {risk.message}
-                    </div>
+                    <h3 className="fw-bold text-warning mb-0">
+                      {pendingLeaves}
+                    </h3>
                   </div>
-                )
-              )}
+                </div>
+
+                <div className="col-md-4">
+                  <div className="p-4 rounded bg-success bg-opacity-10">
+                    <div className="text-muted small">
+                      Approved
+                    </div>
+
+                    <h3 className="fw-bold text-success mb-0">
+                      {approvedLeaves}
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="col-md-4">
+                  <div className="p-4 rounded bg-danger bg-opacity-10">
+                    <div className="text-muted small">
+                      Rejected
+                    </div>
+
+                    <h3 className="fw-bold text-danger mb-0">
+                      {rejectedLeaves}
+                    </h3>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ==================================================
-          DEPARTMENTS
-      =================================================== */}
+          {/* ==================================================
+              PERFORMANCE
+          =================================================== */}
 
-      <div className="card border-0 shadow-sm mb-4">
-        <div className="card-body p-4">
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <div>
-              <h5 className="fw-bold mb-1">
-                Departments
-              </h5>
+          <div className="row g-4 mb-4">
+            <div className="col-xl-7">
+              <div className="card border-0 shadow-sm h-100">
+                <div className="card-body p-4">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h5 className="fw-bold mb-1">
+                        Top Performers
+                      </h5>
 
-              <p className="text-muted small mb-0">
-                Departments currently available in the backend
-              </p>
+                      <p className="text-muted small mb-0">
+                        Latest performance records
+                      </p>
+                    </div>
+
+                    <span className="badge bg-primary">
+                      Performance
+                    </span>
+                  </div>
+
+                  <div className="table-responsive">
+                    <table className="table table-hover align-middle">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Employee</th>
+                          <th>Review Month</th>
+                          <th>KPI</th>
+                          <th>Overall</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {topPerformers.length > 0 ? (
+                          topPerformers.map(
+                            (performance, index) => {
+                              const score =
+                                getPerformanceScore(
+                                  performance
+                                );
+
+                              const employee =
+                                employees.find(
+                                  (item) =>
+                                    String(
+                                      getEmployeeId(
+                                        item
+                                      )
+                                    ) ===
+                                    String(
+                                      performance?.employeeId
+                                    )
+                                );
+
+                              const employeeName =
+                                performance?.employeeName ||
+                                getEmployeeName(
+                                  employee
+                                );
+
+                              return (
+                                <tr
+                                  key={
+                                    performance?.id ||
+                                    index
+                                  }
+                                >
+                                  <td>
+                                    <div className="d-flex align-items-center gap-2">
+                                      <div
+                                        className="rounded-circle d-flex align-items-center justify-content-center"
+                                        style={{
+                                          width:
+                                            "34px",
+                                          height:
+                                            "34px",
+                                          background:
+                                            "#eef2ff",
+                                          fontSize:
+                                            "11px",
+                                          fontWeight:
+                                            "700",
+                                        }}
+                                      >
+                                        {getInitials(
+                                          employeeName
+                                        )}
+                                      </div>
+
+                                      <span className="fw-semibold">
+                                        {employeeName}
+                                      </span>
+                                    </div>
+                                  </td>
+
+                                  <td>
+                                    {performance?.reviewMonth ||
+                                      performance?.month ||
+                                      performance?.reviewDate ||
+                                      "-"}
+                                  </td>
+
+                                  <td>
+                                    {numberValue(
+                                      performance?.kpiScore,
+                                      performance?.kpi,
+                                      performance?.score
+                                    )}
+                                  </td>
+
+                                  <td>
+                                    <span
+                                      className={`badge ${
+                                        score >= 80
+                                          ? "bg-success"
+                                          : score >= 60
+                                          ? "bg-warning text-dark"
+                                          : "bg-danger"
+                                      }`}
+                                    >
+                                      {score}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            }
+                          )
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan="4"
+                              className="text-center text-muted py-5"
+                            >
+                              No performance data available.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <span className="badge bg-primary">
-              {departments.length}
-            </span>
-          </div>
+            <div className="col-xl-5">
+              <div className="card border-0 shadow-sm h-100">
+                <div className="card-body p-4">
+                  <h5 className="fw-bold mb-1">
+                    Workforce Risk
+                  </h5>
 
-          {departments.length > 0 ? (
-            <div className="row g-3">
-              {departments.map(
-                (department, index) => {
-                  const departmentName =
-                    department?.name ||
-                    department?.departmentName ||
-                    department?.title ||
-                    `Department ${index + 1}`;
+                  <p className="text-muted small mb-3">
+                    Automatic risk indicators
+                  </p>
 
-                  return (
-                    <div
-                      className="col-xl-3 col-md-4 col-sm-6"
-                      key={
-                        department?.id ||
-                        index
-                      }
-                    >
-                      <div className="border rounded p-3 h-100">
-                        <div className="d-flex align-items-center gap-3">
-                          <div
-                            className="rounded-circle d-flex align-items-center justify-content-center"
-                            style={{
-                              width: "42px",
-                              height: "42px",
-                              background:
-                                "#f1f3f5",
-                            }}
-                          >
-                            🏢
-                          </div>
-
+                  {workforceRisk.map(
+                    (risk, index) => (
+                      <div
+                        key={index}
+                        className="border rounded p-3 mb-3"
+                      >
+                        <div className="d-flex justify-content-between align-items-start">
                           <div>
                             <div className="fw-semibold">
-                              {departmentName}
+                              {risk.title}
                             </div>
 
-                            <div className="small text-muted">
-                              ID:{" "}
-                              {department?.id ||
-                                "-"}
+                            <div className="small text-muted mt-1">
+                              {risk.message}
+                            </div>
+                          </div>
+
+                          <span
+                            className={`badge ${
+                              risk.level === "High"
+                                ? "bg-danger"
+                                : risk.level ===
+                                  "Medium"
+                                ? "bg-warning text-dark"
+                                : "bg-success"
+                            }`}
+                          >
+                            {risk.level}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* ==================================================
+              DEPARTMENTS
+          =================================================== */}
+
+          <div className="card border-0 shadow-sm mb-4">
+            <div className="card-body p-4">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <h5 className="fw-bold mb-1">
+                    Departments
+                  </h5>
+
+                  <p className="text-muted small mb-0">
+                    Departments currently available in the backend
+                  </p>
+                </div>
+
+                <span className="badge bg-primary">
+                  {departments.length}
+                </span>
+              </div>
+
+              {departments.length > 0 ? (
+                <div className="row g-3">
+                  {departments.map(
+                    (department, index) => {
+                      const departmentName =
+                        department?.name ||
+                        department?.departmentName ||
+                        department?.title ||
+                        `Department ${index + 1}`;
+
+                      return (
+                        <div
+                          className="col-xl-3 col-md-4 col-sm-6"
+                          key={
+                            department?.id ||
+                            index
+                          }
+                        >
+                          <div className="border rounded p-3 h-100">
+                            <div className="d-flex align-items-center gap-3">
+                              <div
+                                className="rounded-circle d-flex align-items-center justify-content-center"
+                                style={{
+                                  width: "42px",
+                                  height: "42px",
+                                  background:
+                                    "#f1f3f5",
+                                }}
+                              >
+                                🏢
+                              </div>
+
+                              <div>
+                                <div className="fw-semibold">
+                                  {departmentName}
+                                </div>
+
+                                <div className="small text-muted">
+                                  ID:{" "}
+                                  {department?.id ||
+                                    "-"}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  );
-                }
+                      );
+                    }
+                  )}
+                </div>
+              ) : (
+                <div className="text-center text-muted py-4">
+                  No department records available.
+                </div>
               )}
             </div>
-          ) : (
-            <div className="text-center text-muted py-4">
-              No department records available.
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ==================================================
-          NOTIFICATIONS
-      =================================================== */}
-
-      <div className="card border-0 shadow-sm mb-4">
-        <div className="card-body p-4">
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <div>
-              <h5 className="fw-bold mb-1">
-                Recent HR Activity
-              </h5>
-
-              <p className="text-muted small mb-0">
-                Notifications stored by the backend
-              </p>
-            </div>
-
-            <span className="badge bg-info text-dark">
-              Notifications
-            </span>
           </div>
 
-          {recentNotifications.length > 0 ? (
-            recentNotifications.map(
-              (notification, index) => (
-                <div
-                  key={
-                    notification?.id ||
-                    index
-                  }
-                  className="border-bottom py-3"
-                >
-                  <div className="d-flex justify-content-between">
-                    <div>
-                      <div className="fw-semibold">
-                        {notification?.title ||
-                          "HR Notification"}
-                      </div>
+          {/* ==================================================
+              NOTIFICATIONS
+          =================================================== */}
 
-                      <div className="small text-muted mt-1">
-                        {notification?.message ||
-                          "No message available."}
+          <div className="card border-0 shadow-sm mb-4">
+            <div className="card-body p-4">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <h5 className="fw-bold mb-1">
+                    Recent HR Activity
+                  </h5>
+
+                  <p className="text-muted small mb-0">
+                    Notifications stored by the backend
+                  </p>
+                </div>
+
+                <span className="badge bg-info text-dark">
+                  Notifications
+                </span>
+              </div>
+
+              {recentNotifications.length > 0 ? (
+                recentNotifications.map(
+                  (notification, index) => (
+                    <div
+                      key={
+                        notification?.id ||
+                        index
+                      }
+                      className="border-bottom py-3"
+                    >
+                      <div className="d-flex justify-content-between">
+                        <div>
+                          <div className="fw-semibold">
+                            {notification?.title ||
+                              "HR Notification"}
+                          </div>
+
+                          <div className="small text-muted mt-1">
+                            {notification?.message ||
+                              "No message available."}
+                          </div>
+                        </div>
+
+                        <div className="small text-muted text-nowrap ms-3">
+                          {formatDate(
+                            notification?.createdAt ||
+                              notification?.createdDate ||
+                              notification?.timestamp
+                          )}
+                        </div>
                       </div>
                     </div>
+                  )
+                )
+              ) : (
+                <div className="text-center text-muted py-5">
+                  No notifications available.
+                </div>
+              )}
+            </div>
+          </div>
 
-                    <div className="small text-muted text-nowrap ms-3">
-                      {formatDate(
-                        notification?.createdAt ||
-                          notification?.createdDate ||
-                          notification?.timestamp
-                      )}
-                    </div>
+          {/* ==================================================
+              SYSTEM INFORMATION
+          =================================================== */}
+
+          <div className="card border-0 shadow-sm">
+            <div className="card-body p-4">
+              <div className="row g-4">
+                <div className="col-md-3">
+                  <div className="small text-muted">
+                    Backend
+                  </div>
+
+                  <div className="fw-semibold">
+                    NexusHR Railway API
                   </div>
                 </div>
-              )
-            )
-          ) : (
-            <div className="text-center text-muted py-5">
-              No notifications available.
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* ==================================================
-          SYSTEM INFORMATION
-      =================================================== */}
+                <div className="col-md-3">
+                  <div className="small text-muted">
+                    Refresh interval
+                  </div>
 
-      <div className="card border-0 shadow-sm">
-        <div className="card-body p-4">
-          <div className="row g-4">
-            <div className="col-md-3">
-              <div className="small text-muted">
-                Backend
-              </div>
+                  <div className="fw-semibold">
+                    10 seconds
+                  </div>
+                </div>
 
-              <div className="fw-semibold">
-                NexusHR Railway API
-              </div>
-            </div>
+                <div className="col-md-3">
+                  <div className="small text-muted">
+                    Employees loaded
+                  </div>
 
-            <div className="col-md-3">
-              <div className="small text-muted">
-                Refresh interval
-              </div>
+                  <div className="fw-semibold">
+                    {employees.length}
+                  </div>
+                </div>
 
-              <div className="fw-semibold">
-                10 seconds
-              </div>
-            </div>
+                <div className="col-md-3">
+                  <div className="small text-muted">
+                    Attendance records
+                  </div>
 
-            <div className="col-md-3">
-              <div className="small text-muted">
-                Employees loaded
-              </div>
-
-              <div className="fw-semibold">
-                {employees.length}
-              </div>
-            </div>
-
-            <div className="col-md-3">
-              <div className="small text-muted">
-                Attendance records
-              </div>
-
-              <div className="fw-semibold">
-                {attendanceToday.length}
+                  <div className="fw-semibold">
+                    {attendanceToday.length}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* ==================================================
+              FOOTER
+          =================================================== */}
+
+          <div className="text-center text-muted small mt-4">
+            NexusHR Admin Dashboard • Data synchronized
+            with backend
+          </div>
         </div>
-      </div>
-
-      {/* ==================================================
-          FOOTER
-      =================================================== */}
-
-      <div className="text-center text-muted small mt-4">
-        NexusHR Admin Dashboard • Data synchronized
-        with backend
-      </div>
+      </main>
     </div>
   );
 }
